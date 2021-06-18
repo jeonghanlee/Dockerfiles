@@ -46,7 +46,7 @@ LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics jeonghanlee/
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf update -y && \
-    dnf install -y git sudo bash vi&& \
+    dnf install -y git sudo bash vi langpacks-en&& \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y
 

@@ -11,7 +11,13 @@ bash docker_builder.bash -t debian10
 
 ## Rocky 8 + EPICS
 
-```
+```bash
 bash docker_builder.bash -t rocky8
+```
+
+## Useful Docker Commands
+
+```bash
+docker images
 ```
 
