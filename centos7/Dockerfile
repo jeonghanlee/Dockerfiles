@@ -3,14 +3,15 @@
 #  version : 0.0.1
 ##
 ## BuildEnv docker image size : 
-FROM rockylinux/rockylinux:8.4-rc1 AS builder
+FROM centos:7 AS builder
 
 ENV WorkPath /home/EPICS
 ARG INSTALL_LOCATION=/usr/local
 
-RUN export LC_CTYPE=C.UTF-8 &&\
-    export LC_ALL=C.UTF-8 &&\
-    dnf install -y git sudo bash && \
+RUN echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
+    echo "LC_ALL=en_US.UTF-8"    >> /etc/environment && \
+    echo "LANGUAGE=en_US.UTF-8"  >> /etc/environment && \ 
+    yum install -y git sudo bash langpacks-en && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     git clone https://github.com/jeonghanlee/EPICS-env && \ 
@@ -32,7 +33,7 @@ RUN export LC_CTYPE=C.UTF-8 &&\
 
 ## Multi-Stages build
 ## Running docker image size : 
-FROM rockylinux/rockylinux:8.4-rc1
+FROM centos:7
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 
 ARG BUILD_DATE
@@ -43,23 +44,25 @@ ARG TZ=America/Los_Angeles
 # Labels.
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="jeonghanlee/rocky8-epics"
-LABEL org.label-schema.description="Rocky 8 EPICS base and modules Docker Image"
+LABEL org.label-schema.name="jeonghanlee/centos7-epics"
+LABEL org.label-schema.description="CentOs 7EPICS base and modules Docker Image"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/EPICS-env/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics jeonghanlee/rocky8-epics"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics jeonghanlee/centos7-epics"
 
 ### YOUR TIME ZONE
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    dnf update -y && \
-    dnf install -y git sudo bash vi langpacks-en&& \
+    yum update -y && \
+    yum install -y git sudo bash vi langpacks-en && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y
 
 WORKDIR ${INSTALL_LOCATION}
 COPY --from=builder ${INSTALL_LOCATION} .
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
+
+
 ##
 ENTRYPOINT ["/bin/bash"]
 

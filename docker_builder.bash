@@ -79,13 +79,15 @@ while getopts "${options}" opt; do
         echo "Option -$OPTARG requires an argument." >&2
         exit 1
     ;;
-    h) usage
+    h) 
+        usage
     ;;
     \?)
         echo "Invalid option: -$OPTARG" >&2
-        xit
+        usage
     ;;
-    *) usage
+    *) 
+        usage
     ;;
     esac
 done
@@ -168,7 +170,7 @@ else
     done
 fi
 
-command="docker build ${DOCKER_BUILD_OPTS} --file ${DOCKER_FILENAME} -t "${target_image}" "${docker_build_arg}" ."
+command="docker build ${DOCKER_BUILD_OPTS} --file ${DOCKER_FILENAME} -t ${target_image} ${docker_build_arg} ."
 
 SRC_TOP=${SC_TOP}
 
