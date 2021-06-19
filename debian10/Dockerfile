@@ -3,7 +3,7 @@
 #  version : 0.0.1
 ##
 ## BuildEnv docker image size : 
-FROM debian:buster-slim AS builder
+FROM amd64/debian:buster-slim AS builder
 
 ENV WorkPath /home/EPICS
 ARG INSTALL_LOCATION=/usr/local
@@ -31,7 +31,7 @@ RUN apt update -y && \
 
 ## Multi-Stages build
 ## Running docker image size : 
-FROM debian:buster-slim
+FROM amd64/debian:buster-slim
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 
 ARG BUILD_DATE
