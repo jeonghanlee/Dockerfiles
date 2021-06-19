@@ -15,6 +15,13 @@ bash docker_builder.bash -t debian10
 bash docker_builder.bash -t rocky8
 ```
 
+## CentOS7 + EPICS
+
+```bash
+bash docker_builder.bash -t centos7
+```
+
+
 ## Useful Docker Commands
 
 ```bash
