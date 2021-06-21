@@ -2,9 +2,10 @@ name: ci
 
 on:
   push:
-    branches:
-      - 'main'
-
+    branches: [ * ]
+  pull_request:
+    branches: [ * ]
+    
 jobs:
   debian10:
     runs-on: ubuntu-latest
@@ -29,5 +30,6 @@ jobs:
           push: true
           tags: ${username}/debian10-epics:latest
 
-      - name : Image Digest
+      - 
+        name : Image Digest
         run: echo ${{ steps.docker_builder.output.digest }}
