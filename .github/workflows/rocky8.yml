@@ -7,7 +7,7 @@ on:
     branches: [ main ]
     
 jobs:
-  debian10:
+  rocky8:
     runs-on: ubuntu-latest
     steps:
       -
