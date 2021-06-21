@@ -1,4 +1,4 @@
-name: ci
+name: CentOs7
 
 on:
   push:
@@ -35,9 +35,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/debian10/Dockerfile
+          file: ${{ github.workspace }}/centos7/Dockerfile
           push: true
-          tags: jeonghanlee/debian10-epics:latest
+          tags: jeonghanlee/centos7-epics:latest
           
       - 
         name : Image Digest
