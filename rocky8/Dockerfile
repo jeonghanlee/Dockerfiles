@@ -3,7 +3,7 @@
 #  version : 0.0.1
 ##
 ## BuildEnv docker image size : 
-FROM rockylinux/rockylinux:8.4-rc1 AS builder
+FROM rockylinux/rockylinux:8.4 AS builder
 
 ARG INSTALL_LOCATION=/usr/local
 
@@ -18,7 +18,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
 
 ## Multi-Stages build
 ## Running docker image size : 
-FROM rockylinux/rockylinux:8.4-rc1
+FROM rockylinux/rockylinux:8.4
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 
 ARG BUILD_DATE
@@ -51,7 +51,9 @@ WORKDIR ${INSTALL_LOCATION}
 
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
 COPY --from=builder ${INSTALL_LOCATION}/apps apps
-RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
+
+RUN mkdir -p /vxboot/PVenv /vxboot/PVnames && \
+    mv ${INSTALL_LOCATION}/apps/bash_profile /root/.bash_profile
 
 ##
 ENTRYPOINT ["/bin/bash"]

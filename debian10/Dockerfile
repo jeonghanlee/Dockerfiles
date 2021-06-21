@@ -44,14 +44,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
     apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck && \
-    apt clean 
+    apt clean && \
+    rm -rf /var/lib/apt/lists/*
 
 WORKDIR ${INSTALL_LOCATION}
 #
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
 COPY --from=builder ${INSTALL_LOCATION}/apps apps
 #
-RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
+RUN mkdir -p /vxboot/PVenv /vxboot/PVnames && \
+    mv ${INSTALL_LOCATION}/apps/bash_profile /root/.bash_profile
 ##
 ENTRYPOINT ["/bin/bash"]
 

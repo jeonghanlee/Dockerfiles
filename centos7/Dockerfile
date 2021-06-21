@@ -56,7 +56,10 @@ WORKDIR ${INSTALL_LOCATION}
 
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
 COPY --from=builder ${INSTALL_LOCATION}/apps apps
-RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
+
+RUN mkdir -p /vxboot/PVenv /vxboot/PVnames && \
+    mv ${INSTALL_LOCATION}/apps/bash_profile /root/.bash_profile
+
 
 ##
 ENTRYPOINT ["/bin/bash"]
