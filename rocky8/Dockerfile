@@ -5,30 +5,16 @@
 ## BuildEnv docker image size : 
 FROM rockylinux/rockylinux:8.4-rc1 AS builder
 
-ENV WorkPath /home/EPICS
 ARG INSTALL_LOCATION=/usr/local
 
-RUN export LC_CTYPE=C.UTF-8 &&\
-    export LC_ALL=C.UTF-8 &&\
-    dnf install -y git sudo bash && \
+RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
+    dnf install -y git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \
-    git clone https://github.com/jeonghanlee/EPICS-env && \ 
-    echo "INSTALL_LOCATION:=${INSTALL_LOCATION}" > CONFIG_SITE.local && \
-    make -s -C EPICS-env/ init && \
-    make -s -C EPICS-env/ conf && \
-    make -s -C EPICS-env/ patch && \
-    make -s -C EPICS-env/ print-INSTALL_LOCATION_EPICS > ${INSTALL_LOCATION}/.epics_path && \
-    make -s -C EPICS-env/ print-INSTALL_LOCATION_BASE  > ${INSTALL_LOCATION}/.base_path  && \
-    make -s -C EPICS-env/ print-INSTALL_LOCATION_MODS  > ${INSTALL_LOCATION}/.modules_path  && \
-    make -s -C EPICS-env/ print-PATH_NAME_EPICS        > ${INSTALL_LOCATION}/.epics_vers && \
-    echo ${INSTALL_LOCATION}/epics/R$(cat ${INSTALL_LOCATION}/.epics_vers) > ${INSTALL_LOCATION}/.symlink_epics_path && \
-    make -s -C EPICS-env/ build && \
-    make -s -C EPICS-env/ install && \
-    make -s -C EPICS-env/ symlinks.modules && \
-    mkdir -p $(cat ${INSTALL_LOCATION}/.symlink_epics_path) && \
-    ln -snf $(cat ${INSTALL_LOCATION}/.base_path)    $(cat ${INSTALL_LOCATION}/.symlink_epics_path)/base && \
-    ln -snf $(cat ${INSTALL_LOCATION}/.modules_path) $(cat ${INSTALL_LOCATION}/.symlink_epics_path)/modules
+    bash pkg_automation/pkg_automation.bash -y
+
+RUN git clone https://github.com/jeonghanlee/EPICS-env && \
+    bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
+    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
 
 ## Multi-Stages build
 ## Running docker image size : 
@@ -53,13 +39,20 @@ LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics jeonghanlee/
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf update -y && \
-    dnf install -y git sudo bash vi langpacks-en&& \
+    dnf install -y git sudo bash vi langpacks-en && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y
-
+    bash pkg_automation/pkg_automation.bash -y && \
+    rm -rf pkg_automation && \
+    dnf install -y java-11-openjdk python3-pip cppcheck && \
+    pip3 install flawfinder && \
+    dnf clean all && rm -rf /var/cache/dnf/*
+    
 WORKDIR ${INSTALL_LOCATION}
-COPY --from=builder ${INSTALL_LOCATION} .
+
+COPY --from=builder ${INSTALL_LOCATION}/epics epics
+COPY --from=builder ${INSTALL_LOCATION}/apps apps
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
+
 ##
 ENTRYPOINT ["/bin/bash"]
 
