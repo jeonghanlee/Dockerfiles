@@ -25,6 +25,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
           
+      - 
+        name: checkout
+        uses: actions/checkout@v2
+
       -
         name: Build and push
         id: docker_build
