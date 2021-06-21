@@ -30,8 +30,7 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v2
         with:
-          context: .
-          file: debian10/Dockerfile
+          context: ./debian10
           push: true
           tags: jeonghanlee/debian10-epics:latest
           
