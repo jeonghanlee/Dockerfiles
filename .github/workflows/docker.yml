@@ -31,7 +31,7 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: $GITHUB_WORKSPAC/debian10/Dockerfile
+          file: $GITHUB_WORKSPACE/debian10/Dockerfile
           push: true
           tags: jeonghanlee/debian10-epics:latest
           
