@@ -56,10 +56,10 @@ WORKDIR ${INSTALL_LOCATION}
 
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
 COPY --from=builder ${INSTALL_LOCATION}/apps apps
-COPY --from=builder ${INSTALL_LOCATION}/apps/bashrc /root/.bashrc
-
+COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
 
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
 
 ##
-ENTRYPOINT [ "/bin/bash", "-c" ]
+ENTRYPOINT [ "/bin/bash" ]
+#
