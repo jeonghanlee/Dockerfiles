@@ -48,9 +48,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     rm -rf /var/lib/apt/lists/*
 
 
-# repo to /entrypoint.sh
-COPY entrypoint.sh .
-
 WORKDIR ${INSTALL_LOCATION}
 #
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
@@ -58,9 +55,10 @@ COPY --from=builder ${INSTALL_LOCATION}/apps apps
 COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
 
 # dash to bash (Debian/Ubuntu)
-#RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
-RUN  mkdir -p /vxboot/PVenv /vxboot/PVnames 
+RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
+    mkdir -p /vxboot/PVenv /vxboot/PVnames 
 
 ##
-ENTRYPOINT [ "/entrypoint.sh" ]
+SHELL [ "/bin/bash"]
+ENTRYPOINT [ "" ]
 ##

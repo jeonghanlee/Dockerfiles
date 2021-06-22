@@ -47,9 +47,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     pip3 install flawfinder && \
     dnf clean all && rm -rf /var/cache/dnf/*
     
-# repo to /entrypoint.sh
-COPY entrypoint.sh .
-
 WORKDIR ${INSTALL_LOCATION}
 
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
@@ -60,5 +57,6 @@ COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
 
 ##
-ENTRYPOINT [ "/entrypoint.sh" ]
+SHELL [ "/bin/bash" ]
+ENTRYPOINT [ "" ]
 
