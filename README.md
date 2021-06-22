@@ -25,7 +25,7 @@ bash docker_builder.bash -t rocky8
 bash docker_builder.bash -t centos7
 ```
 
-## Run Locally
+## Use within the Gitlab Runnner
 
 These images are optimized for the Gitlab Runner. The following example `.gitlab-ci.yml` shows how to integrate them
 
@@ -89,6 +89,41 @@ test-rocky8:
         - bash ${CI_PROJECT_DIR}/test.bash
         
 ```
+
+## Run Locally
+
+One needs to add `/bin/bash` as `ENTRYPOINT`.
+
+```bash
+$ docker run -i -t jeonghanlee/debian10-epics:latest /bin/bash
+root@adabe59b7240:/usr/local# source /usr/local/setEnv
+
+Set the EPICS Environment as follows:
+THIS Source NAME    : setEpicsEnv.bash
+THIS Source PATH    : /usr/local/epics/debian-10/7.0.5
+EPICS_BASE          : /usr/local/epics/debian-10/7.0.5/base
+EPICS_HOST_ARCH     : linux-x86_64
+EPICS_MODULES       : /usr/local/epics/debian-10/7.0.5/modules
+PATH                : /usr/local/epics/debian-10/7.0.5/base/bin/linux-x86_64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH     : /usr/local/epics/debian-10/7.0.5/base/lib/linux-x86_64
+
+Enjoy Everlasting EPICS!
+root@adabe59b7240:/usr/local# source /usr/local/epics/R7.0.5/setEpicsEnv.bash
+
+Set the EPICS Environment as follows:
+THIS Source NAME    : setEpicsEnv.bash
+THIS Source PATH    : /usr/local/epics/R7.0.5
+EPICS_BASE          : /usr/local/epics/R7.0.5/base
+EPICS_HOST_ARCH     : linux-x86_64
+EPICS_MODULES       : /usr/local/epics/R7.0.5/modules
+PATH                : /usr/local/epics/R7.0.5/base/bin/linux-x86_64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin:/usr/local/apps/pmd/bin
+LD_LIBRARY_PATH     : /usr/local/epics/R7.0.5/base/lib/linux-x86_64:/usr/local/apps/pmd/lib
+
+Enjoy Everlasting EPICS!
+
+```
+
+
 
 
 ## The EPICS environment and others
