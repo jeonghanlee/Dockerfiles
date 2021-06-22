@@ -25,6 +25,43 @@ bash docker_builder.bash -t rocky8
 bash docker_builder.bash -t centos7
 ```
 
+## Run Locally
+
+These images are optimized for the Gitlab Runner. The following example `.gitlab-ci.yml` shows how to integrate them
+
+```bash
+
+build-centos7:
+    stage: build
+    tags:
+        - centos7-epics
+    script:
+        - source /usr/local/setEnv
+        - shellcheck -V
+        - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
+        - caget -h
+
+build-debian10:
+    stage: build
+    tags:
+        - debian10-epics
+    script:
+        - source /usr/local/setEnv
+        - shellcheck -V
+        - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
+        - caget -h
+
+build-rock8:
+    stage: build
+    tags:
+        - rocky8-epics
+    script:
+        - source /usr/local/setEnv
+        - caget -h
+
+```
+
+
 ## The EPICS environment and others
 
 The EPICS environment and others path can be defined via a shell script located in `${INSTALL_LOCATION}`. Its default location is `/usr/local`
