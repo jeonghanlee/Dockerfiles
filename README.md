@@ -30,16 +30,26 @@ bash docker_builder.bash -t centos7
 These images are optimized for the Gitlab Runner. The following example `.gitlab-ci.yml` shows how to integrate them
 
 ```bash
-
 build-centos7:
     stage: build
     tags:
         - centos7-epics
+    
     script:
         - source /usr/local/setEnv
         - shellcheck -V
         - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
         - caget -h
+
+test-centos7:
+    stage: test
+    needs: [ "build-centos7" ]
+    tags:
+        - centos7-epics
+    script:
+        - source /usr/local/setEnv
+        - bash ${CI_PROJECT_DIR}/test.bash
+
 
 build-debian10:
     stage: build
@@ -51,7 +61,17 @@ build-debian10:
         - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
         - caget -h
 
-build-rock8:
+test-debian10:
+    stage: test
+    needs: [ "build-debian10" ]
+    tags:
+        - debian10-epics
+    script:
+        - source /usr/local/setEnv
+        - bash ${CI_PROJECT_DIR}/test.bash
+
+
+build-rocky8:
     stage: build
     tags:
         - rocky8-epics
@@ -59,6 +79,15 @@ build-rock8:
         - source /usr/local/setEnv
         - caget -h
 
+test-rocky8:
+    stage: test
+    needs: [ "build-rocky8" ]
+    tags:
+        - rocky8-epics
+    script:
+        - source /usr/local/setEnv
+        - bash ${CI_PROJECT_DIR}/test.bash
+        
 ```
 
 
