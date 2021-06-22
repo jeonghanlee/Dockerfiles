@@ -57,5 +57,4 @@ COPY --from=builder ${INSTALL_LOCATION}/apps/bashrc /root/.bashrc
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
     mkdir -p /vxboot/PVenv /vxboot/PVnames 
 ##
-SHELL [ "/bin/bash", "-c" ]
-CMD [ "source /root/.bashrc" ]
+ENTRYPOINT [ "/bin/bash", "-c" ]
