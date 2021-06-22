@@ -27,6 +27,11 @@ bash docker_builder.bash -t centos7
 
 ## The EPICS environment and others
 
-The EPICS environment is done by default. And one can find `/usr/local/epics/` path. The additional application(s) (for example, `pmd`) will be installed in `/usr/local/apps` path. Its configuration `.bashrc` is located in `/root/.bashrc`.
+The EPICS environment and others path can be defined via a shell script located in `${INSTALL_LOCATION}`. Its default location is `/usr/local`
 
+```bash
+source /usr/local/setEnv
+```
+
+The additional application(s) (for example, `pmd`) is installed in `/usr/local/apps` path. 
 
