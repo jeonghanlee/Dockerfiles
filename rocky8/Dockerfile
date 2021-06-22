@@ -57,6 +57,5 @@ COPY --from=builder ${INSTALL_LOCATION}/apps/bashrc /root/.bashrc
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
 
 ##
-SHELL [ "/bin/bash", "-c" ]
-CMD [ "source /root/.bashrc" ]
+ENTRYPOINT [ "/bin/bash", "-c" ]
 
