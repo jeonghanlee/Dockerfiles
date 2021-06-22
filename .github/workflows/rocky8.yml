@@ -50,6 +50,7 @@ jobs:
           context: .
           file: ${{ github.workspace }}/rocky8/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          #tags: ${{ steps.meta.outputs.tags }}
+          tags: jeonghanlee/rocky8-epics:latest
           labels: ${{ steps.meta.outputs.labels }}
           

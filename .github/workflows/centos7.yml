@@ -50,6 +50,7 @@ jobs:
           context: .
           file: ${{ github.workspace }}/centos7/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ steps.meta.outputs.tags }}
+          #tags: ${{ steps.meta.outputs.tags }}
+          tags: jeonghanlee/centos7-epics:latest
           labels: ${{ steps.meta.outputs.labels }}
           
