@@ -25,6 +25,12 @@ bash docker_builder.bash -t rocky8
 bash docker_builder.bash -t centos7
 ```
 
+## Scientific Linux 7 + EPICS
+
+```bash
+bash docker_builder.bash -t sl7
+```
+
 ## Use within the Gitlab Runnner
 
 These images are optimized for the Gitlab Runner. The following example `.gitlab-ci.yml` shows how to integrate them
