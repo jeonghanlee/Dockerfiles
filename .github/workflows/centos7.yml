@@ -1,9 +1,5 @@
-env:
-  OS_NAME: centos7
-  DOCKER_ACCOUNT: alscontrols
-  DOCKER_REPO: $OS_NAME-epics
 
-name: $OS_NAME
+name: CentOS7
 
 
 on:
@@ -13,8 +9,13 @@ on:
     branches: [ main ]
     
 jobs:
-  $OS_NAME:
+  centos7:
     runs-on: ubuntu-latest
+    env:
+        OS_NAME: centos7
+        DOCKER_ACCOUNT: alscontrols
+        DOCKER_REPO: $OS_NAME-epics
+
     steps:
       - 
         name: checkout
