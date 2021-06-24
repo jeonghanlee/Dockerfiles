@@ -4,6 +4,8 @@ name: Scientific Linux 7
 on:
   push:
     branches: [ main ]
+    paths:
+    - 'sl7/**'
   pull_request:
     branches: [ main ]
 #    

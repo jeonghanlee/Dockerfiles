@@ -1,9 +1,11 @@
 # 0. change name
 name: CentOS7
-#
+# change paths name
 on:
   push:
     branches: [ main ]
+    paths:
+    - 'centos7/**'
   pull_request:
     branches: [ main ]
 #    

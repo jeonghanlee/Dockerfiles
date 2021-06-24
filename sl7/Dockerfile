@@ -52,8 +52,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     pip install flawfinder && \
     yum clean all && rm -rf /var/cache/yum/*
 
-# repo to /entrypoint.sh
-
 WORKDIR ${INSTALL_LOCATION}
 
 COPY --from=builder ${INSTALL_LOCATION}/epics epics

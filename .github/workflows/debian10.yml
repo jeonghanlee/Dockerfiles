@@ -1,9 +1,11 @@
 # 0. change name
 name: Debian 10 Buster 
-#
+# change path name
 on:
   push:
     branches: [ main ]
+    paths:
+    - 'debian10/**'
   pull_request:
     branches: [ main ]
 #    
