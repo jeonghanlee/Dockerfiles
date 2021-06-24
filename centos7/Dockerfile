@@ -35,7 +35,7 @@ LABEL org.label-schema.name="alscontrols/centos7-epics"
 LABEL org.label-schema.description="CentOS 7 EPICS base and modules Docker Image"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics alscontrols/centos7-epics"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=ce7epics alscontrols/centos7-epics"
 
 ### YOUR TIME ZONE
 ENV TZ ${TZ}
@@ -51,8 +51,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     yum install -y java-11-openjdk ShellCheck splint python2-pip cppcheck && \
     pip install flawfinder && \
     yum clean all && rm -rf /var/cache/yum/*
-
-# repo to /entrypoint.sh
 
 WORKDIR ${INSTALL_LOCATION}
 
