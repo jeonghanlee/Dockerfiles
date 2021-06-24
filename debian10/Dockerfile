@@ -39,11 +39,11 @@ LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics alscontrols/
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
-    apt install -y --no-install-recommends git sudo bash vim && \
+    apt install -y git sudo bash vim && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    apt install -y --no-install-recommends openjdk-11-jre flawfinder shellcheck splint cppcheck && \
+    apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
