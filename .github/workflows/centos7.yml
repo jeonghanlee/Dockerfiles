@@ -14,7 +14,7 @@ jobs:
     env:
         OS_NAME: centos7
         DOCKER_ACCOUNT: alscontrols
-        DOCKER_REPO: $OS_NAME-epics
+        DOCKER_REPO: ${{ env.OS_NAME }}-epics
 
     steps:
       - 
@@ -58,6 +58,6 @@ jobs:
           file: ${{ github.workspace }}/$OS_NAME/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: $${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
+          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
           labels: ${{ steps.meta.outputs.labels }}
           
