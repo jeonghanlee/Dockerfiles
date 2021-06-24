@@ -15,7 +15,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
 ## Multi-Stages build
-## Running docker image size : 
+## Running docker image size : 2.2GB
 FROM rockylinux/rockylinux:8.4
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
