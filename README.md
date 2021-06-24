@@ -102,35 +102,20 @@ test-rocky8:
 One needs to add `/bin/bash` as `ENTRYPOINT`.
 
 ```bash
-$ docker run -i -t jeonghanlee/debian10-epics:latest /bin/bash
-root@adabe59b7240:/usr/local# source /usr/local/setEnv
+$  docker run -it alscontrols/centos7-epics /bin/bash
 
-Set the EPICS Environment as follows:
-THIS Source NAME    : setEpicsEnv.bash
-THIS Source PATH    : /usr/local/epics/debian-10/7.0.5
-EPICS_BASE          : /usr/local/epics/debian-10/7.0.5/base
-EPICS_HOST_ARCH     : linux-x86_64
-EPICS_MODULES       : /usr/local/epics/debian-10/7.0.5/modules
-PATH                : /usr/local/epics/debian-10/7.0.5/base/bin/linux-x86_64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-LD_LIBRARY_PATH     : /usr/local/epics/debian-10/7.0.5/base/lib/linux-x86_64
-
-Enjoy Everlasting EPICS!
-root@adabe59b7240:/usr/local# source /usr/local/epics/R7.0.5/setEpicsEnv.bash
-
+root@d15155bd0e42 local]# source /usr/local/setEnv 
 Set the EPICS Environment as follows:
 THIS Source NAME    : setEpicsEnv.bash
 THIS Source PATH    : /usr/local/epics/R7.0.5
 EPICS_BASE          : /usr/local/epics/R7.0.5/base
 EPICS_HOST_ARCH     : linux-x86_64
 EPICS_MODULES       : /usr/local/epics/R7.0.5/modules
-PATH                : /usr/local/epics/R7.0.5/base/bin/linux-x86_64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/root/bin:/usr/local/apps/pmd/bin
-LD_LIBRARY_PATH     : /usr/local/epics/R7.0.5/base/lib/linux-x86_64:/usr/local/apps/pmd/lib
+PATH                : /usr/local/epics/R7.0.5/base/bin/linux-x86_64:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+LD_LIBRARY_PATH     : /usr/local/epics/R7.0.5/base/lib/linux-x86_64
 
 Enjoy Everlasting EPICS!
-
 ```
-
-
 
 
 ## The EPICS environment and others
