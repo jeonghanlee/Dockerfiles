@@ -3,7 +3,7 @@
 #  version : 0.0.1
 ##
 ## BuildEnv docker image size : 4.22GB
-FROM debian:buster-20210621 AS builder
+FROM amd64/debian:buster AS builder
 
 ARG INSTALL_LOCATION=/usr/local
 
@@ -18,7 +18,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
 
 # Multi-Stages build
 # Running docker image size : 2.74GB
-FROM debian:buster-20210621
+FROM amd64/debian:buster
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
