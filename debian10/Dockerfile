@@ -3,7 +3,7 @@
 #  version : 0.0.1
 ##
 ## BuildEnv docker image size : 4.22GB
-FROM amd64/debian:buster AS builder
+FROM debian:buster AS builder
 
 ARG INSTALL_LOCATION=/usr/local
 
@@ -18,7 +18,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
 
 # Multi-Stages build
 # Running docker image size : 2.74GB
-FROM amd64/debian:buster
+FROM debian:buster
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
@@ -29,21 +29,21 @@ ARG TZ=America/Los_Angeles
 ## Labels.
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="jeonghanlee/debian10-epics"
+LABEL org.label-schema.name="alscontrols/debian10-epics"
 LABEL org.label-schema.description="Debian 10 EPICS base and modules Docker Image"
-LABEL org.label-schema.url="https://github.com/jeonghanlee/EPICS-env/"
+LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics jeonghanlee/debian10-epics"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=epics alscontrols/debian10-epics"
 #
 ### YOUR TIME ZONE
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
-    apt install -y  git sudo bash vim && \
+    apt install -y --no-install-recommends git sudo bash vim && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck && \
+    apt install -y --no-install-recommends openjdk-11-jre flawfinder shellcheck splint cppcheck && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
