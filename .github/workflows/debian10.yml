@@ -1,16 +1,25 @@
-name: Debian10
-
+# 0. change name
+name: Debian 10 Buster 
+#
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
+#    
 jobs:
+# change job name
   debian10:
     runs-on: ubuntu-latest
+    env:
+        # change the following 4 variables
+        DOCKER_FILE: debian10/Dockerfile 
+        DOCKER_ACCOUNT: alscontrols
+        DOCKER_REPO: debian10-epics
+        DOCKER_TAG: latest
+        
     steps:
-      -
+      - 
         name: checkout
         uses: actions/checkout@v2
       -
@@ -20,7 +29,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            alscontrols/debian10-epics
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -44,11 +53,13 @@ jobs:
           password: ${{ secrets.DOCKERHUB_TOKEN }}
       -
         name: Build and push
+        id: docker_build
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/debian10/Dockerfile
+          file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
-          # tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ steps.meta.images }}:latest
+          #tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
+          

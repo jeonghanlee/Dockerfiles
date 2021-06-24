@@ -1,21 +1,23 @@
-
+# 0. change name
 name: CentOS7
-
-
+#
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
+#    
 jobs:
+# change job name
   centos7:
     runs-on: ubuntu-latest
     env:
-        OS_NAME: centos7
+        # change the following 4 variables
+        DOCKER_FILE: centos7/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: centos7-epics
-
+        DOCKER_TAG: latest
+        
     steps:
       - 
         name: checkout
@@ -55,9 +57,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/${{ env.OS_NAME }}/Dockerfile
+          file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:latest
+          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           

@@ -1,14 +1,23 @@
-name: Scientific Linux 7
-
+# 0. change name
+name: Scientific Linux 7 
+#
 on:
   push:
     branches: [ main ]
   pull_request:
     branches: [ main ]
-    
+#    
 jobs:
+# change job name
   sl7:
     runs-on: ubuntu-latest
+    env:
+        # change the following 4 variables
+        DOCKER_FILE: sl7/Dockerfile 
+        DOCKER_ACCOUNT: alscontrols
+        DOCKER_REPO: sl7-epics
+        DOCKER_TAG: latest
+        
     steps:
       - 
         name: checkout
@@ -20,7 +29,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            alscontrols/sl7-epics
+            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -48,9 +57,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/sl7/Dockerfile
+          file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ steps.meta.images }}:latest
+          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
           
