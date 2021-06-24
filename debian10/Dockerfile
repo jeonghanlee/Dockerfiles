@@ -4,18 +4,17 @@
 ##
 ## BuildEnv docker image size : 4.22GB
 FROM amd64/debian:buster AS builder
-
+#
 ARG INSTALL_LOCATION=/usr/local
-
+#
 RUN apt update -y && \
     apt install -y  git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y
-
+#
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
-
 # Multi-Stages build
 # Running docker image size : 2.74GB
 FROM amd64/debian:buster
@@ -25,7 +24,6 @@ ARG BUILD_DATE
 ARG BUILD_VERSION
 ARG INSTALL_LOCATION=/usr/local
 ARG TZ=America/Los_Angeles
-#
 ## Labels.
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
@@ -35,7 +33,6 @@ LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -it --rm --name=debepics alscontrols/debian10-epics"
 #
-### YOUR TIME ZONE
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
@@ -46,18 +43,16 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck gcovr && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
-
+#
 WORKDIR ${INSTALL_LOCATION}
 #
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
 COPY --from=builder ${INSTALL_LOCATION}/apps apps
 COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
-
 # dash to bash (Debian/Ubuntu)
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
     mkdir -p /vxboot/PVenv /vxboot/PVnames 
-
-##
+#
 SHELL [ "/bin/bash"]
 ENTRYPOINT [ "" ]
-##
+#
