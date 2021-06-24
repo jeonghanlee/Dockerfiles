@@ -1,4 +1,4 @@
-name: Rocky8
+name: Scientific Linux 7
 
 on:
   push:
@@ -7,7 +7,7 @@ on:
     branches: [ main ]
     
 jobs:
-  rocky8:
+  centos7:
     runs-on: ubuntu-latest
     steps:
       - 
@@ -20,7 +20,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            alscontrols/rocky8-epics
+            alscontrols/sl7-epics
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -48,9 +48,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/rocky8/Dockerfile
+          file: ${{ github.workspace }}/sl7/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: alscontrols/rocky8-epics:latest
+          tags: alscontrols/centos7-epics:latest
           labels: ${{ steps.meta.outputs.labels }}
           

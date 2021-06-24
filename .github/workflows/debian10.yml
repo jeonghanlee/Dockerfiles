@@ -50,5 +50,5 @@ jobs:
           file: ${{ github.workspace }}/debian10/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           # tags: ${{ steps.meta.outputs.tags }}
-          tags: jeonghanlee/debian10-epics:latest
+          tags: alscontrols/debian10-epics:latest
           labels: ${{ steps.meta.outputs.labels }}
