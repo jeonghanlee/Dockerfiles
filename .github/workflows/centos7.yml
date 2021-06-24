@@ -1,4 +1,10 @@
-name: CentOS7
+env:
+  OS_NAME: centos7
+  DOCKER_ACCOUNT: alscontrols
+  DOCKER_REPO: $OS_NAME-epics
+
+name: $OS_NAME
+
 
 on:
   push:
@@ -7,7 +13,7 @@ on:
     branches: [ main ]
     
 jobs:
-  centos7:
+  $OS_NAME:
     runs-on: ubuntu-latest
     steps:
       - 
@@ -20,7 +26,7 @@ jobs:
         with:
           # list of Docker images to use as base name for tags
           images: |
-            alscontrols/centos7-epics
+            ${DOCKER_ACCOUNT}/${DOCKER_REPO}
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -48,9 +54,9 @@ jobs:
         uses: docker/build-push-action@v2
         with:
           context: .
-          file: ${{ github.workspace }}/centos7/Dockerfile
+          file: ${{ github.workspace }}/$OS_NAME/Dockerfile
           push: ${{ github.event_name != 'pull_request' }}
           #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ steps.meta.images }}:latest
+          tags: $DOCKER_ACCOUNT/$DOCKER_REPO:latest
           labels: ${{ steps.meta.outputs.labels }}
           
