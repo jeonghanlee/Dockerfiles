@@ -1,6 +1,5 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.1
 ##
 ## BuildEnv docker image size : 
 FROM rockylinux/rockylinux:8.4 AS builder
