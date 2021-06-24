@@ -14,7 +14,7 @@ jobs:
     env:
         OS_NAME: centos7
         DOCKER_ACCOUNT: alscontrols
-        DOCKER_REPO: ${{ env.OS_NAME }}-epics
+        DOCKER_REPO: centos7-epics
 
     steps:
       - 
