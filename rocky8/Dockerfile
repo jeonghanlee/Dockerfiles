@@ -44,7 +44,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
     dnf install -y java-11-openjdk python3-pip cppcheck && \
-    pip3 install flawfinder && \
+    pip3 install flawfinder gcovr && \
     dnf clean all && rm -rf /var/cache/dnf/*
     
 WORKDIR ${INSTALL_LOCATION}

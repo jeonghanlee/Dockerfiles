@@ -43,7 +43,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck && \
+    apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck gcovr && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 
