@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
     - 'debian10/**'
+    - '.trigger/**'
   pull_request:
     branches: [ main ]
 #    

@@ -6,6 +6,8 @@ on:
     branches: [ main ]
     paths:
     - 'centos7/**'
+    - '.trigger/**'
+
   pull_request:
     branches: [ main ]
 #    

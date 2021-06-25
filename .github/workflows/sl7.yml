@@ -6,6 +6,7 @@ on:
     branches: [ main ]
     paths:
     - 'sl7/**'
+    - 'trigger/**'
   pull_request:
     branches: [ main ]
 #    
