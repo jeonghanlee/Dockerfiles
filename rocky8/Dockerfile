@@ -50,7 +50,7 @@ COPY --from=builder ${INSTALL_LOCATION}/apps apps
 COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
 #
 RUN mkdir -p /vxboot/PVenv /vxboot/PVnames
-#
+# SHELL allows to use this image for local image and gitlab runner
 SHELL [ "/bin/bash" ]
 ENTRYPOINT [ "" ]
 #
