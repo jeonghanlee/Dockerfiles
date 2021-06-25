@@ -7,6 +7,8 @@ on:
     paths:
     - 'sl7/**'
     - '.trigger/**'
+    - '.github/workflows/sl7.yml'
+
   pull_request:
     branches: [ main ]
 #    
