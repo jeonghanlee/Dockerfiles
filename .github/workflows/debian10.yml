@@ -7,6 +7,7 @@ on:
     paths:
     - 'debian10/**'
     - '.trigger/**'
+    - '.github/workflows/debian10.yml'
   pull_request:
     branches: [ main ]
 #    

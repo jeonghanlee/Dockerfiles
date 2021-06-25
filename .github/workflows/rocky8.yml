@@ -7,7 +7,7 @@ on:
     paths:
     - 'rocky8/**'
     - '.trigger/**'
-
+    - '.github/workflows/rocky8.yml'
   pull_request:
     branches: [ main ]
 #    

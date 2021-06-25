@@ -7,7 +7,7 @@ on:
     paths:
     - 'centos7/**'
     - '.trigger/**'
-
+    - '.github/workflows/centos7.yml'
   pull_request:
     branches: [ main ]
 #    
