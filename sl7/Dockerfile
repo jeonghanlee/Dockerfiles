@@ -15,7 +15,8 @@ RUN echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
-    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
+    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}" && \
+    bash EPICS-env/scripts/als.bash
 ## Multi-Stages build
 ## Running docker image size : 1.62GB 
 FROM sl:7

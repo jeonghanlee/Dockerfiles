@@ -14,7 +14,8 @@ RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
-    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
+    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}" && \
+    bash EPICS-env/scripts/als.bash
 ## Multi-Stages build
 ## Running docker image size : 2.2GB
 FROM rockylinux/rockylinux:8.4

@@ -14,7 +14,8 @@ RUN apt update -y && \
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
-    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}"
+    bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}" && \
+    bash EPICS-env/scripts/als.bash
 # Multi-Stages build
 # Running docker image size : 2.74GB
 FROM amd64/debian:buster
