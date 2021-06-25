@@ -41,7 +41,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    apt install -y openjdk-11-jre flawfinder shellcheck splint cppcheck gcovr python3-pip && \
+    apt install -y openjdk-11-jre shellcheck splint cppcheck python3-pip && \
+    pip3 install gcovr flawfinder && \
+    ln -sf /usr/local/bin/gcovr /usr/bin/gcovr && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 #
