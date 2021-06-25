@@ -45,8 +45,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    yum install -y java-11-openjdk ShellCheck splint python2-pip cppcheck && \
-    pip install flawfinder gcovr && \
+    yum install -y java-11-openjdk ShellCheck splint python3-pip cppcheck && \
+    pip3 install flawfinder gcovr && \
     yum clean all && rm -rf /var/cache/yum/*
 #
 WORKDIR ${INSTALL_LOCATION}
