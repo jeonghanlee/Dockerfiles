@@ -46,5 +46,6 @@ replace_tag "${input_tag}" "${ROC_FILE}"
 replace_tag "${input_tag}" "${SL7_FILE}"
 popd || exit
 
+git diff
 exit
 
