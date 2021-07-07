@@ -1,4 +1,5 @@
 # Dockerfile Collections for the GitLab Local Runners
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/b2a4a2b53bc3409dacb58dda4cbe2218)](https://app.codacy.com/gh/jeonghanlee/Dockerfiles?utm_source=github.com&utm_medium=referral&utm_content=jeonghanlee/Dockerfiles&utm_campaign=Badge_Grade_Settings)
 [![Debian10](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml)
 [![Rocky8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
 [![CentOS7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml)
