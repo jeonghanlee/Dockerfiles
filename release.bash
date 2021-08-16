@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.1
+#  version : 0.0.2
 
 declare -g SC_SCRIPT;
 declare -g SC_TOP;
@@ -13,12 +13,14 @@ function pushd { builtin pushd "$@" > /dev/null || exit; }
 function popd  { builtin popd  > /dev/null || exit; }
 
 Debian10="debian10.yml"
+Debian11="debian11.yml"
 CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
 Sl7="sl7.yml"
 
 ACTION_PATH="${SC_TOP}/.github/workflows";
 DEB_FILE="${ACTION_PATH}/${Debian10}";
+DEB11_FILE="${ACTION_PATH}/${Debian11}";
 CEN_FILE="${ACTION_PATH}/${CentOS7}";
 ROC_FILE="${ACTION_PATH}/${Rocky8}";
 SL7_FILE="${ACTION_PATH}/${Sl7}";
@@ -41,6 +43,7 @@ fi
 
 pushd "$SC_TOP" || exit
 replace_tag "${input_tag}" "${DEB_FILE}"
+replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${CEN_FILE}"
 replace_tag "${input_tag}" "${ROC_FILE}"
 replace_tag "${input_tag}" "${SL7_FILE}"
