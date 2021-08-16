@@ -3,7 +3,7 @@
 #  version : 0.0.3
 ##
 ## BuildEnv docker image size : GB
-FROM amd64/debian:bullseys AS builder
+FROM amd64/debian:bullseye AS builder
 #
 ARG INSTALL_LOCATION=/usr/local
 #
@@ -18,7 +18,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/als.bash
 # Multi-Stages build
 # Running docker image size : GB
-FROM amd64/debian:bullseys
+FROM amd64/debian:bullseye
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
