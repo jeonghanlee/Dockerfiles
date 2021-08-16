@@ -1,4 +1,5 @@
 # Dockerfile Collections for the GitLab Local Runners
+[![Debian 11 Bullseye](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml)
 [![Debian10](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml)
 [![Rocky8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
 [![CentOS7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml)
@@ -8,6 +9,12 @@
 For saving valuable resouces (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
 
 The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/alscontrols
+
+## Debian 11 + EPICS
+
+```bash
+bash docker_builder.bash -t debian11
+```
 
 ## Debian 10 + EPICS
 
