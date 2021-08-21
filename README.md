@@ -132,4 +132,3 @@ source /usr/local/setEnv
 ```
 
 The additional application(s) (for example, `pmd`) is installed in `/usr/local/apps` path. 
-
