@@ -42,7 +42,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
     apt install -y openjdk-17-jre shellcheck splint cppcheck python3-pip && \
-    pip3 install gcovr flawfinder && \
+    pip3 install gcovr==5.0 flawfinder==2.0.8 && \
     ln -sf /usr/local/bin/gcovr /usr/bin/gcovr && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*

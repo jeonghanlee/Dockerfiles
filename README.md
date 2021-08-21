@@ -65,7 +65,6 @@ test-centos7:
         - source /usr/local/setEnv
         - bash ${CI_PROJECT_DIR}/test.bash
 
-
 build-debian10:
     stage: build
     tags:
@@ -84,7 +83,6 @@ test-debian10:
     script:
         - source /usr/local/setEnv
         - bash ${CI_PROJECT_DIR}/test.bash
-
 
 build-rocky8:
     stage: build
@@ -124,7 +122,6 @@ LD_LIBRARY_PATH     : /usr/local/epics/R7.0.5/base/lib/linux-x86_64
 
 Enjoy Everlasting EPICS!
 ```
-
 
 ## The EPICS environment and others
 
