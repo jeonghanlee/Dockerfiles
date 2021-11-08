@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: debian11/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: debian11-epics
-        DOCKER_TAG: unstable
+        DOCKER_TAG: latest
         
     steps:
       - 

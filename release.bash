@@ -26,11 +26,31 @@ ROC_FILE="${ACTION_PATH}/${Rocky8}";
 SL7_FILE="${ACTION_PATH}/${Sl7}";
 
 
+function yes_or_no_to_go
+{
+
+    printf  "> \n";
+    printf  "> Default latest tag will be used.\n"
+    read -p ">> Do you want to continue (y/N)? " answer
+    case ${answer:0:1} in
+	y|Y )
+	    printf ">> latest tag is going to be used...... ";
+	    ;;
+	* )
+    printf  "> \n";
+            printf ">> Please use the difference tag as an input.\n";
+            printf ">> $SC_SCRIPT tag_name.\n";
+	    exit;
+    ;;
+    esac
+
+}
+
 function replace_tag 
 {
     local tag="$1"; shift;
     local file="$1"; shift;
-    sed -i -e "s| DOCKER_TAG:.*$| DOCKER_TAG: ${tag}|g" "${file}"
+    sed -i.bak -e "s| DOCKER_TAG:.*$| DOCKER_TAG: ${tag}|g" "${file}"
 }
 
 
@@ -38,7 +58,7 @@ input_tag="$1";
 
 if [ -z "$input_tag" ]; then
     input_tag="latest";
-    echo "Default tag [ $input_tag ] will be used."
+    yes_or_no_to_go;
 fi
 
 pushd "$SC_TOP" || exit
