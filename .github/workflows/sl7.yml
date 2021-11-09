@@ -21,7 +21,7 @@ jobs:
         DOCKER_FILE: sl7/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: sl7-epics
-        DOCKER_TAG: unstable
+        DOCKER_TAG: latest
         
     steps:
       - 
