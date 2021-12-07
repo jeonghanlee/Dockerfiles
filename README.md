@@ -2,6 +2,7 @@
 [![Debian 11 Bullseye](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml)
 [![Debian10](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml)
 [![Rocky8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
+[![Alma8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml)
 [![CentOS7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml)
 [![Scientific Linux 7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/sl7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/sl7.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/adfd1fd512cd4dfda0635ced97bb9a71)](https://www.codacy.com/gh/jeonghanlee/Dockerfiles/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jeonghanlee/Dockerfiles&amp;utm_campaign=Badge_Grade)
@@ -26,6 +27,12 @@ bash docker_builder.bash -t debian10
 
 ```bash
 bash docker_builder.bash -t rocky8
+```
+
+## Alma 8 + EPICS
+
+```bash
+bash docker_builder.bash -t alma8
 ```
 
 ## CentOS7 + EPICS
