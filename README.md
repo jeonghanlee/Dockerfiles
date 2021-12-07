@@ -6,7 +6,7 @@
 [![Scientific Linux 7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/sl7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/sl7.yml)
 [![Codacy Badge](https://app.codacy.com/project/badge/Grade/adfd1fd512cd4dfda0635ced97bb9a71)](https://www.codacy.com/gh/jeonghanlee/Dockerfiles/dashboard?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=jeonghanlee/Dockerfiles&amp;utm_campaign=Badge_Grade)
 
-For saving valuable resouces (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
+For saving valuable resources (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
 
 The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/alscontrols
 
@@ -131,4 +131,10 @@ The EPICS environment and others path can be defined via a shell script located 
 source /usr/local/setEnv
 ```
 
-The additional application(s) (for example, `pmd`) is installed in `/usr/local/apps` path. 
+The additional application(s) (for example, `pmd`) is installed in `/usr/local/apps` path.
+
+## Force Docker to use `amd64` instead of `aarch64` on MacOS M1
+
+```bash
+export DOCKER_DEFAULT_PLATFORM=linux/amd64
+```
