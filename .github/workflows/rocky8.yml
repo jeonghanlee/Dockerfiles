@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: rocky8/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: rocky8-epics
-        DOCKER_TAG: v1.2.0
+        DOCKER_TAG: latest
         
     steps:
       - 
