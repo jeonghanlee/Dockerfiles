@@ -1,5 +1,5 @@
 # 0. change name
-name: Debian 11 Bullseye 
+name: Debian 11 Bullseye on github 
 # change path name
 on:
   push:
@@ -7,7 +7,7 @@ on:
     paths:
     - 'debian11/**'
     - '.trigger/**'
-    - '.github/workflows/debian11.yml'
+    - '.github/workflows/githubdeb11.yml'
   pull_request:
     branches: [ main ]
 #    
@@ -18,7 +18,7 @@ jobs:
     env:
         # change the following 4 variables
         DOCKER_FILE: debian11/Dockerfile 
-        DOCKER_ACCOUNT: alscontrols
+        DOCKER_ACCOUNT: alscontrol
         DOCKER_REPO: debian11-epics
         DOCKER_TAG: latest
         
@@ -29,11 +29,13 @@ jobs:
       -
         name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@98669ae865ea3cffbcbaa878cf57c20bbf1c6c38
         with:
           # list of Docker images to use as base name for tags
           images: |
             ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
+            ghcr.io/${{ github.repository }}
+
           # generate Docker tags based on the following events/attributes
           tags: |
             type=schedule
@@ -50,15 +52,16 @@ jobs:
         name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v1
       -
-        name: Login to DockerHub
-        uses: docker/login-action@v1
+        name: Login to the container registry
+        uses: docker/login-action@f054a8b539a109f9f41c372932f1ae047eff08c9
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GHCR_TOKEN }}
       -
         name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@ad44023a93711e3deb337508980b4b5e9bcdc5dc
         with:
           context: .
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
