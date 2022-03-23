@@ -12,7 +12,7 @@ RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     dnf install -y python3-pip && \
-    pip3 install numpy==1.22.3
+    pip3 install numpy
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
@@ -44,7 +44,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
     dnf install -y java-11-openjdk python3-pip cppcheck && \
-    pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy==1.22.3 && \
+    pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
     dnf clean all && rm -rf /var/cache/dnf/*
 #    
 WORKDIR ${INSTALL_LOCATION}
