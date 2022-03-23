@@ -11,7 +11,7 @@ RUN echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
     echo "LANGUAGE=en_US.UTF-8"  >> /etc/environment && \ 
     yum update -y && yum install -y git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \\
+    bash pkg_automation/pkg_automation.bash -y && \
     yum install -y python3-pip && \
     pip3 install numpy==1.22.3
 #

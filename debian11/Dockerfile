@@ -10,7 +10,7 @@ ARG INSTALL_LOCATION=/usr/local
 RUN apt update -y && \
     apt install -y  git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \\
+    bash pkg_automation/pkg_automation.bash -y && \
     apt install -y python3-pip && \
     pip3 install numpy==1.22.3
 #
