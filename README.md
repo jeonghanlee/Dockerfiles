@@ -11,6 +11,20 @@ For saving valuable resources (time, electricity, computing power, and so on), t
 
 The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/alscontrols
 
+## Release Procedure
+
+* Relaese the new version. Check the latest one at https://hub.docker.com/repository/docker/alscontrols/rocky8-epics
+
+```bash
+./release.bash v1.x.x
+```
+
+* Everything works within github action, release latest one
+
+```bash
+./release.bash
+```
+
 ## Debian 11 + EPICS
 
 ```bash
