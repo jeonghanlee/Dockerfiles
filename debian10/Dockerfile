@@ -10,7 +10,9 @@ ARG INSTALL_LOCATION=/usr/local
 RUN apt update -y && \
     apt install -y  git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y
+    bash pkg_automation/pkg_automation.bash -y && \\
+    apt install -y python3-pip && \
+    pip3 install numpy==1.22.3
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
@@ -42,7 +44,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
     apt install -y openjdk-11-jre shellcheck splint cppcheck python3-pip && \
-    pip3 install gcovr flawfinder && \
+    pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy==1.22.3 && \
     ln -sf /usr/local/bin/gcovr /usr/bin/gcovr && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
