@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: alma8/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: alma8-epics
-        DOCKER_TAG: v1.3.0
+        DOCKER_TAG: latest
         
     steps:
       - 
