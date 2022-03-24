@@ -4,10 +4,6 @@ name: Debian 11 Bullseye
 on:
   push:
     branches: [ main ]
-    paths:
- #   - 'debian11/**'
- #   - '.trigger/**'
- #   - '.github/workflows/debian11.yml'
   pull_request:
     branches: [ main ]
 #    
