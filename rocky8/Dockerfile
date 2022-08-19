@@ -3,7 +3,7 @@
 #
 ##
 ## BuildEnv docker image size : 
-FROM rockylinux/rockylinux:8.5 AS builder
+FROM rockylinux/rockylinux:8 AS builder
 #
 ARG INSTALL_LOCATION=/usr/local
 #
@@ -22,7 +22,7 @@ RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/als.bash
 ## Multi-Stages build
 ## Running docker image size : 2.2GB
-FROM rockylinux/rockylinux:8.5
+FROM rockylinux/rockylinux:8
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
