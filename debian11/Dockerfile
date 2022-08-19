@@ -12,7 +12,9 @@ RUN apt update -y && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     apt install -y python3-pip && \
-    pip3 install numpy
+    pip3 install numpy && \
+    git clone https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
@@ -46,6 +48,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt install -y openjdk-17-jre shellcheck splint cppcheck python3-pip && \
     pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
     ln -sf /usr/local/bin/gcovr /usr/bin/gcovr && \
+    git clone https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github && \
+    rm -rf uldaq-env && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 #
