@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: centos7/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: centos7-epics
-        DOCKER_TAG: v1.4.0
+        DOCKER_TAG: latest
         
     steps:
       - 
