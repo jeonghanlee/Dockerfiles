@@ -13,7 +13,9 @@ RUN echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     yum install -y python3-pip && \
-    pip3 install numpy
+    pip3 install numpy && \
+    git clone https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
@@ -47,6 +49,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
+    git clone https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github && \
+    rm -rf uldaq-env && \
     yum install -y java-11-openjdk ShellCheck splint python3-pip cppcheck && \
     pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
     yum clean all && rm -rf /var/cache/yum/*
