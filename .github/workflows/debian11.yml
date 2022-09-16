@@ -21,7 +21,7 @@ jobs:
         DOCKER_FILE: debian11/Dockerfile 
         DOCKER_ACCOUNT: alscontrols
         DOCKER_REPO: debian11-epics
-        DOCKER_TAG: latest
+        DOCKER_TAG: v1.5.1
         
     steps:
       - 
