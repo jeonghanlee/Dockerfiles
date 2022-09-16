@@ -4,13 +4,13 @@ name: Debian 11 Bullseye
 # change path name
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'debian11/**'
     - '.trigger/**'
     - '.github/workflows/debian11.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name

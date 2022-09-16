@@ -3,13 +3,13 @@ name: Rocky Linux 8
 #
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'rocky8/**'
     - '.trigger/**'
     - '.github/workflows/rocky8.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name

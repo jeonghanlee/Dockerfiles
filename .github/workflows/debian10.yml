@@ -3,13 +3,13 @@ name: Debian 10 Buster
 # change path name
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'debian10/**'
     - '.trigger/**'
     - '.github/workflows/debian10.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name

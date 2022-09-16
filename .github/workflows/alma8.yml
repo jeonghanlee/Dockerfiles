@@ -3,13 +3,13 @@ name: Alma Linux 8
 #
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'alma8/**'
     - '.trigger/**'
     - '.github/workflows/alma8.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name

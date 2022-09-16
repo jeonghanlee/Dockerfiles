@@ -3,14 +3,14 @@ name: Scientific Linux 7
 #
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'sl7/**'
     - '.trigger/**'
     - '.github/workflows/sl7.yml'
 
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name

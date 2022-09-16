@@ -3,13 +3,13 @@ name: CentOS7
 # change paths name
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
     paths:
     - 'centos7/**'
     - '.trigger/**'
     - '.github/workflows/centos7.yml'
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
 #    
 jobs:
 # change job name
