@@ -32,11 +32,11 @@ ARG TZ=America/Los_Angeles
 ## Labels.
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="alscontrols/debian11-epics"
+LABEL org.label-schema.name="jeonghanlee/debian11-epics"
 LABEL org.label-schema.description="Debian 11 EPICS base and modules Docker Image"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb11epics alscontrols/debian11-epics /bin/bash"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb11epics jeonghanlee/debian11-epics /bin/bash"
 #
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \

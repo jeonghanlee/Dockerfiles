@@ -9,11 +9,11 @@
 
 For saving valuable resources (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
 
-The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/alscontrols
+The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/jeonghanlee
 
 ## Release Procedure
 
-* Relaese the new version. Check the latest one at https://hub.docker.com/repository/docker/alscontrols/rocky8-epics
+* Relaese the new version. Check the latest one at https://hub.docker.com/repository/docker/jeonghanlee/rocky8-epics
 
 ```bash
 ./release.bash v1.x.x
@@ -129,7 +129,7 @@ test-rocky8:
 One needs to add `/bin/bash` as `ENTRYPOINT`.
 
 ```bash
-$  docker run -it alscontrols/centos7-epics /bin/bash
+$  docker run -it jeonghanlee/centos7-epics /bin/bash
 
 root@d15155bd0e42 local]# source /usr/local/setEnv 
 Set the EPICS Environment as follows:

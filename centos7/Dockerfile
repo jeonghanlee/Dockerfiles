@@ -34,11 +34,11 @@ ARG TZ=America/Los_Angeles
 # Labels.
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="alscontrols/centos7-epics"
+LABEL org.label-schema.name="jeonghanlee/centos7-epics"
 LABEL org.label-schema.description="CentOS 7 EPICS base and modules Docker Image"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=ce7epics alscontrols/centos7-epics"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=ce7epics jeonghanlee/centos7-epics"
 #
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \

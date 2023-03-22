@@ -19,7 +19,7 @@ jobs:
     env:
         # change the following 4 variables
         DOCKER_FILE: sl7/Dockerfile 
-        DOCKER_ACCOUNT: alscontrols
+        DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: sl7-epics
         DOCKER_TAG: latest
         

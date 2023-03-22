@@ -18,7 +18,7 @@ jobs:
     env:
         # change the following 4 variables
         DOCKER_FILE: debian10/Dockerfile 
-        DOCKER_ACCOUNT: alscontrols
+        DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: debian10-epics
         DOCKER_TAG: latest
         
