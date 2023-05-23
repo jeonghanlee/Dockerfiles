@@ -61,7 +61,7 @@ bash docker_builder.bash -t alma8
 bash docker_builder.bash -t centos7
 ```
 
-## Scientific Linux 7 + EPICS
+## ~~Scientific Linux 7 + EPICS~~
 
 ```bash
 bash docker_builder.bash -t sl7
