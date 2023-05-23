@@ -31,16 +31,22 @@ The following example commands are good for building its docker image locally. A
 bash docker_builder.bash -t debian11
 ```
 
-## Debian 10 + EPICS
+## Rocky 9 + EPICS
 
 ```bash
-bash docker_builder.bash -t debian10
+bash docker_builder.bash -t rocky9
 ```
 
 ## Rocky 8 + EPICS
 
 ```bash
 bash docker_builder.bash -t rocky8
+```
+
+## Debian 10 + EPICS
+
+```bash
+bash docker_builder.bash -t debian10
 ```
 
 ## Alma 8 + EPICS

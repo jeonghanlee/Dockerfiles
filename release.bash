@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.3
+#  version : 0.0.4
 
 declare -g SC_SCRIPT;
 declare -g SC_TOP;
@@ -16,6 +16,7 @@ Debian10="debian10.yml"
 Debian11="debian11.yml"
 CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
+Rocky9="rocky9.yml"
 Sl7="sl7.yml"
 Alma8="alma8.yml"
 
@@ -24,6 +25,7 @@ DEB_FILE="${ACTION_PATH}/${Debian10}";
 DEB11_FILE="${ACTION_PATH}/${Debian11}";
 CEN_FILE="${ACTION_PATH}/${CentOS7}";
 ROC_FILE="${ACTION_PATH}/${Rocky8}";
+ROC9_FILE="${ACTION_PATH}/${Rocky9}";
 SL7_FILE="${ACTION_PATH}/${Sl7}";
 ALMA_FILE="${ACTION_PATH}/${Alma8}";
 
@@ -67,6 +69,7 @@ replace_tag "${input_tag}" "${DEB_FILE}"
 replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${CEN_FILE}"
 replace_tag "${input_tag}" "${ROC_FILE}"
+replace_tag "${input_tag}" "${ROC9_FILE}"
 replace_tag "${input_tag}" "${SL7_FILE}"
 replace_tag "${input_tag}" "${ALMA_FILE}"
 popd || exit
