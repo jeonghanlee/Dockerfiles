@@ -36,7 +36,7 @@ LABEL org.label-schema.name="jeonghanlee/rocky9-epics"
 LABEL org.label-schema.description="Rocky 9 EPICS base and modules Docker Image"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
-LABEL org.label-schema.docker.cmd="docker run -it --rm --name=rk8epics jeonghanlee/rocky9-epics"
+LABEL org.label-schema.docker.cmd="docker run -it --rm --name=rk9epics jeonghanlee/rocky9-epics"
 # shellcheck will be installed through EPICS-env/scripts/install_apps.bash in builder...
 ENV TZ ${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
