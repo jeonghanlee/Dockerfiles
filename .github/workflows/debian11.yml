@@ -21,7 +21,7 @@ jobs:
         DOCKER_FILE: debian11/Dockerfile 
         DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: debian11-epics
-        DOCKER_TAG: v1.5.2
+        DOCKER_TAG: latest
         
     steps:
       - 
