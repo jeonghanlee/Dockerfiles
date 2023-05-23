@@ -17,7 +17,7 @@ Debian11="debian11.yml"
 CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
 Rocky9="rocky9.yml"
-Sl7="sl7.yml"
+#Sl7="sl7.yml"
 Alma8="alma8.yml"
 
 ACTION_PATH="${SC_TOP}/.github/workflows";
@@ -26,7 +26,7 @@ DEB11_FILE="${ACTION_PATH}/${Debian11}";
 CEN_FILE="${ACTION_PATH}/${CentOS7}";
 ROC_FILE="${ACTION_PATH}/${Rocky8}";
 ROC9_FILE="${ACTION_PATH}/${Rocky9}";
-SL7_FILE="${ACTION_PATH}/${Sl7}";
+#SL7_FILE="${ACTION_PATH}/${Sl7}";
 ALMA_FILE="${ACTION_PATH}/${Alma8}";
 
 function yes_or_no_to_go
@@ -70,7 +70,7 @@ replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${CEN_FILE}"
 replace_tag "${input_tag}" "${ROC_FILE}"
 replace_tag "${input_tag}" "${ROC9_FILE}"
-replace_tag "${input_tag}" "${SL7_FILE}"
+#replace_tag "${input_tag}" "${SL7_FILE}"
 replace_tag "${input_tag}" "${ALMA_FILE}"
 popd || exit
 
