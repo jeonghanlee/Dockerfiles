@@ -1,4 +1,5 @@
 # Dockerfile Collections for the GitLab Local Runners
+[![Debian 12 Bookworm](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml)
 [![Debian 11 Bullseye](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml)
 [![Rocky Linux 9](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml)
 [![Debian10](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml)
