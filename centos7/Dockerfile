@@ -7,7 +7,9 @@ FROM centos:7 AS builder
 #
 ARG INSTALL_LOCATION=/usr/local  
 #
-RUN echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
+    echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
     echo "LC_ALL=en_US.UTF-8"    >> /etc/environment && \
     echo "LANGUAGE=en_US.UTF-8"  >> /etc/environment && \ 
     yum update -y && yum install -y git sudo bash wget unzip make && \
