@@ -38,7 +38,7 @@ LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb11epics jeonghanlee/debian11-epics /bin/bash"
 #
-ENV TZ ${TZ}
+ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
     apt install -y git sudo bash vim && \

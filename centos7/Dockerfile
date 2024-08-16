@@ -15,7 +15,7 @@ RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
     yum update -y && yum install -y git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
-    yum install -y python3-pip && \
+    yum install -y python3-pip cmake && \
     pip3 install numpy && \
     git clone https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github
@@ -42,13 +42,15 @@ LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -it --rm --name=ce7epics jeonghanlee/centos7-epics"
 #
-ENV TZ ${TZ}
-RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
+ENV TZ=${TZ}
+RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
+    sed -i 's|#baseurl=http://mirror.centos.org|baseurl=http://vault.centos.org|g' /etc/yum.repos.d/CentOS-* && \
+    ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     echo "LC_CTYPE=en_US.UTF-8"  >  /etc/environment && \
     echo "LC_ALL=en_US.UTF-8"    >> /etc/environment && \
     echo "LANGUAGE=en_US.UTF-8"  >> /etc/environment && \ 
     yum update -y && \
-    yum install -y git sudo bash vi langpacks-en tree && \
+    yum install -y git sudo bash vi langpacks-en tree cmake && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \

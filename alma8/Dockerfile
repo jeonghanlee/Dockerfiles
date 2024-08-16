@@ -38,7 +38,7 @@ LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -it --rm --name=rk8epics jeonghanlee/alma8-epics"
 # shellcheck will be installed through EPICS-env/scripts/install_apps.bash in builder...
-ENV TZ ${TZ}
+ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf update -y && \
     dnf install -y git sudo bash vi langpacks-en && \

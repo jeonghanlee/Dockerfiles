@@ -2,7 +2,6 @@
 [![Debian 12 Bookworm](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml)
 [![Debian 11 Bullseye](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml)
 [![Rocky Linux 9](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml)
-[![Debian10](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian10.yml)
 [![Rocky8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
 [![Alma8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml)
 [![CentOS7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml)
@@ -43,12 +42,6 @@ bash docker_builder.bash -t rocky9
 bash docker_builder.bash -t rocky8
 ```
 
-## Debian 10 + EPICS
-
-```bash
-bash docker_builder.bash -t debian10
-```
-
 ## Alma 8 + EPICS
 
 ```bash
@@ -59,12 +52,6 @@ bash docker_builder.bash -t alma8
 
 ```bash
 bash docker_builder.bash -t centos7
-```
-
-## ~~Scientific Linux 7 + EPICS~~
-
-```bash
-bash docker_builder.bash -t sl7
 ```
 
 ## Use within the Gitlab Runnner

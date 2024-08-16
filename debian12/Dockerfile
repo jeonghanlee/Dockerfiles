@@ -36,7 +36,7 @@ LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb12epics jeonghanlee/debian12-epics /bin/bash"
 #
-ENV TZ ${TZ}
+ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
     apt install -y git sudo bash vim openjdk-17-jre-headless&& \
