@@ -67,7 +67,6 @@ if [ -z "$input_tag" ]; then
 fi
 
 pushd "$SC_TOP" || exit
-replace_tag "${input_tag}" "${DEB_FILE}"
 replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${DEB12_FILE}"
 replace_tag "${input_tag}" "${CEN_FILE}"
