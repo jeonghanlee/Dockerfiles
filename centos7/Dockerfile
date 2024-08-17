@@ -15,7 +15,8 @@ RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
     yum update -y && yum install -y git sudo bash wget unzip make && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
-    yum install -y python3-pip cmake && \
+    yum install -y python3-pip cmake3 && \
+    ln -sf /usr/bin/cmake3 /usr/bin/cmake && \
     pip3 install numpy && \
     git clone https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github
@@ -50,7 +51,8 @@ RUN sed -i 's/mirrorlist/#mirrorlist/g' /etc/yum.repos.d/CentOS-* && \
     echo "LC_ALL=en_US.UTF-8"    >> /etc/environment && \
     echo "LANGUAGE=en_US.UTF-8"  >> /etc/environment && \ 
     yum update -y && \
-    yum install -y git sudo bash vi langpacks-en tree cmake && \
+    yum install -y git sudo bash vi langpacks-en tree cmake3 && \
+    ln -sf /usr/bin/cmake3 /usr/bin/cmake && \
     git clone https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
