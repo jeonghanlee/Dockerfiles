@@ -14,7 +14,7 @@ on:
 jobs:
 # change job name
   rocky8:
-    runs-on: ubuntu-22.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.0422.04ee
+    runs-on: ubuntu-22.04
         DOCKER_REPO: rocky8-epics
         DOCKER_TAG: v2.2.0
         
