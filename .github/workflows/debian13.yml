@@ -15,13 +15,13 @@ on:
 jobs:
 # change job name
   debian13:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     env:
         # change the following 4 variables
         DOCKER_FILE: debian13/Dockerfile 
         DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: debian13-epics
-        DOCKER_TAG: latest
+        DOCKER_TAG: 22.04
         
     steps:
       - 
