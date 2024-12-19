@@ -15,6 +15,9 @@ jobs:
 # change job name
   rocky8:
     runs-on: ubuntu-22.04
+        # change the following 4 variables
+        DOCKER_FILE: rocky8/Dockerfile 
+        DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: rocky8-epics
         DOCKER_TAG: v2.2.0
         
