@@ -1,10 +1,8 @@
 # Dockerfile Collections for the GitLab Local Runners
 [![Debian 12 Bookworm](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian12.yml)
-[![Debian 11 Bullseye](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/debian11.yml)
 [![Rocky Linux 9](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky9.yml)
-[![Rocky8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
+[![Rocky Linux 8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
 [![Alma8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml)
-[![CentOS7](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/centos7.yml)
 
 For saving valuable resources (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
 
@@ -24,7 +22,7 @@ The following example commands are good for building its docker image locally. A
 ./release.bash
 ```
 
-## Debian 11 + EPICS
+## Debian 12 + EPICS
 
 ```bash
 bash docker_builder.bash -t debian11
@@ -40,81 +38,6 @@ bash docker_builder.bash -t rocky9
 
 ```bash
 bash docker_builder.bash -t rocky8
-```
-
-## Alma 8 + EPICS
-
-```bash
-bash docker_builder.bash -t alma8
-```
-
-## CentOS7 + EPICS
-
-```bash
-bash docker_builder.bash -t centos7
-```
-
-## Use within the Gitlab Runnner
-
-These images are optimized for the Gitlab Runner. The following example `.gitlab-ci.yml` shows how to integrate them
-
-```bash
-build-centos7:
-    stage: build
-    tags:
-        - centos7-epics
-    
-    script:
-        - source /usr/local/setEnv
-        - shellcheck -V
-        - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
-        - caget -h
-
-test-centos7:
-    stage: test
-    needs: [ "build-centos7" ]
-    tags:
-        - centos7-epics
-    script:
-        - source /usr/local/setEnv
-        - bash ${CI_PROJECT_DIR}/test.bash
-
-build-debian10:
-    stage: build
-    tags:
-        - debian10-epics
-    script:
-        - source /usr/local/setEnv
-        - shellcheck -V
-        - git ls-files --exclude='*.bash' --ignored | xargs shellcheck  || echo "No script found!"
-        - caget -h
-
-test-debian10:
-    stage: test
-    needs: [ "build-debian10" ]
-    tags:
-        - debian10-epics
-    script:
-        - source /usr/local/setEnv
-        - bash ${CI_PROJECT_DIR}/test.bash
-
-build-rocky8:
-    stage: build
-    tags:
-        - rocky8-epics
-    script:
-        - source /usr/local/setEnv
-        - caget -h
-
-test-rocky8:
-    stage: test
-    needs: [ "build-rocky8" ]
-    tags:
-        - rocky8-epics
-    script:
-        - source /usr/local/setEnv
-        - bash ${CI_PROJECT_DIR}/test.bash
-        
 ```
 
 ## Run Locally
