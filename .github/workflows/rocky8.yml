@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: rocky8/Dockerfile 
         DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: rocky8-epics
-        DOCKER_TAG: v2.3.1
+        DOCKER_TAG: latest
         
     steps:
       - 
