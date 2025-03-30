@@ -1,8 +1,8 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.3
+#  version : 0.0.2
 ##
-FROM rust:slim-bullseye
+FROM rust:slim-bookworm
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
