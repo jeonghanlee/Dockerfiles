@@ -4,9 +4,11 @@
 [![Rocky Linux 8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/rocky8.yml)
 [![Alma8](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/alma8.yml)
 
-For saving valuable resources (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries for the gitlab runner. The generated image size is big, because they should contain almost all libraries for the EPICS and other applications.
+[![Rust with mdbook](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/mdbook.yml/badge.svg)](https://github.com/jeonghanlee/Dockerfiles/actions/workflows/mdbook.yml)i
 
-The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/orgs/jeonghanlee
+For saving valuable resources (time, electricity, computing power, and so on), these collections will be used to generate Linux Images with the EPICS environment with full libraries and mdbook with rust for the gitlab runner.
+
+The following example commands are good for building its docker image locally. And all docker images are built through the Github Actions. The Docker images are hosted at https://hub.docker.com/repositories/jeonghanlee
 
 ## Release Procedure
 
