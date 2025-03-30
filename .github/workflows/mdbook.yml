@@ -1,14 +1,13 @@
 ---
 # 0. change name
-name: Debian 12 Bookworm 
+name: Rust with mdbook 
 # change path name
 on:
   push:
     branches: [ master ]
     paths:
-    - 'debian12/**'
-    - '.trigger/**'
-    - '.github/workflows/debian12.yml'
+    - 'mdbook/**'
+    - '.github/workflows/mdbook.yml'
   pull_request:
     branches: [ master ]
 #    
@@ -18,9 +17,9 @@ jobs:
     runs-on: ubuntu-22.04
     env:
         # change the following 4 variables
-        DOCKER_FILE: debian12/Dockerfile 
+        DOCKER_FILE: mdbook/Dockerfile 
         DOCKER_ACCOUNT: jeonghanlee
-        DOCKER_REPO: debian12-epics
+        DOCKER_REPO: mdbook
         DOCKER_TAG: latest
         
     steps:
