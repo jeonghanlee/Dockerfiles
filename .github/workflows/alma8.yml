@@ -20,7 +20,7 @@ jobs:
         DOCKER_FILE: alma8/Dockerfile 
         DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: alma8-epics
-        DOCKER_TAG: v2.3.2
+        DOCKER_TAG: latest
         
     steps:
       - 
