@@ -28,9 +28,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 RUN groupadd --gid 1001 ggaigroup && \
     useradd --uid 1001 --gid ggaigroup --shell /bin/bash --create-home ggaiuser
 
-# Copy the requirements file with the correct ownership
-COPY --chown=ggaiuser:ggaigroup requirements.txt .
-
 # --- Install Dependencies Directly via Command Line ---
 # The backslash (\) is used to continue the command on the next line for readability.
 RUN pip install --no-cache-dir \
