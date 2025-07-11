@@ -1,0 +1,20 @@
+# --- Core LLM and GitLab API ---
+google-generativeai
+python-gitlab
+
+# --- LangChain Framework (The "Glue") ---
+# The core LangChain library for chaining prompts and components
+langchain
+# The specific integration for Google's models (LLMs and Embeddings)
+langchain_google_genai
+# Community-maintained integrations, especially for document loaders
+langchain_community
+
+# --- Vector Store (The "Memory") ---
+# The vector database. ChromaDB is easy to use and can persist to disk.
+chromadb
+
+# --- Document Handling (The "Knowledge Base") ---
+# A common dependency for loading PDF files, which are often part of a knowledge base.
+pypdf
+# You might add others here like 'unstructured' for complex file types.
