@@ -24,10 +24,6 @@ ENV TZ=${TZ}
 # Set up the timezone system-wide. This is a separate layer for better caching.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Security Best Practice: Create a non-root user
-RUN groupadd --gid 1001 ggaigroup && \
-    useradd --uid 1001 --gid ggaigroup --shell /bin/bash --create-home ggaiuser
-
 # --- Install Dependencies Directly via Command Line ---
 # The backslash (\) is used to continue the command on the next line for readability.
 RUN pip install --no-cache-dir \
@@ -39,11 +35,6 @@ RUN pip install --no-cache-dir \
     chromadb \
     pypdf
 
-# Switch to the non-root user for security
-USER appuser
-
-# Set a working directory for the user
-WORKDIR /home/ggaiuser
 # --- For Interactive Use ---
 # Set the default shell to Bash for a better interactive experience
 SHELL ["/bin/bash", "-c"]
