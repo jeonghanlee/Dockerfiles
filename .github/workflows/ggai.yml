@@ -1,29 +1,29 @@
 ---
 # 0. change name
-name: Rust with mdbook 
+name: Google Generative AI Environment
 # change path name
 on:
   push:
     branches: [ master ]
     paths:
-    - 'mdbook/**'
-    - '.github/workflows/mdbook.yml'
+    - 'ggai/**'
+    - '.github/workflows/ggai.yml'
   pull_request:
     branches: [ master ]
-#    
+#
 jobs:
 # change job name
   mdbook:
     runs-on: ubuntu-22.04
     env:
         # change the following 4 variables
-        DOCKER_FILE: mdbook/Dockerfile 
+        DOCKER_FILE: ggai/Dockerfile
         DOCKER_ACCOUNT: jeonghanlee
-        DOCKER_REPO: mdbook
+        DOCKER_REPO: ggai
         DOCKER_TAG: latest
-        
+
     steps:
-      - 
+      -
         name: checkout
         uses: actions/checkout@v4
       -
@@ -66,4 +66,4 @@ jobs:
           #tags: ${{ steps.meta.outputs.tags }}
           tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
-          
+
