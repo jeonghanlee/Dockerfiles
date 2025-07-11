@@ -31,8 +31,16 @@ RUN groupadd --gid 1001 ggaigroup && \
 # Copy the requirements file with the correct ownership
 COPY --chown=ggaiuser:ggaigroup requirements.txt .
 
-# Install dependencies in a separate layer for better caching
-RUN pip install --no-cache-dir -r requirements.txt
+# --- Install Dependencies Directly via Command Line ---
+# The backslash (\) is used to continue the command on the next line for readability.
+RUN pip install --no-cache-dir \
+    google-generativeai \
+    python-gitlab \
+    langchain \
+    langchain_google_genai \
+    langchain_community \
+    chromadb \
+    pypdf
 
 # Switch to the non-root user for security
 USER appuser

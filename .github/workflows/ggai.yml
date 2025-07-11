@@ -13,7 +13,7 @@ on:
 #
 jobs:
 # change job name
-  mdbook:
+  ggai:
     runs-on: ubuntu-22.04
     env:
         # change the following 4 variables
