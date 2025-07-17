@@ -21,7 +21,7 @@ ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
     apt upgrade -y && \
-    cargo install mdbook@0.4.51 && \
+    cargo install mdbook@0.4.52 && \
     apt clean && \
     rm -rf /var/lib/apt/* && \
     rm -rf /var/lib/dpkg/*
