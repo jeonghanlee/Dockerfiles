@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.3
+#  version : 0.0.4
 ##
 ## BuildEnv docker image size : GB
 FROM amd64/debian:trixie-slim AS builder
@@ -9,13 +9,15 @@ ARG INSTALL_LOCATION=/usr/local
 #
 RUN apt update -y && \
     apt install -y  git sudo bash wget unzip make && \
-    git clone https://github.com/jeonghanlee/pkg_automation && \
+    git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
-    git clone https://github.com/jeonghanlee/uldaq-env && \
-    make -C uldaq-env github
+    git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github && \
+    git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
+    make -C open62541-env github
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
-    bash EPICS-env/scripts/build_epics_deb13.bash "${INSTALL_LOCATION}" && \
+    bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/als.bash
 # Multi-Stages build
@@ -39,13 +41,16 @@ LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb13epics jeongha
 ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt update -y && \
-    apt install -y git sudo bash vim openjdk-24-jre-headless&& \
-    git clone https://github.com/jeonghanlee/pkg_automation && \
+    apt install -y git sudo bash vim openjdk-21-jre-headless&& \
+    git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    git clone https://github.com/jeonghanlee/uldaq-env && \
+    git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \
     rm -rf uldaq-env && \
+    git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
+    make -C open62541-env github && \
+    rm -rf open62541-env && \
     apt clean && \
     rm -rf /var/lib/apt/lists/*
 #
@@ -56,7 +61,7 @@ COPY --from=builder ${INSTALL_LOCATION}/apps apps
 COPY --from=builder ${INSTALL_LOCATION}/setEnv setEnv
 # dash to bash (Debian/Ubuntu)
 RUN echo "dash dash/sh boolean false" | debconf-set-selections && \
-    mkdir -p /vxboot/PVenv /vxboot/PVnames 
+    mkdir -p /vxboot/PVenv /vxboot/PVnames
 #
 SHELL [ "/bin/bash"]
 ENTRYPOINT [ "" ]

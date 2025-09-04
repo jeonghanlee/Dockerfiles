@@ -2,19 +2,21 @@
 #  email   : jeonghan.lee@gmail.com
 #
 ##
-## BuildEnv docker image size : 
+## BuildEnv docker image size :
 FROM almalinux:8 AS builder
 #
 ARG INSTALL_LOCATION=/usr/local
 #
 RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
     dnf install -y git sudo bash wget unzip make && \
-    git clone https://github.com/jeonghanlee/pkg_automation && \
+    git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     dnf install -y python3-pip && \
     pip3 install numpy && \
-    git clone https://github.com/jeonghanlee/uldaq-env && \
-    make -C uldaq-env github
+    git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
+    make -C uldaq-env github && \
+    git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
+    make -C open62541-env github
 #
 RUN git clone https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
@@ -42,16 +44,19 @@ ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf update -y && \
     dnf install -y git sudo bash vi langpacks-en && \
-    git clone https://github.com/jeonghanlee/pkg_automation && \
+    git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    git clone https://github.com/jeonghanlee/uldaq-env && \
+    git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \
     rm -rf uldaq-env && \
+    git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
+    make -C open62541-env github && \
+    rm -rf open62541-env && \
     dnf install -y java-11-openjdk python3-pip cppcheck && \
     pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
     dnf clean all && rm -rf /var/cache/dnf/*
-#    
+#
 WORKDIR ${INSTALL_LOCATION}
 #
 COPY --from=builder ${INSTALL_LOCATION}/epics epics
