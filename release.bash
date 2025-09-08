@@ -15,6 +15,7 @@ function popd  { builtin popd  > /dev/null || exit; }
 Debian10="debian10.yml"
 Debian11="debian11.yml"
 Debian12="debian12.yml"
+Debian13="debian12.yml"
 #CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
 Rocky9="rocky9.yml"
@@ -25,6 +26,7 @@ ACTION_PATH="${SC_TOP}/.github/workflows";
 DEB_FILE="${ACTION_PATH}/${Debian10}";
 DEB11_FILE="${ACTION_PATH}/${Debian11}";
 DEB12_FILE="${ACTION_PATH}/${Debian12}";
+DEB13_FILE="${ACTION_PATH}/${Debian13}";
 #CEN_FILE="${ACTION_PATH}/${CentOS7}";
 ROC_FILE="${ACTION_PATH}/${Rocky8}";
 ROC9_FILE="${ACTION_PATH}/${Rocky9}";
@@ -69,6 +71,7 @@ fi
 pushd "$SC_TOP" || exit
 replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${DEB12_FILE}"
+replace_tag "${input_tag}" "${DEB13_FILE}"
 #replace_tag "${input_tag}" "${CEN_FILE}"
 replace_tag "${input_tag}" "${ROC_FILE}"
 replace_tag "${input_tag}" "${ROC9_FILE}"
