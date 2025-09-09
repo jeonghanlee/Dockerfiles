@@ -1,6 +1,6 @@
 ---
 # 0. change name
-name: Debian 13 Trixie 
+name: Debian 13 Trixie
 # change path name
 on:
   push:
@@ -18,13 +18,13 @@ jobs:
     runs-on: ubuntu-22.04
     env:
         # change the following 4 variables
-        DOCKER_FILE: debian13/Dockerfile 
+        DOCKER_FILE: debian13/Dockerfile
         DOCKER_ACCOUNT: jeonghanlee
         DOCKER_REPO: debian13-epics
-        DOCKER_TAG: 22.04
-        
+        DOCKER_TAG: latest
+
     steps:
-      - 
+      -
         name: checkout
         uses: actions/checkout@v5
       -
@@ -67,4 +67,4 @@ jobs:
           #tags: ${{ steps.meta.outputs.tags }}
           tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
- 
+
