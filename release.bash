@@ -79,6 +79,7 @@ replace_tag "${input_tag}" "${ROC9_FILE}"
 replace_tag "${input_tag}" "${ALMA_FILE}"
 popd || exit
 
+echo ""
 #git diff
 exit
 
