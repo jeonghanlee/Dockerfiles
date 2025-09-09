@@ -15,7 +15,7 @@ function popd  { builtin popd  > /dev/null || exit; }
 Debian10="debian10.yml"
 Debian11="debian11.yml"
 Debian12="debian12.yml"
-Debian13="debian12.yml"
+Debian13="debian13.yml"
 #CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
 Rocky9="rocky9.yml"
@@ -53,7 +53,7 @@ function yes_or_no_to_go
 
 }
 
-function replace_tag 
+function replace_tag
 {
     local tag="$1"; shift;
     local file="$1"; shift;
