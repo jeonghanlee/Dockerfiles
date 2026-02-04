@@ -36,7 +36,6 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     inkscape \
     ghostscript \
     qrencode \
-    fonts-noto-cjk \
     fonts-liberation && \
     cargo install mdbook --version ${MDBOOK_VERSION} && \
     apt-get clean && \
