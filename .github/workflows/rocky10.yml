@@ -1,8 +1,5 @@
----
-# 0. change name
 name: Rocky Linux 10
-#
-true:
+on:
   push:
     branches: [master]
     paths:
