@@ -1,32 +1,31 @@
 ---
 # 0. change name
-name: Debian 11 Bullseye 
-# change path name
-on:
+name: Rocky Linux 10
+#
+true:
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
-    - 'debian11/**'
-    - '.trigger/**'
-    - '.github/workflows/debian11.yml'
+      - 'rocky10/**'
+      - '.trigger/**'
+      - '.github/workflows/rocky10.yml'
   pull_request:
-    branches: [ master ]
-#    
+    branches: [master]
+
 jobs:
-# change job name
-  debian11:
+  # change job name
+  rocky10:
     runs-on: ubuntu-22.04
     env:
-        # change the following 4 variables
-        DOCKER_FILE: debian11/Dockerfile 
-        DOCKER_ACCOUNT: jeonghanlee
-        DOCKER_REPO: debian11-epics
-        DOCKER_TAG: latest
-        
+      # change the following 4 variables
+      DOCKER_FILE: rocky10/Dockerfile
+      DOCKER_ACCOUNT: jeonghanlee
+      DOCKER_REPO: rocky10-epics
+      DOCKER_TAG: v2.5.0
     steps:
-      - 
+      -
         name: checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
       -
         name: Docker meta
         id: meta
@@ -64,7 +63,6 @@ jobs:
           context: .
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
-          #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+          # tags: ${{ steps.meta.outputs.tags }}
+          tags: ${{env.DOCKER_ACCOUNT}}/${{env.DOCKER_REPO}}:${{env.DOCKER_TAG}}
           labels: ${{ steps.meta.outputs.labels }}
-          
