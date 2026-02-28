@@ -18,7 +18,7 @@ jobs:
       DOCKER_FILE: rocky10/Dockerfile
       DOCKER_ACCOUNT: jeonghanlee
       DOCKER_REPO: rocky10-epics
-      DOCKER_TAG: v2.5.0
+      DOCKER_TAG: 2.5.1
     steps:
       -
         name: checkout

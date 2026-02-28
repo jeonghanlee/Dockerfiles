@@ -19,6 +19,7 @@ Debian13="debian13.yml"
 #CentOS7="centos7.yml"
 Rocky8="rocky8.yml"
 Rocky9="rocky9.yml"
+Rocky10="rocky10.yml"
 #Sl7="sl7.yml"
 Alma8="alma8.yml"
 
@@ -30,6 +31,7 @@ DEB13_FILE="${ACTION_PATH}/${Debian13}";
 #CEN_FILE="${ACTION_PATH}/${CentOS7}";
 ROC_FILE="${ACTION_PATH}/${Rocky8}";
 ROC9_FILE="${ACTION_PATH}/${Rocky9}";
+ROC10_FILE="${ACTION_PATH}/${Rocky10}";
 #SL7_FILE="${ACTION_PATH}/${Sl7}";
 ALMA_FILE="${ACTION_PATH}/${Alma8}";
 
@@ -69,12 +71,13 @@ if [ -z "$input_tag" ]; then
 fi
 
 pushd "$SC_TOP" || exit
-replace_tag "${input_tag}" "${DEB11_FILE}"
+#replace_tag "${input_tag}" "${DEB11_FILE}"
 replace_tag "${input_tag}" "${DEB12_FILE}"
 replace_tag "${input_tag}" "${DEB13_FILE}"
 #replace_tag "${input_tag}" "${CEN_FILE}"
 replace_tag "${input_tag}" "${ROC_FILE}"
 replace_tag "${input_tag}" "${ROC9_FILE}"
+replace_tag "${input_tag}" "${ROC10_FILE}"
 #replace_tag "${input_tag}" "${SL7_FILE}"
 replace_tag "${input_tag}" "${ALMA_FILE}"
 popd || exit
