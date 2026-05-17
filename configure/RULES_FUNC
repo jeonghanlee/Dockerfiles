@@ -13,20 +13,22 @@ VARS_EXCLUDES += QUIET SHELL
 .PHONY: help
 
 help: ## Show available make targets
-	$(info -----------------------------------------)
-	$(info Make Targets)
-	$(info -----------------------------------------)
-	$(QUIET) awk '/^[a-zA-Z._0-9%-]+:/ { \
-	  nb = sub(/^## /, "", helpMsg); \
-	  if (nb == 0) { \
-	    helpMsg = $$0; \
-	    nb = sub(/^[^:]*:.* ## /, "", helpMsg); \
-	  } \
-	  if (nb) { \
-	    split($$1, target, ":"); \
-	    print target[1] "\t" helpMsg; \
-	  } \
-	} \
-	{ helpMsg = $$0 }' $(MAKEFILE_LIST) | column -ts:
+	$(QUIET) printf "%s\n" "Targets"
+	$(QUIET) printf "%s\n" "-------"
+	$(QUIET) awk '\
+	    BEGIN { section = "" } \
+	    /^##@/ { \
+	        section = substr($$0, 5); \
+	        if (seen_section++) { printf "\n" } \
+	        printf "%s\n", section; \
+	        next; \
+	    } \
+	    /^[a-zA-Z._0-9%-]+:/ { \
+	        help_msg = $$0; \
+	        if (sub(/^[^:]*:.* ## /, "", help_msg)) { \
+	            split($$1, target, ":"); \
+	            printf "  %-22s %s\n", target[1], help_msg; \
+	        } \
+	    }' $(MAKEFILE_LIST)
 
 FORCE:
