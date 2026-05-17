@@ -1,88 +1,155 @@
 #!/usr/bin/env bash
+#
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.0.4
+#  version : 0.1.0
 
-declare -g SC_SCRIPT;
-declare -g SC_TOP;
+set -euo pipefail
 
-SC_SCRIPT="$(realpath "$0")";
-SC_TOP="${SC_SCRIPT%/*}"
+SC_SCRIPT="$(realpath "$0")"
+readonly SC_SCRIPT
+readonly SC_TOP="${SC_SCRIPT%/*}"
+readonly ACTION_PATH="${SC_TOP}/.github/workflows"
 
-function pushd { builtin pushd "$@" > /dev/null || exit; }
-function popd  { builtin popd  > /dev/null || exit; }
+declare OPT_FORCE=0
+declare OPT_DRYRUN=0
+declare input_tag=""
 
-Debian10="debian10.yml"
-Debian11="debian11.yml"
-Debian12="debian12.yml"
-Debian13="debian13.yml"
-#CentOS7="centos7.yml"
-Rocky8="rocky8.yml"
-Rocky9="rocky9.yml"
-Rocky10="rocky10.yml"
-#Sl7="sl7.yml"
-Alma8="alma8.yml"
+readonly -a RELEASE_WORKFLOWS=(
+    "debian12.yml"
+    "debian13.yml"
+    "rocky8.yml"
+    "rocky9.yml"
+    "rocky10.yml"
+    "alma8.yml"
+)
 
-ACTION_PATH="${SC_TOP}/.github/workflows";
-DEB_FILE="${ACTION_PATH}/${Debian10}";
-DEB11_FILE="${ACTION_PATH}/${Debian11}";
-DEB12_FILE="${ACTION_PATH}/${Debian12}";
-DEB13_FILE="${ACTION_PATH}/${Debian13}";
-#CEN_FILE="${ACTION_PATH}/${CentOS7}";
-ROC_FILE="${ACTION_PATH}/${Rocky8}";
-ROC9_FILE="${ACTION_PATH}/${Rocky9}";
-ROC10_FILE="${ACTION_PATH}/${Rocky10}";
-#SL7_FILE="${ACTION_PATH}/${Sl7}";
-ALMA_FILE="${ACTION_PATH}/${Alma8}";
+function usage {
+    {
+        printf "\n"
+        printf "Usage: %s [options] [tag]\n" "$0"
+        printf "\n"
+        printf "Options:\n"
+        printf "  -f             Use the default latest tag without prompting\n"
+        printf "  -n             Print changes without editing workflow files\n"
+        printf "  -h             Show this help\n"
+        printf "\n"
+        printf "Examples:\n"
+        printf "  %s v2.5.1\n" "$0"
+        printf "  %s -f\n" "$0"
+        printf "\n"
+    } >&2
+    exit 1
+}
 
-function yes_or_no_to_go
-{
+function die {
+    local message="$1"
 
-    printf  "> \n";
-    printf  "> Default latest tag will be used.\n"
-    read -p ">> Do you want to continue (y/N)? " answer
-    case ${answer:0:1} in
-	y|Y )
-	    printf ">> latest tag is going to be used...... ";
-	    ;;
-	* )
-    printf  "> \n";
-            printf ">> Please use the difference tag as an input.\n";
-            printf ">> $SC_SCRIPT tag_name.\n";
-	    exit;
-    ;;
+    printf "Error: %s\n" "$message" >&2
+    exit 1
+}
+
+function parse_args {
+    local opt
+
+    while getopts ":fnh" opt; do
+        case "$opt" in
+            f)
+                OPT_FORCE=1
+                ;;
+            n)
+                OPT_DRYRUN=1
+                ;;
+            h)
+                usage
+                ;;
+            :)
+                die "option -${OPTARG} requires an argument"
+                ;;
+            \?)
+                die "invalid option: -${OPTARG}"
+                ;;
+            *)
+                usage
+                ;;
+        esac
+    done
+    shift $((OPTIND - 1))
+
+    if [[ $# -gt 1 ]]; then
+        die "only one tag argument is supported"
+    fi
+
+    input_tag="${1:-}"
+}
+
+function confirm_latest_tag {
+    local answer=""
+
+    if [[ -n "$input_tag" ]]; then
+        return 0
+    fi
+
+    input_tag="latest"
+
+    if (( OPT_FORCE )); then
+        printf "Using default tag: %s\n" "$input_tag"
+        return 0
+    fi
+
+    if [[ ! -t 0 ]]; then
+        die "no tag provided and stdin is not interactive; use -f to select latest"
+    fi
+
+    printf "> Default latest tag will be used.\n"
+    printf ">> Do you want to continue (y/N)? "
+    read -r answer
+
+    case "${answer:0:1}" in
+        y|Y)
+            printf "Using default tag: %s\n" "$input_tag"
+            ;;
+        *)
+            die "provide a tag argument or use -f to select latest"
+            ;;
     esac
-
 }
 
-function replace_tag
-{
-    local tag="$1"; shift;
-    local file="$1"; shift;
-    sed -i.bak -e "s| DOCKER_TAG:.*$| DOCKER_TAG: ${tag}|g" "${file}"
+function replace_tag {
+    local tag="$1"
+    local file="$2"
+    local tmp_file
+
+    [[ -s "$file" ]] || die "missing workflow file: ${file}"
+    grep -q '^[[:space:]]*DOCKER_TAG:' "$file" || die "DOCKER_TAG not found in ${file}"
+
+    if (( OPT_DRYRUN )); then
+        printf "Would set %s DOCKER_TAG to %s\n" "$file" "$tag"
+        return 0
+    fi
+
+    tmp_file="$(mktemp "${file}.XXXXXX")"
+    sed -E "s|^([[:space:]]*DOCKER_TAG:).*$|\\1 ${tag}|" "$file" > "$tmp_file"
+    cat "$tmp_file" > "$file"
+    rm -f "$tmp_file"
+
+    grep -q "^[[:space:]]*DOCKER_TAG: ${tag}$" "$file" || die "failed to update ${file}"
 }
 
+function update_workflows {
+    local workflow
+    local file
 
-input_tag="$1";
+    for workflow in "${RELEASE_WORKFLOWS[@]}"; do
+        file="${ACTION_PATH}/${workflow}"
+        replace_tag "$input_tag" "$file"
+    done
+}
 
-if [ -z "$input_tag" ]; then
-    input_tag="latest";
-    yes_or_no_to_go;
-fi
+function main {
+    parse_args "$@"
+    confirm_latest_tag
+    update_workflows
+}
 
-pushd "$SC_TOP" || exit
-#replace_tag "${input_tag}" "${DEB11_FILE}"
-replace_tag "${input_tag}" "${DEB12_FILE}"
-replace_tag "${input_tag}" "${DEB13_FILE}"
-#replace_tag "${input_tag}" "${CEN_FILE}"
-replace_tag "${input_tag}" "${ROC_FILE}"
-replace_tag "${input_tag}" "${ROC9_FILE}"
-replace_tag "${input_tag}" "${ROC10_FILE}"
-#replace_tag "${input_tag}" "${SL7_FILE}"
-replace_tag "${input_tag}" "${ALMA_FILE}"
-popd || exit
-
-echo ""
-#git diff
-exit
-
+main "$@"
