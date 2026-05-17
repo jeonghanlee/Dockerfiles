@@ -209,10 +209,12 @@ function append_words {
 
 function print_command {
     local -a command=("$@")
+    local separator=""
     local word
 
     for word in "${command[@]}"; do
-        printf "%q " "$word"
+        printf "%s%q" "$separator" "$word"
+        separator=" "
     done
     printf "\n"
 }
