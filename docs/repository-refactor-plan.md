@@ -22,7 +22,7 @@ The refactor should reduce operational risk without changing image behavior unne
 |---|---|---|
 | Local build tooling | `docker_builder.bash`, `release.bash`, `trigger.bash` | Build images locally, update workflow tags, trigger CI rebuilds. |
 | EPICS images | `debian*/Dockerfile`, `rocky*/Dockerfile`, `alma8/Dockerfile` | Multi-stage EPICS environment images. |
-| Utility images | `mdbook/Dockerfile`, `ggai/Dockerfile` | Documentation and Python AI tooling images. |
+| Utility images | `mdbook/Dockerfile` | Documentation build and rendering image. |
 | CI workflows | `.github/workflows/*.yml` | Build and push per-image Docker tags. |
 | Configuration | `*/env.conf` | Local build defaults for image names and build options. |
 | Project docs | `README.md`, `SUPPORT.md`, `RELEASE.md` | User-facing build and release notes. |
@@ -145,7 +145,7 @@ Decision gates:
 
 ### Phase 3: Dockerfile Resource Pass
 
-Optimize Dockerfiles in small OS-family groups. Debian, Rocky, Alma, mdbook, and ggai should be handled as separate passes because package managers and default dependency policies differ.
+Optimize Dockerfiles in small OS-family groups. Debian, Rocky, Alma, and mdbook should be handled as separate passes because package managers and default dependency policies differ.
 
 Planned Debian changes:
 
@@ -164,8 +164,8 @@ Planned Rocky and Alma changes:
 
 Planned utility image changes:
 
-- Move `ggai` dependency installation to `requirements.txt` or delete the unused requirements file.
 - Keep `mdbook` version pinned.
+- Build `mdbook` in a Rust builder stage and copy only the binary into the runtime image.
 - Review whether `ENTRYPOINT [ "" ]` should be replaced by `CMD [ "/bin/bash" ]` or omitted.
 
 Acceptance gates:
@@ -238,7 +238,7 @@ Non-ASCII findings are acceptable only when the glyph has technical meaning and 
 The refactor keeps these behaviors unchanged:
 
 - One workflow file per image.
-- Existing active image directories remain present.
+- Active image directories are limited to the maintained EPICS and mdbook images.
 - `DOCKER_BUILD_OPTS=--network=host` remains the local default.
 - `ENTRYPOINT [ "" ]` remains unchanged in existing Dockerfiles.
 - Ignored `.bak` and `.un~` files are not deleted by this refactor.

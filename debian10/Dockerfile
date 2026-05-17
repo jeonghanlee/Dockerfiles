@@ -47,7 +47,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
-    apt-get install -y --no-install-recommends openjdk-11-jre shellcheck splint cppcheck python3-pip && \
+    apt-get install -y --no-install-recommends openjdk-11-jre-headless shellcheck splint cppcheck python3-pip && \
     pip3 install --no-cache-dir gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
     ln -sf /usr/local/bin/gcovr /usr/bin/gcovr && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
