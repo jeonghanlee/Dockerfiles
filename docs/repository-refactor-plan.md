@@ -273,4 +273,4 @@ These decisions should be made before the related phase starts:
 2. Should local builds keep `--network=host` as the default?
 3. Should ignored `.bak` and `.un~` files be deleted from the working tree?
 4. Should GitHub Actions stay as one workflow per image?
-5. Should old images such as Debian 10 and Debian 11 remain active build targets?
+5. Should additional retired image directories remain archived outside this repository?
