@@ -1,0 +1,32 @@
+.DEFAULT_GOAL := help
+
+ifndef VERBOSE
+  QUIET := @
+endif
+
+ifdef DEBUG_SHELL
+  SHELL = /bin/sh -x
+endif
+
+VARS_EXCLUDES += QUIET SHELL
+
+.PHONY: help
+
+help: ## Show available make targets
+	$(info -----------------------------------------)
+	$(info Make Targets)
+	$(info -----------------------------------------)
+	$(QUIET) awk '/^[a-zA-Z._0-9%-]+:/ { \
+	  nb = sub(/^## /, "", helpMsg); \
+	  if (nb == 0) { \
+	    helpMsg = $$0; \
+	    nb = sub(/^[^:]*:.* ## /, "", helpMsg); \
+	  } \
+	  if (nb) { \
+	    split($$1, target, ":"); \
+	    print target[1] "\t" helpMsg; \
+	  } \
+	} \
+	{ helpMsg = $$0 }' $(MAKEFILE_LIST) | column -ts:
+
+FORCE:

@@ -1,0 +1,74 @@
+VARS_EXCLUDES += image_targets
+
+.PHONY: all build dry-run check check-tools check-images check-scripts
+.PHONY: check-workflows check-docs check-diff release.dry-run trigger versions
+
+all: check ## Run the default validation suite
+
+build: $(IMAGE_BUILD_TARGETS) ## Build all active Docker images
+
+dry-run: $(IMAGE_DRY_RUN_TARGETS) ## Preview all active Docker builds
+
+check: check-tools check-images check-scripts check-workflows check-docs check-diff dry-run ## Run repository validation
+
+check-tools: ## Verify tools required by validation targets
+	$(QUIET) for tool in bash git ruby shellcheck; do \
+	    if ! command -v "$$tool" >/dev/null 2>&1; then \
+	        printf "%s\n" "error: required command not found: $$tool"; \
+	        exit 1; \
+	    fi; \
+	done
+
+check-images: ## Verify each configured image has Dockerfile and env.conf
+	$(QUIET) for image in $(IMAGE_DIRS); do \
+	    test -s "$(TOP)/$$image/Dockerfile" || { printf "%s\n" "error: missing $$image/Dockerfile"; exit 1; }; \
+	    test -s "$(TOP)/$$image/env.conf" || { printf "%s\n" "error: missing $$image/env.conf"; exit 1; }; \
+	done
+
+check-scripts: ## Run Bash syntax and ShellCheck validation
+	$(QUIET) bash -n $(SCRIPT_FILES)
+	$(QUIET) shellcheck -S warning $(SCRIPT_FILES)
+
+check-workflows: ## Parse GitHub Actions workflow YAML files
+	$(QUIET) ruby -e 'require "yaml"; ARGV.each { |path| YAML.load_file(path) }' $(WORKFLOW_FILES)
+
+check-docs: ## Reject non-ASCII characters in Markdown sources
+	$(QUIET) if LC_ALL=C grep -rnP '[^\x00-\x7F]' --include='*.md' .; then \
+	    printf "%s\n" "error: non-ASCII Markdown content found"; \
+	    exit 1; \
+	fi
+
+check-diff: ## Check staged and unstaged diff whitespace
+	$(QUIET) git diff --check
+
+release.dry-run: ## Preview release tag update with latest
+	$(QUIET) $(RELEASE_TOOL) -n -f
+
+release.%: ## Update release workflow tags to the specified tag
+	$(QUIET) $(RELEASE_TOOL) $*
+
+trigger: ## Update tracked CI rebuild trigger file
+	$(QUIET) $(TRIGGER_TOOL)
+
+versions: ## Print project and tool versions
+	$(QUIET) printf "%s = %s\n" "APPNAME" "$(APPNAME)"
+	$(QUIET) printf "%s = %s\n" "PROJECT_URL" "$(PROJECT_URL)"
+	$(QUIET) printf "%s = %s\n" "IMAGE_DIRS" "$(IMAGE_DIRS)"
+	$(QUIET) git --version
+	$(QUIET) ruby --version
+	$(QUIET) shellcheck --version | sed -n '1p'
+	$(QUIET) if command -v docker >/dev/null 2>&1; then docker --version; else printf "%s\n" "docker not found"; fi
+
+define image_targets
+.PHONY: build.$(1) dry-run.$(1)
+
+build.$(1): ## Build $(1) Docker image
+	$$(QUIET) $$(DOCKER_BUILDER) -t $(1) $$(if $$(BUILD_ARGS),-a "$$(BUILD_ARGS)",)
+
+dry-run.$(1): ## Preview $(1) Docker build command
+	$$(QUIET) $$(DOCKER_BUILDER) -d -t $(1) $$(if $$(BUILD_ARGS),-a "$$(BUILD_ARGS)",)
+endef
+
+$(foreach image, $(IMAGE_DIRS), $(eval $(call image_targets,$(image))))
+
+FORCE:

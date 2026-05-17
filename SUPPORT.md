@@ -17,7 +17,7 @@ This document covers maintenance procedures for this Docker image repository.
 7. Run the local dry-run check.
 
 ```bash
-./docker_builder.bash -d -t <image>
+make dry-run.<image>
 ```
 
 ## Update Release Tags
@@ -55,7 +55,5 @@ The workflows that include `.trigger/**` in their path filters will run on the n
 Run these checks before committing script, workflow, or documentation changes:
 
 ```bash
-bash -n docker_builder.bash release.bash trigger.bash
-shellcheck -S warning docker_builder.bash release.bash trigger.bash
-git diff --check
+make check
 ```

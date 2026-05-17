@@ -1,0 +1,7 @@
+APPNAME := Dockerfiles
+APP_DESCRIPTION := Docker image definitions for ALS GitLab runner environments
+PROJECT_URL := https://github.com/jeonghanlee/Dockerfiles
+DOCKER_ACCOUNT := jeonghanlee
+
+-include $(TOP)/../RELEASE.local
+-include $(TOP)/configure/RELEASE.local
