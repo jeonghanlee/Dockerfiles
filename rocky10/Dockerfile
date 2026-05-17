@@ -12,13 +12,15 @@ RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     dnf install -y python3-pip && \
-    pip3 install numpy && \
+    pip3 install --no-cache-dir numpy && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \
     git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
-    make -C open62541-env github
+    make -C open62541-env github && \
+    dnf clean all && \
+    rm -rf /var/cache/dnf /var/cache/yum
 #
-RUN git clone https://github.com/jeonghanlee/EPICS-env && \
+RUN git clone --depth 1 https://github.com/jeonghanlee/EPICS-env && \
     bash EPICS-env/scripts/build_epics.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/install_apps.bash "${INSTALL_LOCATION}" && \
     bash EPICS-env/scripts/als.bash
@@ -54,8 +56,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     make -C open62541-env github && \
     rm -rf open62541-env && \
     dnf install -y java-21-openjdk python3-pip cppcheck && \
-    pip3 install gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
-    dnf clean all && rm -rf /var/cache/dnf/*
+    pip3 install --no-cache-dir gcovr==5.0 flawfinder==2.0.8 pyparsing==2.4.2 numpy && \
+    dnf clean all && rm -rf /var/cache/dnf /var/cache/yum
 #
 WORKDIR ${INSTALL_LOCATION}
 #

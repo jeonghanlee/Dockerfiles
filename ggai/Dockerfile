@@ -24,20 +24,13 @@ ENV TZ=${TZ}
 # Set up the timezone system-wide. This is a separate layer for better caching.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# --- Install Dependencies Directly via Command Line ---
-# The backslash (\) is used to continue the command on the next line for readability.
-RUN pip install --no-cache-dir \
-    google-generativeai \
-    python-gitlab \
-    langchain \
-    langchain_google_genai \
-    langchain_community \
-    chromadb \
-    pypdf
+# Install Python dependencies from the image-local requirements file.
+COPY requirements.txt /tmp/requirements.txt
+RUN pip install --no-cache-dir --requirement /tmp/requirements.txt && \
+    rm -f /tmp/requirements.txt
 
 # --- For Interactive Use ---
 # Set the default shell to Bash for a better interactive experience
 SHELL ["/bin/bash", "-c"]
 # Set the default command to launch a Bash shell if no other command is provided
 CMD ["/bin/bash"]
-

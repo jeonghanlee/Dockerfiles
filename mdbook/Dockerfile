@@ -38,6 +38,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     qrencode \
     fonts-liberation && \
     cargo install mdbook --version ${MDBOOK_VERSION} && \
+    rm -rf /usr/local/cargo/registry /usr/local/cargo/git && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
