@@ -1,62 +1,61 @@
-# How to
+# Repository Support Notes
 
-## Add a new Dockerfile
+## Scope
 
-* Create a docker repository in the docker hub
+This document covers maintenance procedures for this Docker image repository.
 
-* Copy other directory to new directory with the different name
+**Out of scope:** Docker Hub credential rotation, GitHub organization policy, EPICS source maintenance, and downstream GitLab runner deployment.
 
-* Update the copied one
+## Add a New Image
 
-* Update `release.bash`
-
-* Add `github action
-
-## Docker Tag
-
-```bash
-
-
-## Docker Tag
+1. Create the Docker Hub repository.
+2. Create a new image directory with `Dockerfile` and `env.conf`.
+3. Set `TARGET_NAME`, `DOCKER_ID`, `DOCKER_BUILD_OPTS`, and `BUILD_ARGS` in `env.conf`.
+4. Add a workflow in `.github/workflows/<image>.yml`.
+5. Add the image to `release.bash` only if it participates in release tag updates.
+6. Add the image to the table in `README.md`.
+7. Run the local dry-run check.
 
 ```bash
-./release.bash
->
-> Default latest tag will be used.
->> Do you want to continue (y/N)?
-#
-#
-$ ./release.bash unstablei
-$ git diff
-.
-.
-diff --git a/.github/workflows/rocky8.yml b/.github/workflows/rocky8.yml
-index fbf50f2..b5e236c 100644
---- a/.github/workflows/rocky8.yml
-+++ b/.github/workflows/rocky8.yml
-@@ -20,7 +20,7 @@ jobs:
-         DOCKER_FILE: rocky8/Dockerfile
-         DOCKER_ACCOUNT: jeonghanlee
-         DOCKER_REPO: rocky8-epics
--        DOCKER_TAG: latest
-+        DOCKER_TAG: unstable
-.
-.
-.
-$ git status
-On branch main
-Your branch is up to date with 'origin/main'.
+./docker_builder.bash -d -t <image>
+```
 
-Changes not staged for commit:
-  (use "git add <file>..." to update what will be committed)
-  (use "git restore <file>..." to discard changes in working directory)
-	modified:   .github/workflows/centos7.yml
-	modified:   .github/workflows/debian10.yml
-	modified:   .github/workflows/debian11.yml
-	modified:   .github/workflows/rocky8.yml
-	modified:   .github/workflows/sl7.yml
+## Update Release Tags
 
-$ git add ...
-$ git commit -m "..."
-$ git push
+Set a specific release tag across active release workflows:
+
+```bash
+./release.bash v2.5.1
+```
+
+Set `latest` without an interactive prompt:
+
+```bash
+./release.bash -f
+```
+
+Preview tag updates without editing workflow files:
+
+```bash
+./release.bash -n v2.5.1
+```
+
+## Trigger Active Image Rebuilds
+
+Use the trigger helper when a rebuild is required without changing an image directory.
+
+```bash
+./trigger.bash
+```
+
+The workflows that include `.trigger/**` in their path filters will run on the next push.
+
+## Validation
+
+Run these checks before committing script, workflow, or documentation changes:
+
+```bash
+bash -n docker_builder.bash release.bash trigger.bash
+shellcheck -S warning docker_builder.bash release.bash trigger.bash
+git diff --check
 ```

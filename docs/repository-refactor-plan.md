@@ -220,6 +220,29 @@ Non-ASCII findings are acceptable only when the glyph has technical meaning and 
 | Image size | `docker image inspect` or CI artifact comparison | When Docker builds run |
 | Runtime smoke test | Start shell or expected command in changed image | When Docker builds run |
 
+## Current Status
+
+| Surface | Status | Verification |
+|---|---|---|
+| Refactor plan | Applied | `git diff --check` |
+| Bash helper syntax | Applied | `bash -n docker_builder.bash release.bash trigger.bash` |
+| Bash helper static safety | Applied | `shellcheck -S warning docker_builder.bash release.bash trigger.bash` |
+| Local build dry-run | Applied | `./docker_builder.bash -d -t <image>` for each image directory |
+| Release dry-run | Applied | `./release.bash -n -f` and `./release.bash -n v2.5.1` |
+| Workflow YAML parse | Applied | `ruby -e 'require "yaml"; ARGV.each { |p| YAML.load_file(p) }' .github/workflows/*.yml` |
+| Workflow resource use | Applied | Per-image build context and pull-request login guard in each workflow |
+| Dockerfile cache cleanup | Applied | Static review and local builder dry-run |
+| Full image builds | Not run | Requires network access, Docker daemon access, and build time per image |
+| Docker Hub publishing | Not run | Push operations are intentionally outside local validation |
+
+The refactor keeps these behaviors unchanged:
+
+- One workflow file per image.
+- Existing active image directories remain present.
+- `DOCKER_BUILD_OPTS=--network=host` remains the local default.
+- `ENTRYPOINT [ "" ]` remains unchanged in existing Dockerfiles.
+- Ignored `.bak` and `.un~` files are not deleted by this refactor.
+
 ## Safety Rules for Implementation
 
 The refactor should follow these rules:
