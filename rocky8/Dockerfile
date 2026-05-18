@@ -13,6 +13,12 @@ RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
     bash pkg_automation/pkg_automation.bash -y && \
     alternatives --display python || true && \
     ls -l /usr/bin/python /usr/bin/unversioned-python /etc/alternatives/python || true && \
+    if [ ! -x /usr/bin/python3 ]; then \
+        printf "%s\n" "error: python3 command is missing after pkg_automation"; \
+        exit 1; \
+    fi && \
+    ln -sf /usr/bin/python3 /usr/local/bin/python && \
+    ls -l /usr/local/bin/python && \
     if ! command -v python >/dev/null 2>&1; then \
         printf "%s\n" "error: python command is missing after pkg_automation"; \
         exit 1; \
@@ -57,6 +63,12 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     bash pkg_automation/pkg_automation.bash -y && \
     alternatives --display python || true && \
     ls -l /usr/bin/python /usr/bin/unversioned-python /etc/alternatives/python || true && \
+    if [ ! -x /usr/bin/python3 ]; then \
+        printf "%s\n" "error: python3 command is missing after pkg_automation"; \
+        exit 1; \
+    fi && \
+    ln -sf /usr/bin/python3 /usr/local/bin/python && \
+    ls -l /usr/local/bin/python && \
     if ! command -v python >/dev/null 2>&1; then \
         printf "%s\n" "error: python command is missing after pkg_automation"; \
         exit 1; \
