@@ -8,7 +8,7 @@ FROM amd64/debian:bookworm-slim AS builder
 ARG INSTALL_LOCATION=/usr/local
 #
 RUN apt-get update -y && \
-    apt-get install -y --no-install-recommends git sudo bash wget unzip make && \
+    apt-get install -y --no-install-recommends ca-certificates git sudo bash wget unzip make && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
@@ -43,7 +43,7 @@ LABEL org.label-schema.docker.cmd="docker run -it --rm --name=deb12epics jeongha
 ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
-    apt-get install -y --no-install-recommends git sudo bash vim openjdk-17-jre-headless && \
+    apt-get install -y --no-install-recommends ca-certificates git sudo bash vim openjdk-17-jre-headless && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
     bash pkg_automation/pkg_automation.bash -y && \
     rm -rf pkg_automation && \
