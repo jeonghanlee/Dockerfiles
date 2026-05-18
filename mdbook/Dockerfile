@@ -6,7 +6,7 @@ FROM rust:slim-bookworm AS builder
 #
 ARG MDBOOK_VERSION="0.4.52"
 #
-RUN cargo install mdbook --version ${MDBOOK_VERSION}
+RUN cargo install mdbook --version ${MDBOOK_VERSION} --locked
 
 FROM debian:bookworm-slim
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"

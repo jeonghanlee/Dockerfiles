@@ -166,6 +166,7 @@ Planned Rocky changes:
 Planned utility image changes:
 
 - Keep `mdbook` version pinned.
+- Install `mdbook` with Cargo lockfile resolution so dependency updates do not raise the required Rust version unexpectedly.
 - Build `mdbook` in a Rust builder stage and copy only the binary into the runtime image.
 - Review whether `ENTRYPOINT [ "" ]` should be replaced by `CMD [ "/bin/bash" ]` or omitted.
 
