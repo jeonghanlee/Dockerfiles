@@ -21,7 +21,6 @@ readonly -a RELEASE_WORKFLOWS=(
     "rocky8.yml"
     "rocky9.yml"
     "rocky10.yml"
-    "alma8.yml"
 )
 
 function usage {

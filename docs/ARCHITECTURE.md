@@ -68,7 +68,6 @@ docker/build-push-action
 
 | Image directory | Workflow | Release tag updates |
 |---|---|---|
-| `alma8/` | `.github/workflows/alma8.yml` | Yes |
 | `debian12/` | `.github/workflows/debian12.yml` | Yes |
 | `debian13/` | `.github/workflows/debian13.yml` | Yes |
 | `mdbook/` | `.github/workflows/mdbook.yml` | No |

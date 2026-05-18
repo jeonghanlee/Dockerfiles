@@ -21,7 +21,7 @@ The refactor should reduce operational risk without changing image behavior unne
 | Area | Files | Current role |
 |---|---|---|
 | Local build tooling | `docker_builder.bash`, `release.bash`, `trigger.bash` | Build images locally, update workflow tags, trigger CI rebuilds. |
-| EPICS images | `debian*/Dockerfile`, `rocky*/Dockerfile`, `alma8/Dockerfile` | Multi-stage EPICS environment images. |
+| EPICS images | `debian*/Dockerfile`, `rocky*/Dockerfile` | Multi-stage EPICS environment images. |
 | Utility images | `mdbook/Dockerfile` | Documentation build and rendering image. |
 | CI workflows | `.github/workflows/*.yml` | Build and push per-image Docker tags. |
 | Configuration | `*/env.conf` | Local build defaults for image names and build options. |
@@ -39,7 +39,7 @@ The refactor should reduce operational risk without changing image behavior unne
 
 ### Dockerfiles
 
-The EPICS Dockerfiles repeat the same dependency installation, git clone, package automation, and runtime cleanup patterns across Debian, Rocky, and Alma variants. Several paths can reduce disk and network use:
+The EPICS Dockerfiles repeat the same dependency installation, git clone, package automation, and runtime cleanup patterns across Debian and Rocky variants. Several paths can reduce disk and network use:
 
 - Use shallow clones consistently where build semantics allow it.
 - Use `--no-install-recommends` on Debian runtime packages where package behavior is unchanged.
@@ -145,7 +145,7 @@ Decision gates:
 
 ### Phase 3: Dockerfile Resource Pass
 
-Optimize Dockerfiles in small OS-family groups. Debian, Rocky, Alma, and mdbook should be handled as separate passes because package managers and default dependency policies differ.
+Optimize Dockerfiles in small OS-family groups. Debian, Rocky, and mdbook should be handled as separate passes because package managers and default dependency policies differ.
 
 Planned Debian changes:
 
@@ -155,7 +155,7 @@ Planned Debian changes:
 - Use `pip3 install --no-cache-dir` for Python packages.
 - Apply shallow clones where full history is not required.
 
-Planned Rocky and Alma changes:
+Planned Rocky changes:
 
 - Evaluate `dnf --setopt=install_weak_deps=False install` per runtime package group.
 - Use `pip3 install --no-cache-dir` for Python packages.

@@ -1,5 +1,5 @@
-IMAGE_DIRS := alma8 debian12 debian13 mdbook rocky8 rocky9 rocky10
-RELEASE_IMAGE_DIRS := alma8 debian12 debian13 rocky8 rocky9 rocky10
+IMAGE_DIRS := debian12 debian13 mdbook rocky8 rocky9 rocky10
+RELEASE_IMAGE_DIRS := debian12 debian13 rocky8 rocky9 rocky10
 DEFAULT_IMAGE := debian13
 BUILD_ARGS :=
 
