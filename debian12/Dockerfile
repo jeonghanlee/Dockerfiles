@@ -10,7 +10,7 @@ ARG INSTALL_LOCATION=/usr/local
 RUN apt-get update -y && \
     apt-get install -y --no-install-recommends ca-certificates git sudo bash wget unzip make && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \
+    bash pkg_automation/pkg_automation.bash -y -v && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \
     git clone --depth 1 https://github.com/jeonghanlee/open62541-env.git && \
@@ -45,7 +45,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get update -y && \
     apt-get install -y --no-install-recommends ca-certificates git sudo bash vim openjdk-17-jre-headless && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \
+    bash pkg_automation/pkg_automation.bash -y -v && \
     rm -rf pkg_automation && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \

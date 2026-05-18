@@ -153,6 +153,7 @@ Planned Debian changes:
 - Add `--no-install-recommends` where package behavior is known to stay equivalent.
 - Keep `ca-certificates` explicit in stages that use HTTPS so TLS trust does not depend on recommended packages.
 - Keep package metadata cleanup in the same `RUN` layer as package installation.
+- Run `pkg_automation` with `-v` so Debian package-based Python links are verified before EPICS builds.
 - Use `pip3 install --no-cache-dir` for Python packages.
 - Apply shallow clones where full history is not required.
 
