@@ -10,20 +10,7 @@ ARG INSTALL_LOCATION=/usr/local
 RUN export LC_CTYPE=C.UTF-8 && export LC_ALL=C.UTF-8 && \
     dnf --setopt=install_weak_deps=False install -y git sudo bash wget unzip make && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \
-    alternatives --display python || true && \
-    ls -l /usr/bin/python /usr/bin/unversioned-python /etc/alternatives/python || true && \
-    if [ ! -x /usr/bin/python3 ]; then \
-        printf "%s\n" "error: python3 command is missing after pkg_automation"; \
-        exit 1; \
-    fi && \
-    ln -sf /usr/bin/python3 /usr/local/bin/python && \
-    ls -l /usr/local/bin/python && \
-    if ! command -v python >/dev/null 2>&1; then \
-        printf "%s\n" "error: python command is missing after pkg_automation"; \
-        exit 1; \
-    fi && \
-    python --version && \
+    bash pkg_automation/pkg_automation.bash -y -f && \
     dnf --setopt=install_weak_deps=False install -y python3-pip && \
     pip3 install --no-cache-dir numpy && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
@@ -60,20 +47,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     dnf update -y && \
     dnf --setopt=install_weak_deps=False install -y git sudo bash vi langpacks-en && \
     git clone --depth 1 https://github.com/jeonghanlee/pkg_automation && \
-    bash pkg_automation/pkg_automation.bash -y && \
-    alternatives --display python || true && \
-    ls -l /usr/bin/python /usr/bin/unversioned-python /etc/alternatives/python || true && \
-    if [ ! -x /usr/bin/python3 ]; then \
-        printf "%s\n" "error: python3 command is missing after pkg_automation"; \
-        exit 1; \
-    fi && \
-    ln -sf /usr/bin/python3 /usr/local/bin/python && \
-    ls -l /usr/local/bin/python && \
-    if ! command -v python >/dev/null 2>&1; then \
-        printf "%s\n" "error: python command is missing after pkg_automation"; \
-        exit 1; \
-    fi && \
-    python --version && \
+    bash pkg_automation/pkg_automation.bash -y -f && \
     rm -rf pkg_automation && \
     git clone --depth 1 https://github.com/jeonghanlee/uldaq-env && \
     make -C uldaq-env github && \

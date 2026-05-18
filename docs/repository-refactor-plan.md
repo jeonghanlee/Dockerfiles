@@ -159,7 +159,8 @@ Planned Debian changes:
 Planned Rocky changes:
 
 - Evaluate `dnf --setopt=install_weak_deps=False install` per runtime package group.
-- Provide and verify the Rocky 8 unversioned `python` command immediately after `pkg_automation` so EPICS Base RPATH tooling is available before compilation.
+- Keep Rocky unversioned `python` behavior delegated to `pkg_automation`;
+  Docker builds pass `-f` so non-interactive Python link repair cannot prompt.
 - Use `pip3 install --no-cache-dir` for Python packages.
 - Keep `dnf clean all` and cache cleanup in the same layer.
 - Keep locale setup explicit for build stages.
