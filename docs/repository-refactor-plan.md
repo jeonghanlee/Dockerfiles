@@ -151,6 +151,7 @@ Planned Debian changes:
 
 - Replace `apt update` with `apt-get update` for scripting consistency.
 - Add `--no-install-recommends` where package behavior is known to stay equivalent.
+- Keep `ca-certificates` explicit in stages that use HTTPS so TLS trust does not depend on recommended packages.
 - Keep package metadata cleanup in the same `RUN` layer as package installation.
 - Use `pip3 install --no-cache-dir` for Python packages.
 - Apply shallow clones where full history is not required.
@@ -177,6 +178,7 @@ git diff --check
 Optional gates when Docker is available:
 
 ```bash
+docker build --file debian12/Dockerfile --tag local/debian12-epics:test debian12
 docker build --file debian13/Dockerfile --tag local/debian13-epics:test debian13
 docker build --file mdbook/Dockerfile --tag local/mdbook:test mdbook
 ```
@@ -241,13 +243,14 @@ The refactor keeps these behaviors unchanged:
 - Active image directories are limited to the maintained EPICS and mdbook images.
 - `DOCKER_BUILD_OPTS=--network=host` remains the local default.
 - `ENTRYPOINT [ "" ]` remains unchanged in existing Dockerfiles.
-- Ignored `.bak` and `.un~` files are not deleted by this refactor.
+- Ignored `.bak` and `.un~` files are not bulk-deleted by this refactor.
 
 ## Safety Rules for Implementation
 
 The refactor should follow these rules:
 
 - Do not remove ignored backup files unless cleanup is explicitly approved.
+- Retired-image backup files may be removed with the retired image when the cleanup scope explicitly includes that image.
 - Do not collapse all Dockerfiles into a generator until manual Dockerfile parity is established.
 - Do not update third-party action major versions as part of formatting-only workflow cleanup.
 - Do not change image tags, Docker Hub repositories, or supported OS names as part of tooling cleanup.
