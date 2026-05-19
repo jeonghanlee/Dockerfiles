@@ -1,7 +1,7 @@
 ---
 name: mdbook
 
-on:
+"on":
   push:
     branches: [master]
     paths:
@@ -20,10 +20,9 @@ jobs:
   mdbook:
     runs-on: ubuntu-22.04
     env:
-      DOCKER_CONTEXT: mdbook
+      IMAGE_CONTEXT: mdbook
       DOCKER_FILE: mdbook/Dockerfile
-      DOCKER_ACCOUNT: jeonghanlee
-      DOCKER_REPO: mdbook
+      DOCKER_IMAGE: jeonghanlee/mdbook
       DOCKER_TAG: latest
 
     steps:
@@ -35,7 +34,7 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
+            ${{ env.DOCKER_IMAGE }}
           tags: |
             type=schedule
             type=ref,event=branch
@@ -59,8 +58,8 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v7
         with:
-          context: ${{ github.workspace }}/${{ env.DOCKER_CONTEXT }}
+          context: ${{ github.workspace }}/${{ env.IMAGE_CONTEXT }}
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}

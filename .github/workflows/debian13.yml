@@ -1,7 +1,7 @@
 ---
 name: Debian 13 Trixie
 
-on:
+"on":
   push:
     branches: [master]
     paths:
@@ -21,11 +21,10 @@ jobs:
   debian13:
     runs-on: ubuntu-22.04
     env:
-      DOCKER_CONTEXT: debian13
+      IMAGE_CONTEXT: debian13
       DOCKER_FILE: debian13/Dockerfile
-      DOCKER_ACCOUNT: jeonghanlee
-      DOCKER_REPO: debian13-epics
-      DOCKER_TAG: latest
+      DOCKER_IMAGE: jeonghanlee/debian13-epics
+      DOCKER_TAG: 2.6.0
 
     steps:
       - name: Checkout
@@ -36,7 +35,7 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
+            ${{ env.DOCKER_IMAGE }}
           tags: |
             type=schedule
             type=ref,event=branch
@@ -60,8 +59,8 @@ jobs:
         id: docker_build
         uses: docker/build-push-action@v7
         with:
-          context: ${{ github.workspace }}/${{ env.DOCKER_CONTEXT }}
+          context: ${{ github.workspace }}/${{ env.IMAGE_CONTEXT }}
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
-          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}

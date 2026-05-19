@@ -15,11 +15,12 @@ versions: ## Print project and tool versions
 	$(QUIET) git --version
 	$(QUIET) ruby --version
 	$(QUIET) shellcheck --version | sed -n '1p'
+	$(QUIET) yamllint --version
 	$(QUIET) if command -v docker >/dev/null 2>&1; then docker --version; else printf "%s\n" "docker not found"; fi
 
 ##@ Validation
 check-tools: ## Verify tools required by validation targets
-	$(QUIET) for tool in bash git ruby shellcheck; do \
+	$(QUIET) for tool in bash git ruby shellcheck yamllint; do \
 	    if ! command -v "$$tool" >/dev/null 2>&1; then \
 	        printf "%s\n" "error: required command not found: $$tool"; \
 	        exit 1; \
@@ -36,7 +37,8 @@ check-scripts: ## Run Bash syntax and ShellCheck validation
 	$(QUIET) bash -n $(SCRIPT_FILES)
 	$(QUIET) shellcheck -S warning $(SCRIPT_FILES)
 
-check-workflows: ## Parse GitHub Actions workflow YAML files
+check-workflows: ## Lint and parse GitHub Actions workflow YAML files
+	$(QUIET) yamllint $(WORKFLOW_FILES)
 	$(QUIET) ruby -e 'require "yaml"; ARGV.each { |path| YAML.load_file(path) }' $(WORKFLOW_FILES)
 
 check-docs: ## Reject non-ASCII characters in Markdown sources
