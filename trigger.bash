@@ -1,3 +1,9 @@
 #!/usr/bin/env bash
 
-LC_ALL=C tr -cd 0-9 </dev/urandom | head -c 8 > .trigger/random
+set -euo pipefail
+
+readonly TRIGGER_DIR=".trigger"
+readonly TRIGGER_FILE="${TRIGGER_DIR}/random"
+
+mkdir -p "$TRIGGER_DIR"
+printf "%08d\n" "$(((RANDOM * 32768 + RANDOM) % 100000000))" > "$TRIGGER_FILE"

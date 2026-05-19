@@ -1,40 +1,41 @@
-# 0. change name
-name: Rocky Linux 9 
-#
-on:
+---
+name: Rocky Linux 9
+
+"on":
   push:
-    branches: [ master ]
+    branches: [master]
     paths:
-    - 'rocky9/**'
-    - '.trigger/**'
-    - '.github/workflows/rocky9.yml'
+      - "rocky9/**"
+      - ".trigger/**"
+      - ".github/workflows/rocky9.yml"
   pull_request:
-    branches: [ master ]
-#    
+    branches: [master]
+    paths:
+      - "rocky9/**"
+      - ".github/workflows/rocky9.yml"
+
+permissions:
+  contents: read
+
 jobs:
-# change job name
   rocky9:
     runs-on: ubuntu-22.04
     env:
-        # change the following 4 variables
-        DOCKER_FILE: rocky9/Dockerfile 
-        DOCKER_ACCOUNT: jeonghanlee
-        DOCKER_REPO: rocky9-epics
-        DOCKER_TAG: latest
-        
+      IMAGE_CONTEXT: rocky9
+      DOCKER_FILE: rocky9/Dockerfile
+      DOCKER_IMAGE: jeonghanlee/rocky9-epics
+      DOCKER_TAG: 2.6.0
+
     steps:
-      - 
-        name: checkout
-        uses: actions/checkout@v5
-      -
-        name: Docker meta
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v5
+        uses: docker/metadata-action@v6
         with:
-          # list of Docker images to use as base name for tags
           images: |
-            ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}
-          # generate Docker tags based on the following events/attributes
+            ${{ env.DOCKER_IMAGE }}
           tags: |
             type=schedule
             type=ref,event=branch
@@ -43,27 +44,23 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=semver,pattern={{major}}
             type=sha
-      -
-        name: Set up QEMU
-        uses: docker/setup-qemu-action@v3
-      -
-        name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-      -
-        name: Login to DockerHub
-        uses: docker/login-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Login to DockerHub
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      -
-        name: Build and push
+
+      - name: Build and push
         id: docker_build
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@v7
         with:
-          context: .
+          context: ${{ github.workspace }}/${{ env.IMAGE_CONTEXT }}
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
           push: ${{ github.event_name != 'pull_request' }}
-          #tags: ${{ steps.meta.outputs.tags }}
-          tags: ${{ env.DOCKER_ACCOUNT }}/${{ env.DOCKER_REPO }}:${{ env.DOCKER_TAG }}
+          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
-          

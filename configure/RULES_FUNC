@@ -1,0 +1,34 @@
+.DEFAULT_GOAL := help
+
+ifndef VERBOSE
+  QUIET := @
+endif
+
+ifdef DEBUG_SHELL
+  SHELL = /bin/sh -x
+endif
+
+VARS_EXCLUDES += QUIET SHELL
+
+.PHONY: help
+
+help: ## Show available make targets
+	$(QUIET) printf "%s\n" "Targets"
+	$(QUIET) printf "%s\n" "-------"
+	$(QUIET) awk '\
+	    BEGIN { section = "" } \
+	    /^##@/ { \
+	        section = substr($$0, 5); \
+	        if (seen_section++) { printf "\n" } \
+	        printf "%s\n", section; \
+	        next; \
+	    } \
+	    /^[a-zA-Z._0-9%-]+:/ { \
+	        help_msg = $$0; \
+	        if (sub(/^[^:]*:.* ## /, "", help_msg)) { \
+	            split($$1, target, ":"); \
+	            printf "  %-22s %s\n", target[1], help_msg; \
+	        } \
+	    }' $(MAKEFILE_LIST)
+
+FORCE:
