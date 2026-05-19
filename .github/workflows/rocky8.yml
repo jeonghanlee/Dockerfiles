@@ -24,7 +24,7 @@ jobs:
       IMAGE_CONTEXT: rocky8
       DOCKER_FILE: rocky8/Dockerfile
       DOCKER_IMAGE: jeonghanlee/rocky8-epics
-      DOCKER_TAG: 2.6.0
+      DOCKER_TAG: latest
 
     steps:
       - name: Checkout

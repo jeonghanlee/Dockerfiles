@@ -24,7 +24,7 @@ jobs:
       IMAGE_CONTEXT: debian13
       DOCKER_FILE: debian13/Dockerfile
       DOCKER_IMAGE: jeonghanlee/debian13-epics
-      DOCKER_TAG: 2.6.0
+      DOCKER_TAG: latest
 
     steps:
       - name: Checkout
