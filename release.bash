@@ -34,7 +34,7 @@ function usage {
         printf "  -h             Show this help\n"
         printf "\n"
         printf "Examples:\n"
-        printf "  %s v2.5.1\n" "$0"
+        printf "  %s 2.6.0\n" "$0"
         printf "  %s -f\n" "$0"
         printf "\n"
     } >&2

@@ -234,7 +234,7 @@ Non-ASCII findings are acceptable only when the glyph has technical meaning and 
 | Bash helper syntax | Applied | `bash -n docker_builder.bash release.bash trigger.bash` |
 | Bash helper static safety | Applied | `shellcheck -S warning docker_builder.bash release.bash trigger.bash` |
 | Local build dry-run | Applied | `./docker_builder.bash -d -t <image>` for each image directory |
-| Release dry-run | Applied | `./release.bash -n -f` and `./release.bash -n v2.5.1` |
+| Release dry-run | Applied | `./release.bash -n -f` and `./release.bash -n 2.6.0` |
 | Workflow YAML parse | Applied | `ruby -e 'require "yaml"; ARGV.each { |p| YAML.load_file(p) }' .github/workflows/*.yml` |
 | Workflow resource use | Applied | Per-image build context and pull-request login guard in each workflow |
 | Dockerfile cache cleanup | Applied | Static review and local builder dry-run |

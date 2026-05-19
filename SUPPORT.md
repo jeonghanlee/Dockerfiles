@@ -25,7 +25,7 @@ make dry-run.<image>
 Set a specific release tag across active release workflows:
 
 ```bash
-./release.bash v2.5.1
+./release.bash 2.6.0
 ```
 
 Set `latest` without an interactive prompt:
@@ -37,7 +37,7 @@ Set `latest` without an interactive prompt:
 Preview tag updates without editing workflow files:
 
 ```bash
-./release.bash -n v2.5.1
+./release.bash -n 2.6.0
 ```
 
 ## Trigger Active Image Rebuilds
