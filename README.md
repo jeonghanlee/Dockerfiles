@@ -44,7 +44,7 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
-./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.5.1"
+./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.6.0"
 ```
 
 GitHub Actions workflows build only the image directory relevant to the workflow. Pull requests build without Docker Hub login or push. Push events to `master` log in to Docker Hub and publish the configured `DOCKER_TAG`.
@@ -52,7 +52,7 @@ GitHub Actions workflows build only the image directory relevant to the workflow
 Release tag updates are applied to active release workflows:
 
 ```bash
-./release.bash v2.5.1
+./release.bash 2.6.0
 ./release.bash -f
 ```
 
