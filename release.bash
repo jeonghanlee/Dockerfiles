@@ -16,10 +16,8 @@ declare OPT_DRYRUN=0
 declare input_tag=""
 
 readonly -a RELEASE_WORKFLOWS=(
-    "debian12.yml"
     "debian13.yml"
     "rocky8.yml"
-    "rocky9.yml"
     "rocky10.yml"
 )
 

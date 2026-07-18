@@ -68,11 +68,9 @@ docker/build-push-action
 
 | Image directory | Workflow | Release tag updates |
 |---|---|---|
-| `debian12/` | `.github/workflows/debian12.yml` | Yes |
 | `debian13/` | `.github/workflows/debian13.yml` | Yes |
 | `mdbook/` | `.github/workflows/mdbook.yml` | No |
 | `rocky8/` | `.github/workflows/rocky8.yml` | Yes |
-| `rocky9/` | `.github/workflows/rocky9.yml` | Yes |
 | `rocky10/` | `.github/workflows/rocky10.yml` | Yes |
 
 ## Configuration Scope

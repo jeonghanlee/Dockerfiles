@@ -12,10 +12,8 @@ This repository covers Dockerfiles, local helper scripts, and GitHub Actions wor
 
 | Image directory | Docker repository | Primary purpose |
 |---|---|---|
-| `debian12/` | `jeonghanlee/debian12-epics` | Debian 12 EPICS environment. |
 | `debian13/` | `jeonghanlee/debian13-epics` | Debian 13 EPICS environment. |
 | `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8 EPICS environment. |
-| `rocky9/` | `jeonghanlee/rocky9-epics` | Rocky Linux 9 EPICS environment. |
 | `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10 EPICS environment. |
 | `mdbook/` | `jeonghanlee/mdbook` | mdbook and document rendering tools. |
 
