@@ -30,27 +30,27 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 
 ```
 In progress (🔄):  none
-Done 2026-07-18:   M1.1 (this register authored on legacy-trim)
+Done 2026-07-18:   M1 complete (register · trim · reference purge) · G1 (tag 1.2.0 pushed)
 
 Next entry points:
-  ▶ ready now:   M5.1 (image name/tag scheme — owner decision only)
-  planned order: [G1] → M1.2 → M1.3 → M2.1 → M2.2 · M2.3 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
+  ▶ ready now:   M2.1 (debian13 Dockerfile rewrite) · M5.1 (image name/tag scheme — owner decision only)
+  planned order: M2.1 → M2.2 · M2.3 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
 
-External wait:  M1.2 ← G1 (legacy closing tag) · M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127)
-Operator action:  G1 tag on master (version choice open; existing: 1.0.0, v1.0.0, v1.1.0) · M5.1 scheme confirmation
+External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127)
+Operator action:  M5.1 scheme confirmation
 
-Next session entry point: after G1, start M1.2 — remove the debian12 and rocky9
-image directories, their workflows, and the configure image lists; verify with
-`make check` showing only debian13/rocky8/rocky10/mdbook remaining.
+Next session entry point: start M2.1 — rewrite `debian13/Dockerfile` to consume
+the prebuilt EPICS-env-distribution tree (sparse checkout, single RUN, ENV-baked
+environment, bake manifest), then verify the environment without sourcing.
 ```
 
-Tally: 16 tasks — ✅ 1 · 🔄 0 · ⬜ 12 · 🔒 3 / ready(▶) 1 · external gates 3 (G1·G2·G3 open)
+Tally: 16 tasks — ✅ 3 · 🔄 0 · ⬜ 11 · 🔒 2 / ready(▶) 2 · external gates 3 (G1 satisfied · G2·G3 open)
 
 ## Groups (L1)
 
 | Group | Name | Progress | Status | Next |
 | :-- | :-- | :-- | :-- | :-- |
-| M1 | Legacy trim (#26) | 1/3 | 🔄 | |
+| M1 | Legacy trim (#26) | 3/3 | ✅ | |
 | M2 | Distribution-based images (#27) | 0/3 | ⬜ | |
 | M3 | IOC runtime layer (#28) | 0/3 | ⬜ | |
 | M4 | Verification gates (#29) | 0/2 | ⬜ | |
@@ -65,9 +65,9 @@ The `Group` cell is written once per group (continuation rows are blank).
 | Group | ID | Task | Status | Next | Deps | Done when / Evidence |
 | :-- | :-- | :-- | :-- | :-: | :-- | :-- |
 | M1 Legacy trim | M1.1 | Author this register on `legacy-trim` | ✅ | | | Register authored 2026-07-18; `git diff --check` clean. |
-| | M1.2 | Remove debian12 and rocky9: image dirs, workflows, configure image lists | 🔒 | | ← G1 | `make check` passes with only debian13/rocky8/rocky10/mdbook in `IMAGE_DIRS`. |
-| | M1.3 | Purge stale references (README, release.bash target list) | ⬜ | | ← M1.2 | Repository-wide grep finds no debian12/rocky9 references. |
-| M2 Distribution images | M2.1 | Rewrite debian13 Dockerfile: sparse-checkout distribution OS tree, single fetch-place-clean RUN, ENV-baked environment, bake manifest | ⬜ | | ← M1.2, D2, D3 | Image builds; `docker run` shows `EPICS_BASE`/`EPICS_HOST_ARCH`/`PATH`/`LD_LIBRARY_PATH` set without sourcing anything. |
+| | M1.2 | Remove debian12 and rocky9: image dirs, workflows, configure image lists | ✅ | | ← G1 | 2026-07-18: dirs, workflows, and configure lists removed; stale `.bak`/`.un~` backups swept; `make check` passes with debian13/mdbook/rocky8/rocky10. |
+| | M1.3 | Purge stale references (README, release.bash target list) | ✅ | | ← M1.2 | 2026-07-18: README image table, `release.bash` workflow list, ARCHITECTURE.md rows updated; the completed 2025 refactor plan doc removed per owner decision (preserved at tag 1.2.0); repository grep clean. |
+| M2 Distribution images | M2.1 | Rewrite debian13 Dockerfile: sparse-checkout distribution OS tree, single fetch-place-clean RUN, ENV-baked environment, bake manifest | ⬜ | ▶ | ← M1.2, D2, D3 | Image builds; `docker run` shows `EPICS_BASE`/`EPICS_HOST_ARCH`/`PATH`/`LD_LIBRARY_PATH` set without sourcing anything. |
 | | M2.2 | Apply the pattern to rocky 8.10 | ⬜ | | ← M2.1 | Same verification as M2.1. |
 | | M2.3 | Apply the pattern to rocky 10.x (latest) | ⬜ | | ← M2.1 | Same verification as M2.1. |
 | M3 IOC runtime layer | M3.1 | Add procServ and con build layers (ansible-provision role recipes; sources removed after install) | ⬜ | | ← M2.1 | Both executables present and runnable in all three images. |
@@ -85,7 +85,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 
 | G | What | Blocks | Status | Evidence |
 | :-- | :-- | :-- | :-- | :-- |
-| G1 | Legacy closing tag on master (owner-run; version choice open) | M1.2 | Open | Existing tags: 1.0.0, v1.0.0, v1.1.0. |
+| G1 | Legacy closing tag on master (owner-run) | M1.2 | Satisfied 2026-07-18 | Annotated tag `1.2.0` ("Close the legacy image line") on master, pushed to origin. |
 | G2 | Docker Hub publish authorization and execution | M5.3 | Open | Owner-run push. |
 | G3 | epics-ioc-runner container execution mode | M3.3 | Open | jeonghanlee/epics-ioc-runner#127 (Backlog, filed 2026-07-18). |
 
