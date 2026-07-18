@@ -70,5 +70,5 @@ The `.trigger/random` file is a tracked rebuild trigger for image workflows that
 |---|---|
 | `docs/README.md` | Documentation index. |
 | `docs/ARCHITECTURE.md` | Repository architecture and data flow. |
-| `docs/repository-refactor-plan.md` | Refactor scope, phases, safety rules, and verification gates. |
+| `docs/milestone.md` | Work Register for the 2026 image rework cycle. |
 | `SUPPORT.md` | Maintenance procedures for adding images and updating tags. |
