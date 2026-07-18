@@ -34,7 +34,7 @@ Done 2026-07-18:   M1 complete (register · trim · reference purge) · G1 (tag 
                    · review session rs20260718_025216 converged (3 lanes, F001-F008 applied)
 
 Next entry points:
-  ▶ ready now:   morning decision packet D-1..D-8 (session convergence report, Open section)
+  ▶ ready now:   morning decision packet D-2..D-8 (D-1 resolved as D8: workflow push blocked)
                  then M2.1 (debian13 Dockerfile rewrite) · M5.1 (name/tag scheme = D-3)
   planned order: M2.1 → M2.2 · M2.3 → M2.4 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
 
@@ -104,6 +104,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | D5 | Exclude analyzer tools; GitLab tester jobs are removed on the `alsu/ci` side | 2026-07-18 |
 | D6 | `latest` tag tracks the newest image; version tags follow the distribution version | 2026-07-18 |
 | D7 | Legacy CI failures (mo-rfdist PIE, zpsc RELEASE wiring, stale template refs) are consumer-project defects, tracked in the `alliocs` register (its M5 group); no legacy image fix needed here | 2026-07-18 |
+| D8 | Docker Hub publish blocked at the workflow level (`push: false` in all three image workflows) until M5.2 lands the gated load-gate-push shape; resolves session decision D-1 | 2026-07-18 |
 
 ## Conventions
 

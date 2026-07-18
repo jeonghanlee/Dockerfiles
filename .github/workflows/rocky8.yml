@@ -61,6 +61,9 @@ jobs:
         with:
           context: ${{ github.workspace }}/${{ env.IMAGE_CONTEXT }}
           file: ${{ github.workspace }}/${{ env.DOCKER_FILE }}
-          push: ${{ github.event_name != 'pull_request' }}
+          # Docker Hub publish is blocked until the gated publish shape
+          # lands in M5.2 (register decision, 2026-07-18). Build stays as
+          # a validation step on both PR and push events.
+          push: false
           tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
           labels: ${{ steps.meta.outputs.labels }}
