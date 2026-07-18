@@ -9,8 +9,9 @@ debian13, rocky 8.10, and rocky 10.x (latest), consuming the prebuilt
 `EPICS-env-distribution` binaries. Purposes: (1) GitLab runner, (2) container
 IOC execution, (3) test environments.
 
-Mode: register-authoritative (GitHub remote; no issue-tracker workflow for this
-cycle) — this register is the status source of truth.
+Mode: register-authoritative — this register is the status source of truth.
+The cycle is mirrored to GitHub milestone `2.0.0` ("Lean images, everlasting
+EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 
 ## Format
 
@@ -49,13 +50,13 @@ Tally: 16 tasks — ✅ 1 · 🔄 0 · ⬜ 12 · 🔒 3 / ready(▶) 1 · extern
 
 | Group | Name | Progress | Status | Next |
 | :-- | :-- | :-- | :-- | :-- |
-| M1 | Legacy trim | 1/3 | 🔄 | |
-| M2 | Distribution-based images | 0/3 | ⬜ | |
-| M3 | IOC runtime layer | 0/3 | ⬜ | |
-| M4 | Verification gates | 0/2 | ⬜ | |
-| M5 | CI and publish | 0/3 | ⬜ | ▶ M5.1 |
-| M6 | Documentation | 0/1 | ⬜ | |
-| M7 | Deferred follow-ups | 0/1 | ⬜ | |
+| M1 | Legacy trim (#26) | 1/3 | 🔄 | |
+| M2 | Distribution-based images (#27) | 0/3 | ⬜ | |
+| M3 | IOC runtime layer (#28) | 0/3 | ⬜ | |
+| M4 | Verification gates (#29) | 0/2 | ⬜ | |
+| M5 | CI and publish (#30) | 0/3 | ⬜ | ▶ M5.1 |
+| M6 | Documentation (#31) | 0/1 | ⬜ | |
+| M7 | Deferred follow-ups (#32) | 0/1 | ⬜ | |
 
 ## Tasks (L2)
 
