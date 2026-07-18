@@ -30,30 +30,29 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 
 ```
 In progress (🔄):  M5.1 (scheme settled as D10; consistency application rides M5.2)
-Done 2026-07-18:   M1 complete · G1 (tag 1.2.0) · review session rs20260718_025216 converged
-                   · morning decision packet FULLY resolved (D8-D15) · D2/D3 ratified
-                   · RELEASE.md removed (D11) · rocky10-epics.yml authored in ci repo (D13)
+Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D16)
+                   · M2.1 debian13 image built and verified (1.21GB, env baked, smoke green)
 
 Next entry points:
-  ▶ ready now:   M2.1 (debian13 Dockerfile rewrite per enriched task row)
-  planned order: M2.1 → M2.2 · M2.3 → M2.4 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
+  ▶ ready now:   M2.2 (rocky 8.10) · M2.3 (rocky 10.2) · M2.4 (runtime package set)
+  planned order: M2.2 · M2.3 → M2.4 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  none standing (G2 arrives at M5.3; G4 sequencing planned after M2)
 
-Next session entry point: start M2.1 — rewrite `debian13/Dockerfile` per its
-enriched task row (distribution 1.2.1 pin, sparse fetch, ENV bake list,
-resident toolchain per D2).
+Next session entry point: apply the M2.1 Dockerfile pattern to rocky8
+(`rocky8/Dockerfile`, dnf package baseline) and rocky10 (10.2 pinned per D12),
+then derive the M2.4 runtime package set across all three images.
 ```
 
-Tally: 18 tasks — ✅ 3 · 🔄 1 · ⬜ 12 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
+Tally: 18 tasks — ✅ 4 · 🔄 1 · ⬜ 11 · 🔒 2 / ready(▶) 3 · external gates 4 (G1 satisfied · G2·G3·G4 open)
 
 ## Groups (L1)
 
 | Group | Name | Progress | Status | Next |
 | :-- | :-- | :-- | :-- | :-- |
 | M1 | Legacy trim (#26) | 3/3 | ✅ | |
-| M2 | Distribution-based images (#27) | 0/4 | ⬜ | ▶ M2.1 |
+| M2 | Distribution-based images (#27) | 1/4 | 🔄 | ▶ M2.2 |
 | M3 | IOC runtime layer (#28) | 0/3 | ⬜ | |
 | M4 | Verification gates (#29) | 0/2 | ⬜ | |
 | M5 | CI and publish (#30) | 0/3 | ⬜ | ▶ M5.1 |
@@ -69,10 +68,10 @@ The `Group` cell is written once per group (continuation rows are blank).
 | M1 Legacy trim | M1.1 | Author this register on `legacy-trim` | ✅ | | | Register authored 2026-07-18; `git diff --check` clean. |
 | | M1.2 | Remove debian12 and rocky9: image dirs, workflows, configure image lists | ✅ | | ← G1 | 2026-07-18: dirs, workflows, and configure lists removed; stale `.bak`/`.un~` backups swept; `make check` passes with debian13/mdbook/rocky8/rocky10. |
 | | M1.3 | Purge stale references (README, release.bash target list) | ✅ | | ← M1.2 | 2026-07-18: README image table, `release.bash` workflow list, ARCHITECTURE.md rows updated; the completed 2025 refactor plan doc removed per owner decision (preserved at tag 1.2.0); OS-token grep clean. Correction (rs20260718_025216 F001): the top-level README doc-index row referencing the removed plan survived that grep; fixed in this session. |
-| M2 Distribution images | M2.1 | Rewrite debian13 Dockerfile: consume `EPICS-env-distribution` `1.2.1/debian-13/7.0.10` (ARG-pinned version); OS package layer separate; sparse fetch (`--depth 1 --filter=blob:none` + sparse-checkout of the one OS tree) with `.git` removed in the same RUN; bake manifest | ⬜ | ▶ | ← M1.2 · ← D2 · ← D3 | Image builds; `docker run` without sourcing shows `EPICS_PATH`, `EPICS_BASE`, `EPICS_MODULES`, `EPICS_HOST_ARCH=linux-x86_64`; `PATH` carries base+pvxs+pmac bin dirs; `LD_LIBRARY_PATH` carries base lib only (modules resolve via RUNPATH); consumer build toolchain present; measured image size recorded. |
-| | M2.2 | Apply the pattern to rocky 8.10 | ⬜ | | ← M2.1 | Same verification as M2.1. |
-| | M2.3 | Apply the pattern to rocky 10.x (latest) | ⬜ | | ← M2.1 | Same verification as M2.1. |
-| | M2.4 | Derive and pin the minimal per-OS runtime package set (pvxs links system libevent) | ⬜ | | ← M2.1 | NEEDED set derived in-image (`readelf`/`ldd` over base bin + modules); per-OS package list pinned in the Dockerfiles; lists are needs-verification until executed in-image. |
+| M2 Distribution images | M2.1 | Rewrite debian13 Dockerfile: consume `EPICS-env-distribution` `1.2.1/debian-13/7.0.10` (ARG-pinned version); OS package layer separate; sparse fetch (`--depth 1 --filter=blob:none` + sparse-checkout of the one OS tree) with `.git` removed in the same RUN; bake manifest | ✅ | | ← M1.2 · ← D2 · ← D3 | 2026-07-18: built and verified — all baked variables present without sourcing; PATH = pmac+pvxs+base bins; LD_LIBRARY_PATH = base lib only; gcc/make/perl/python resolve; manifest records distribution commit e2c1b4e; module inventory 64/64; size 1.21GB (legacy rocky9 was 2.2GB). Smoke beyond done-when: `pvxinfo -V` loads (system libevent OK), softIoc registers a calc record. Deep gate (D17): alliocs harness in-container, 24/24 public-scope IOCs compile green; 6 fails all external (site modules, GitHub regressions — alliocs M4.5). |
+| | M2.2 | Apply the pattern to rocky 8.10 | ⬜ | ▶ | ← M2.1 | Same verification as M2.1. |
+| | M2.3 | Apply the pattern to rocky 10.x (10.2 pinned per D12) | ⬜ | ▶ | ← M2.1 | Same verification as M2.1. |
+| | M2.4 | Derive and pin the minimal per-OS runtime package set (pvxs links system libevent) | ⬜ | ▶ | ← M2.1 | NEEDED set derived in-image (`readelf`/`ldd` over base bin + modules); per-OS package list pinned in the Dockerfiles; lists are needs-verification until executed in-image. |
 | M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ⬜ | | ← M2.1 · ← M2.2 · ← M2.3 | Both executables present and runnable in all three images. |
 | | M3.2 | Include the `tools` IOC generator | ⬜ | | ← M3.1 | Inside a container: generate an IOC, build it, start it. |
 | | M3.3 | Reintroduce ioc-runner (container execution mode) | 🔒 | | ← M3.1 · ← G3 | ioc-runner start/stop works in a systemd-less container. |
@@ -113,6 +112,8 @@ The `Group` cell is written once per group (continuation rows are blank).
 | D13 | GitLab consumer cutover is coordinated (no transition stub): `alsu/ci` template change and runner-image rollout land together under G4; `rocky10-epics.yml` (builder-only) authored in the ci repository (session D-6) | 2026-07-18 |
 | D14 | M6 is a full documentation overhaul: keep only needed documents, create new ones where warranted, retire obsolete ones — README, ARCHITECTURE.md, SUPPORT.md all in scope (session D-7) | 2026-07-18 |
 | D15 | Image vulnerability scanning deferred to the backlog (M7.2) — base-OS findings are not actionable here (session D-8) | 2026-07-18 |
+| D16 | In-image install root is `/opt/epics/<dist-version>/<os-dir>/<epics-version>` — the distribution tree shape preserved under `/opt/epics`, version visible in the path | 2026-07-18 |
+| D17 | Consumer-compile deep gate = alliocs harness run in-container with the exclusion set recorded as alliocs M4.5 (2 GitHub regressions + 5 credential-gated clones). Site-module IOCs (llrf, mks937b, rga, vac-plc) are outside public-image scope: llrf resolves at distribution 1.3.0 (feed goes public — bump the `DIST_VERSION` ARG); the other three stay site-scoped | 2026-07-18 |
 
 ## Conventions
 
