@@ -41,8 +41,10 @@ check-workflows: ## Lint and parse GitHub Actions workflow YAML files
 	$(QUIET) yamllint $(WORKFLOW_FILES)
 	$(QUIET) ruby -e 'require "yaml"; ARGV.each { |path| YAML.load_file(path) }' $(WORKFLOW_FILES)
 
+# docs/milestone.md is the Work Register; its format persists status markers
+# (emoji, typed arrows), so it is exempt from the non-ASCII gate.
 check-docs: ## Reject non-ASCII characters in Markdown sources
-	$(QUIET) if LC_ALL=C grep -rnP '[^\x00-\x7F]' --include='*.md' .; then \
+	$(QUIET) if LC_ALL=C grep -rnP '[^\x00-\x7F]' --include='*.md' --exclude=milestone.md .; then \
 	    printf "%s\n" "error: non-ASCII Markdown content found"; \
 	    exit 1; \
 	fi
