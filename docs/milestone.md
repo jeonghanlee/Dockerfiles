@@ -31,12 +31,12 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 ```
 In progress (🔄):  M5.1 (scheme settled as D10; consistency application rides M5.2)
 Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D18)
-                   · M2 COMPLETE (4/4): three images built, verified, and pruned
-                     (912/891/944MB after M2.4; deep gate 30/35 unchanged post-prune)
+                   · M2 COMPLETE (4/4): three images built, verified, pruned (912/891/944MB)
+Done 2026-07-19:   M3.1 (procServ 2.9.0-dev + con in all three; deep gate 30/35 unchanged)
 
 Next entry points:
-  ▶ ready now:   M3.1 (procServ + con)
-  planned order: M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
+  ▶ ready now:   M3.2 (tools IOC generator)
+  planned order: M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  none standing (G2 arrives at M5.3; G4 sequencing planned after M2)
@@ -46,7 +46,7 @@ opencv, unused X11/motif dev headers) from all three images, confirming each cut
 is unused via in-image readelf NEEDED, then rebuild through the deep gate.
 ```
 
-Tally: 19 tasks — ✅ 7 · 🔄 1 · ⬜ 9 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
+Tally: 19 tasks — ✅ 8 · 🔄 1 · ⬜ 8 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
 
 ## Groups (L1)
 
@@ -54,7 +54,7 @@ Tally: 19 tasks — ✅ 7 · 🔄 1 · ⬜ 9 · 🔒 2 / ready(▶) 1 · externa
 | :-- | :-- | :-- | :-- | :-- |
 | M1 | Legacy trim (#26) | 3/3 | ✅ | |
 | M2 | Distribution-based images (#27) | 4/4 | ✅ | |
-| M3 | IOC runtime layer (#28) | 0/3 | ⬜ | ▶ M3.1 |
+| M3 | IOC runtime layer (#28) | 1/3 | 🔄 | ▶ M3.2 |
 | M4 | Verification gates (#29) | 0/2 | ⬜ | |
 | M5 | CI and publish (#30) | 0/3 | 🔄 | |
 | M6 | Documentation (#31) | 0/1 | ⬜ | |
@@ -73,8 +73,8 @@ The `Group` cell is written once per group (continuation rows are blank).
 | | M2.2 | Apply the pattern to rocky 8.10 | ✅ | | ← M2.1 | 2026-07-18: built first-try; env baked, tools resolve, 64/64 modules, pvxinfo loads (el8 system libevent), record registers; 1.11GB. Deep gate (definitive, container-native): 35/35 cloned, 30 green, 5 fails all external (4 site-module + nsls2 bpc-ioc) — matches rocky10 exactly. |
 | | M2.3 | Apply the pattern to rocky 10.x (10.2 pinned per D12) | ✅ | | ← M2.1 | 2026-07-18: built first-try on `rockylinux:10.2` (os-release 10.2 confirmed); el10 package renames applied (crb, pcre2-devel, libusb1-devel, python3 default); same verification battery green; 1.31GB. Deep gate (definitive, container-native with seeded known_hosts): 35/35 cloned, 30 green on the el10 toolchain — zero image-attributable failures. Fails: 4 site-module IOCs (llrf/mks937b/rga/vac-plc, D17) + alsu/nsls2 `bpc-ioc` (new-line repo defect, alliocs M4 territory). Earlier 23/24 counts were host-tree snapshot subsets, not build differences. |
 | | M2.4 | Prune pure surplus from the dev-carrying images (D18 option 1) | ✅ | | ← M2.1 · ← D18 | 2026-07-18: 10-lane dependency review (rs20260718_192908) — cut X11/Motif (Xt/Xmu/Xpm/motif), netcdf/tiff/png, boost, plus per-OS libbz2/hidapi (debian), `pcre-devel` PCRE1 family (rocky8) / `pcre2-devel` (rocky10), libcurl, legacy libusb-0.1 (rocky); GUI extensions confirmed out of scope (owner). All cuts have zero linkage, zero module-header reference, zero consumer-IOC-build reference. Verified per image: `ldd` over base+modules clean (no "not found"), softIoc/pvxs smoke green, deep gate unchanged 30/35. Size: debian13 1.22->0.91GB, rocky8 1.11->0.89GB, rocky10 1.31->0.94GB. Residue deferred to M7.3: runtime-vs-dev downgrades, flex/ncurses-devel (disputed), and `pcre2-devel` on rocky8 (unavoidable transitive dep of `libselinux-devel`; `--whatrequires` by name empty, pulled by pcre2 capability). |
-| M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ⬜ | ▶ | ← M2.1 · ← M2.2 · ← M2.3 | Both executables present and runnable in all three images. |
-| | M3.2 | Include the `tools` IOC generator | ⬜ | | ← M3.1 | Inside a container: generate an IOC, build it, start it. |
+| M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ✅ | | ← M2.1 · ← M2.2 · ← M2.3 | 2026-07-19: both built in one RUN with a transient autotools set (autoconf/automake/libtool) installed and removed in-layer; procServ 2.9.0-dev + con present in all three images, commits recorded in the bake manifest. Runnable proof beyond --version: procServ launches a softIoc that stays alive. autotools removal verified not to touch the consumer toolchain (gcc/make/perl intact) — deep gate unchanged 30/35 on all three. Size: debian13 912->914MB, rocky8 891->931MB, rocky10 944->970MB. |
+| | M3.2 | Include the `tools` IOC generator | ⬜ | ▶ | ← M3.1 | Inside a container: generate an IOC, build it, start it. |
 | | M3.3 | Reintroduce ioc-runner (container execution mode) | 🔒 | | ← M3.1 · ← G3 | ioc-runner start/stop works in a systemd-less container. |
 | M4 Verification gates | M4.1 | Container gate script: softIoc start, record registration, CA data path, PVA execution probe, module inventory count (64 at 1.2.1), dead-symlink scan, vendored `check_deps.bash` (explicit tree path; binutils present; RPATH hygiene only). Deep-gate runs must seed `/root/.ssh/known_hosts` (ssh-keyscan git-local:8022 + github.com) before invoking the alliocs harness — its `iocs.bash:36` exports its own `GIT_SSH_COMMAND`, overriding any caller accept-new setting (found 2026-07-18 by execution) | ⬜ | | ← M2.1 · ← M2.2 · ← M2.3 | All gates pass on all three images. |
 | | M4.2 | Wire the gates into CI per image build | ⬜ | | ← M4.1 · ← M5.2 | Every PR and push build loads the image, runs the gates, and pushes only after the gates pass on that same build. |

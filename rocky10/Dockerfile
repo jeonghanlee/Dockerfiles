@@ -61,6 +61,23 @@ RUN git clone --depth 1 --filter=blob:none --sparse "${DIST_REPO}" /tmp/dist && 
     printf '%s %s %s %s\n' EPICS-env-distribution "${DIST_REPO}" "$(git -C /tmp/dist rev-parse HEAD)" "$(date -u +%FT%TZ)" > /etc/epics-bake.manifest && \
     rm -rf /tmp/dist
 
+# IOC runtime tools (register M3.1): procServ and con, built from source in the
+# final image (recipes mirror ansible-provision app_procserv / app_con). The
+# autotools set procServ needs (autoconf/automake/libtool) is not needed by
+# consumer IOC builds, so it is installed and removed within this one layer.
+RUN set -e; \
+    dnf install -y autoconf automake libtool && \
+    git clone --depth 1 https://github.com/jeonghanlee/procServ-env /tmp/procServ-env && \
+    make -C /tmp/procServ-env init && make -C /tmp/procServ-env conf && \
+    make -C /tmp/procServ-env build && make -C /tmp/procServ-env install && \
+    printf '%s %s %s %s\n' procServ-env https://github.com/jeonghanlee/procServ-env "$(git -C /tmp/procServ-env rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    git clone --depth 1 https://github.com/jeonghanlee/con /tmp/con && \
+    make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
+    printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    dnf remove -y autoconf automake libtool && dnf clean all && \
+    rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
+    test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
+
 # Baked environment (D3, ratified 2026-07-18): variable list and PATH order
 # follow the verified setEpicsEnv.bash baseline; LD_LIBRARY_PATH carries the
 # base lib dir only - modules resolve through their RUNPATH.
