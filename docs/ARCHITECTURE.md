@@ -58,9 +58,10 @@ docker/build-push-action
 |   |-- Dockerfile
 |   `-- env.conf
 |-- .github/workflows/
+|   |-- image.yml
 |   `-- <image>.yml
 |-- docker_builder.bash
-|-- release.bash
+|-- gate.bash
 `-- trigger.bash
 ```
 
@@ -87,9 +88,9 @@ docker/build-push-action
 
 | Surface | Make target | Direct command |
 |---|---|---|
-| Bash syntax | `make check-scripts` | `bash -n docker_builder.bash release.bash trigger.bash` |
-| Bash static analysis | `make check-scripts` | `shellcheck -S warning docker_builder.bash release.bash trigger.bash` |
+| Bash syntax | `make check-scripts` | `bash -n docker_builder.bash gate.bash trigger.bash` |
+| Bash static analysis | `make check-scripts` | `shellcheck -S warning docker_builder.bash gate.bash trigger.bash` |
 | Workflow YAML parse | `make check-workflows` | `ruby -e 'require "yaml"; ARGV.each { |p| YAML.load_file(p) }' .github/workflows/*.yml` |
 | Docker build preview | `make dry-run` | `./docker_builder.bash -d -t <image>` |
-| Release tag preview | `make release.dry-run` | `./release.bash -n -f` |
+| Container gate | `make gate.<image>` | `docker run --rm -v $PWD/gate.bash:/gate.bash:ro <image> bash /gate.bash` |
 | Diff whitespace | `make check-diff` | `git diff --check` |

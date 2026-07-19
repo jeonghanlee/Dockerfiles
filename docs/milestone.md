@@ -32,13 +32,14 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 In progress (🔄):  M5.1 (scheme settled as D10; consistency application rides M5.2)
 Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D18)
                    · M2 COMPLETE (4/4): three images built, verified, pruned (912/891/944MB)
-Done 2026-07-19:   M3.1 (procServ 2.9.0-dev + con) · tools deferred to M7.4 (owner)
-                   · M4.1 (gate.bash 11/11 on all three; make gate target; 3-reviewer session)
+Done 2026-07-19:   M3.1 (procServ+con) · tools -> M7.4 · M4.1 (gate.bash 11/11, 3 reviewers)
+                   · M5.1 (tag scheme applied) · M5.2/M4.2 authored (reusable image.yml +
+                     gate-before-publish; release.bash retired; dist-version/versions helpers)
 
 Next entry points:
-  ▶ ready now:   M5 CI rework — finish M5.1 (tag scheme D10) and land M5.2 (reusable
-                 workflow D9, dual-tag, gated push); then M4.2 wires gate.bash into it
-  planned order: M5.1+M5.2 → M4.2 → [G2] M5.3 → M6.1 ; M3.3 stays behind G3 (#127)
+  ▶ ready now:   M6.1 (documentation overhaul — README/ARCHITECTURE/SUPPORT)
+  planned order: M6.1 → then master PR-run verifies M5.2/M4.2 CI-green → [G2] M5.3
+  external wait: M5.2/M4.2 CI-green ← the master PR-run (deferred to merge-prep) ; M3.3 ← G3
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  none standing (G2 arrives at M5.3; G4 sequencing planned after M2)
@@ -48,7 +49,7 @@ opencv, unused X11/motif dev headers) from all three images, confirming each cut
 is unused via in-image readelf NEEDED, then rebuild through the deep gate.
 ```
 
-Tally: 19 tasks — ✅ 9 · 🔄 1 · ⬜ 7 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
+Tally: 19 tasks — ✅ 10 · 🔄 2 · ⬜ 5 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
 
 ## Groups (L1)
 
@@ -57,9 +58,9 @@ Tally: 19 tasks — ✅ 9 · 🔄 1 · ⬜ 7 · 🔒 2 / ready(▶) 1 · externa
 | M1 | Legacy trim (#26) | 3/3 | ✅ | |
 | M2 | Distribution-based images (#27) | 4/4 | ✅ | |
 | M3 | IOC runtime layer (#28) | 1/2 | 🔄 | (M3.3 blocked; tools deferred to M7.4) |
-| M4 | Verification gates (#29) | 1/2 | 🔄 | (M4.2 waits on M5.2) |
-| M5 | CI and publish (#30) | 0/3 | 🔄 | ▶ M5.2 |
-| M6 | Documentation (#31) | 0/1 | ⬜ | |
+| M4 | Verification gates (#29) | 1/2 | 🔄 | (M4.2 authored; CI-green pending PR) |
+| M5 | CI and publish (#30) | 1/3 | 🔄 | (M5.2 authored; CI-green pending PR) |
+| M6 | Documentation (#31) | 0/1 | ⬜ | ▶ M6.1 |
 | M7 | Deferred follow-ups (#32) | 0/4 | ⬜ | |
 
 ## Tasks (L2)
@@ -78,11 +79,11 @@ The `Group` cell is written once per group (continuation rows are blank).
 | M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ✅ | | ← M2.1 · ← M2.2 · ← M2.3 | 2026-07-19: both built in one RUN with a transient autotools set (autoconf/automake/libtool) installed and removed in-layer; procServ 2.9.0-dev + con present in all three images, commits recorded in the bake manifest. Runnable proof beyond --version: procServ launches a softIoc that stays alive. autotools removal verified not to touch the consumer toolchain (gcc/make/perl intact) — deep gate unchanged 30/35 on all three. Size: debian13 912->914MB, rocky8 891->931MB, rocky10 944->970MB. |
 | | M3.3 | Reintroduce ioc-runner (container execution mode) | 🔒 | | ← M3.1 · ← G3 | ioc-runner start/stop works in a systemd-less container. |
 | M4 Verification gates | M4.1 | Container gate script `gate.bash` + `make gate[.<image>]` target | ✅ | | ← M2.1 · ← M2.2 · ← M2.3 | 2026-07-19: `gate.bash` (11 gates G0-G10: env-baked, inventory 64, dead-symlink, pairing, module artifacts, softIoc+record, CA data path, PVA data path via softIocPVA+pvxget, relocatable linkage, IOC tools, bake manifest) runs in a built image; `make gate` covers RELEASE_IMAGE_DIRS (mdbook excluded), gate.bash added to check-scripts. 3-reviewer session rs20260719_005012 caught a blocking G8 false-pass (accepted empty/missing runpath) and its rocky false-fail; G8 rewritten to require a non-empty $ORIGIN-relative runpath (accepts DT_RPATH and DT_RUNPATH), G7 upgraded from pvxinfo to a real PVA round-trip, pairing gate added. Result: 11/11 on debian13/rocky8/rocky10 (run in default bridge net — host net breaks localhost CA/PVA). |
-| | M4.2 | Wire the gates into CI per image build | ⬜ | | ← M4.1 · ← M5.2 | Every PR and push build loads the image, runs the gates, and pushes only after the gates pass on that same build. |
-| M5 CI and publish | M5.1 | Settle the image name/tag scheme (`latest` tracks newest; version tags follow the distribution version) | 🔄 | | | Scheme settled and recorded as D10 (2026-07-18); remaining: env.conf and workflow tag expressions made consistent, which lands with M5.2's dual-tag plumbing. |
-| | M5.2 | Update GitHub Actions for the 3-OS build (shape per morning decision D-2): dual-tag plumbing (build-push `tags` list or metadata outputs; `release.bash` rework-or-retire; `docker_builder.bash`/env.conf tag extension or recorded latest-only), `concurrency` group, trigger mechanism kept or replaced explicitly | ⬜ | ▶ | ← M2.1 · ← M2.2 · ← M2.3 · ← M5.1 | CI green, evidenced via a PR to master (workflows do not fire from `legacy-trim` pushes). |
+| | M4.2 | Wire the gates into CI per image build | 🔄 | | ← M4.1 · ← M5.2 | 2026-07-19: implemented inside the reusable `image.yml` (M5.2) — build+`load` then `docker run` the loaded image against `gate.bash`; publish only runs after the gate step. PENDING the same PR-to-master CI-green run as M5.2. |
+| M5 CI and publish | M5.1 | Settle the image name/tag scheme (`latest` tracks newest; version tags follow the distribution version) | ✅ | | | Settled as D10 (2026-07-18) and applied 2026-07-19: tags derive from the Dockerfile `DIST_VERSION` ARG (single source); version management is `make dist-version.<v>` (bump all three) + `make versions` (show), replacing the retired `release.bash` (D21). |
+| | M5.2 | Reworked GitHub Actions: reusable `image.yml` + 3 thin callers | 🔄 | | ← M2.1 · ← M2.2 · ← M2.3 · ← M5.1 | 2026-07-19 authored + locally validated (yamllint + `make check` clean): reusable `workflow_call` (D9) does build+`load` -> run `gate.bash` (M4.2) -> publish `latest`+`<DIST_VERSION>` (D10) only on a manual `workflow_dispatch` on master after the gate (D8; no auto-publish on merge). `release.bash` retired. Concurrency group + `gate.bash`/`image.yml` path filters added. PENDING: CI-green verification via a PR to master (deferred to merge-prep per owner). |
 | | M5.3 | Publish to Docker Hub | 🔒 | | ← G2 | Tags visible on Docker Hub per the M5.1 scheme. |
-| M6 Documentation | M6.1 | Documentation overhaul per D14: keep only needed documents, create new ones where warranted, retire obsolete ones (README, ARCHITECTURE.md, SUPPORT.md in scope) | ⬜ | | ← M2.1 · ← M3.1 · ← M5.2 | Non-ASCII markdown check and `git diff --check` pass; every remaining document matches the shipped structure; retired documents are recorded in the removing commit. |
+| M6 Documentation | M6.1 | Documentation overhaul per D14: keep only needed documents, create new ones where warranted, retire obsolete ones (README, ARCHITECTURE.md, SUPPORT.md in scope) | ⬜ | ▶ | ← M2.1 · ← M3.1 · ← M5.2 | Non-ASCII markdown check and `git diff --check` pass; every remaining document matches the shipped structure; retired documents are recorded in the removing commit. |
 | M7 Deferred | M7.1 | mdbook image modernization | ⬜ | | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages template flow (scheduled independently, outside this cycle). |
 | | M7.2 | Image vulnerability scanning (report-only) | ⬜ | | | Backlogged per D15; done-when defined when picked up. |
 | | M7.3 | Runtime-only slim image variant (D18 option 2): no compiler/`-devel`, minimal NEEDED set only, separate tag; for pure IOC execution (softIoc/runtime), not runner builds | ⬜ | | | Backlogged per D18; done-when defined when picked up. |
@@ -121,6 +122,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | D18 | Package footprint split in two designs: (1) prune only pure surplus while keeping the runner dev toolchain — priority, this cycle as M2.4; (2) a separate runtime-only slim image with no toolchain for pure execution — backlog as M7.3 | 2026-07-18 |
 | D19 | The `tools` IOC generator is deferred out of this cycle's M3 and held in the backlog (M7.4); owner "툴은 일단 빼자" | 2026-07-19 |
 | D20 | Observed via M4.1 gate (rs20260719_005012): rocky8/rocky10 `EPICS-env-distribution` binaries emit DT_RPATH (still `$ORIGIN`-relative, so relocatable) while debian uses DT_RUNPATH — a rocky-toolchain default (missing `-Wl,--enable-new-dtags`). Functionally fine; an upstream distribution-build fix, out of this repo's scope; surfaced to the owner. G8 accepts both tags. | 2026-07-19 |
+| D21 | Version management: `release.bash` retired (its workflow-tag-sed model is dead). The image content version is the Dockerfile `DIST_VERSION` ARG (single source, read by CI for tags); `make dist-version.<v>` bumps all EPICS images at once; `make versions` shows per-image versions + repo git. Repo releases stay on git tags + GitHub Releases | 2026-07-19 |
 
 ## Conventions
 

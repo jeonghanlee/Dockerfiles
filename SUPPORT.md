@@ -12,7 +12,7 @@ This document covers maintenance procedures for this Docker image repository.
 2. Create a new image directory with `Dockerfile` and `env.conf`.
 3. Set `TARGET_NAME`, `DOCKER_ID`, `DOCKER_BUILD_OPTS`, and `BUILD_ARGS` in `env.conf`.
 4. Add a workflow in `.github/workflows/<image>.yml`.
-5. Add the image to `release.bash` only if it participates in release tag updates.
+5. Add the image to `RELEASE_IMAGE_DIRS` in `configure/CONFIG_SITE` if it is an EPICS image (so `make gate` and `make dist-version` cover it).
 6. Add the image to the table in `README.md`.
 7. Run the local dry-run check.
 
@@ -20,24 +20,22 @@ This document covers maintenance procedures for this Docker image repository.
 make dry-run.<image>
 ```
 
-## Update Release Tags
+## Update the EPICS Environment Version
 
-Set a specific release tag across active release workflows:
+An image's version is the `EPICS-env-distribution` version pinned in its
+`DIST_VERSION` build argument. CI reads that argument and publishes the
+`latest` and `<version>` tags from it. A distribution bump is a coordinated
+change across all EPICS images:
 
 ```bash
-./release.bash 2.6.0
+make dist-version.1.2.2
 ```
 
-Set `latest` without an interactive prompt:
+Review the resulting Dockerfile changes, then commit. Show the current
+versions at any time:
 
 ```bash
-./release.bash -f
-```
-
-Preview tag updates without editing workflow files:
-
-```bash
-./release.bash -n 2.6.0
+make versions
 ```
 
 ## Trigger Active Image Rebuilds

@@ -1,7 +1,7 @@
 VARS_EXCLUDES += image_targets
 
 .PHONY: all build dry-run gate check check-tools check-images check-scripts
-.PHONY: check-workflows check-docs check-diff release.dry-run trigger versions
+.PHONY: check-workflows check-docs check-diff trigger versions
 
 ##@ General
 all: check ## Run the default validation suite
@@ -17,6 +17,11 @@ versions: ## Print project and tool versions
 	$(QUIET) shellcheck --version | sed -n '1p'
 	$(QUIET) yamllint --version
 	$(QUIET) if command -v docker >/dev/null 2>&1; then docker --version; else printf "%s\n" "docker not found"; fi
+	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
+	    v="$$(grep -m1 -oE 'DIST_VERSION=[0-9.]+' "$(TOP)/$$d/Dockerfile" | cut -d= -f2)"; \
+	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$$v"; \
+	done
+	$(QUIET) printf "%s = %s\n" "repo git" "$$(git -C $(TOP) describe --tags --always 2>/dev/null)"
 
 ##@ Validation
 check-tools: ## Verify tools required by validation targets
@@ -62,11 +67,11 @@ dry-run: $(IMAGE_DRY_RUN_TARGETS) ## Preview all active Docker builds
 gate: $(IMAGE_GATE_TARGETS) ## Run the container gate against all EPICS images
 
 ##@ Release
-release.dry-run: ## Preview release tag update with latest
-	$(QUIET) $(RELEASE_TOOL) -n -f
-
-release.%: ## Update release workflow tags to the specified tag
-	$(QUIET) $(RELEASE_TOOL) $*
+dist-version.%: ## Set DIST_VERSION across all EPICS image Dockerfiles (e.g. dist-version.1.2.2)
+	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
+	    sed -i -E "s/^(ARG DIST_VERSION=).*/\1$*/" "$(TOP)/$$d/Dockerfile"; \
+	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$*"; \
+	done
 
 trigger: ## Update tracked CI rebuild trigger file
 	$(QUIET) $(TRIGGER_TOOL)

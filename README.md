@@ -31,7 +31,8 @@ make check
 make dry-run
 make dry-run.debian13
 make build.debian13
-make release.dry-run
+make gate.debian13
+make versions
 ```
 
 The `make check` target runs script validation, workflow YAML parsing, markdown character checks, whitespace checks, and Docker build dry-runs for all active images.
@@ -45,16 +46,13 @@ The helper scripts remain available for direct use.
 ./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.6.0"
 ```
 
-GitHub Actions workflows build only the image directory relevant to the workflow. Pull requests build without Docker Hub login or push. Docker Hub publishing is currently disabled in all image workflows pending the gated publish rework.
+GitHub Actions builds each EPICS image through a shared reusable workflow, loads it into the runner, and runs the container verification gate (`gate.bash`) against it. Pull requests and master pushes build and gate only. Docker Hub publishing runs solely on a manual `workflow_dispatch` on `master`, after the gate passes, tagging `latest` and the distribution version.
 
-Release tag updates are applied to active release workflows:
+An image's version is the `EPICS-env-distribution` version pinned in its `DIST_VERSION` build argument, which CI reads for the published tags. Bump it across all EPICS images at once:
 
 ```bash
-./release.bash 2.6.0
-./release.bash -f
+make dist-version.1.2.2
 ```
-
-The `-f` form selects `latest` without an interactive prompt.
 
 ## CI Rebuild Trigger
 
