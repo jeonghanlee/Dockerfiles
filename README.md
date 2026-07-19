@@ -1,6 +1,6 @@
 # Dockerfile Collections for GitLab Local Runners
 
-This repository contains Docker image definitions for ALS GitLab runner and documentation environments. The images are built by GitHub Actions and published under the `jeonghanlee` Docker Hub account.
+This repository contains Docker image definitions for ALS GitLab runner, container IOC, and test environments. The EPICS images consume a prebuilt EPICS environment from `EPICS-env-distribution` and are built by GitHub Actions under the `jeonghanlee` Docker Hub account.
 
 ## Scope
 
@@ -13,13 +13,13 @@ This repository covers Dockerfiles, local helper scripts, and GitHub Actions wor
 | Image directory | Docker repository | Primary purpose |
 |---|---|---|
 | `debian13/` | `jeonghanlee/debian13-epics` | Debian 13 EPICS environment. |
-| `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8 EPICS environment. |
-| `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10 EPICS environment. |
+| `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8.10 EPICS environment. |
+| `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10.2 EPICS environment. |
 | `mdbook/` | `jeonghanlee/mdbook` | mdbook and document rendering tools. |
 
 ## Build Data Flow
 
-Local builds read `<image>/env.conf`, apply optional CLI overrides, and run `docker build` from the image directory.
+Each EPICS image consumes a prebuilt `EPICS-env-distribution` tree, bakes the environment via `ENV`, and carries `procServ`/`con` plus the consumer build toolchain. Local builds read `<image>/env.conf`, apply optional CLI overrides, and run `docker build` from the image directory. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layer breakdown and CI topology.
 
 ## Makefile Workflow
 
@@ -43,7 +43,7 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
-./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.6.0"
+./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-07-19 BUILD_VERSION=1.2.1"
 ```
 
 GitHub Actions builds each EPICS image through a shared reusable workflow, loads it into the runner, and runs the container verification gate (`gate.bash`) against it. Pull requests and master pushes build and gate only. Docker Hub publishing runs solely on a manual `workflow_dispatch` on `master`, after the gate passes, tagging `latest` and the distribution version.
@@ -69,4 +69,4 @@ The `.trigger/random` file is a tracked rebuild trigger for image workflows that
 | `docs/README.md` | Documentation index. |
 | `docs/ARCHITECTURE.md` | Repository architecture and data flow. |
 | `docs/milestone.md` | Work Register for the 2026 image rework cycle. |
-| `SUPPORT.md` | Maintenance procedures for adding images and updating tags. |
+| `SUPPORT.md` | Maintenance procedures: add an image, bump the distribution version, run the gate. |

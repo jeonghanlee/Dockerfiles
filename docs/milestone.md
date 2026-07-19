@@ -35,11 +35,12 @@ Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisi
 Done 2026-07-19:   M3.1 (procServ+con) · tools -> M7.4 · M4.1 (gate.bash 11/11, 3 reviewers)
                    · M5.1 (tag scheme applied) · M5.2/M4.2 authored (reusable image.yml +
                      gate-before-publish; release.bash retired; dist-version/versions helpers)
+                   · M6.1 (README/ARCHITECTURE/SUPPORT rewritten for the shipped architecture)
 
 Next entry points:
-  ▶ ready now:   M6.1 (documentation overhaul — README/ARCHITECTURE/SUPPORT)
-  planned order: M6.1 → then master PR-run verifies M5.2/M4.2 CI-green → [G2] M5.3
-  external wait: M5.2/M4.2 CI-green ← the master PR-run (deferred to merge-prep) ; M3.3 ← G3
+  ▶ ready now:   all cycle code/docs done — next is the master PR (verifies M5.2/M4.2 CI-green)
+  planned order: open PR legacy-trim -> master (CI-green M5.2/M4.2) -> merge -> [G2] M5.3 publish
+  external wait: M5.2/M4.2 CI-green ← the master PR-run ; M5.3 ← G2 ; M3.3 ← G3 (#127)
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  none standing (G2 arrives at M5.3; G4 sequencing planned after M2)
@@ -49,7 +50,7 @@ opencv, unused X11/motif dev headers) from all three images, confirming each cut
 is unused via in-image readelf NEEDED, then rebuild through the deep gate.
 ```
 
-Tally: 19 tasks — ✅ 10 · 🔄 2 · ⬜ 5 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
+Tally: 19 tasks — ✅ 11 · 🔄 2 · ⬜ 4 · 🔒 2 / ready(▶) 0 · external gates 4 (G1 satisfied · G2·G3·G4 open) · ⬜ 4 = M7 backlog
 
 ## Groups (L1)
 
@@ -60,7 +61,7 @@ Tally: 19 tasks — ✅ 10 · 🔄 2 · ⬜ 5 · 🔒 2 / ready(▶) 1 · extern
 | M3 | IOC runtime layer (#28) | 1/2 | 🔄 | (M3.3 blocked; tools deferred to M7.4) |
 | M4 | Verification gates (#29) | 1/2 | 🔄 | (M4.2 authored; CI-green pending PR) |
 | M5 | CI and publish (#30) | 1/3 | 🔄 | (M5.2 authored; CI-green pending PR) |
-| M6 | Documentation (#31) | 0/1 | ⬜ | ▶ M6.1 |
+| M6 | Documentation (#31) | 1/1 | ✅ | |
 | M7 | Deferred follow-ups (#32) | 0/4 | ⬜ | |
 
 ## Tasks (L2)
@@ -83,7 +84,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | M5 CI and publish | M5.1 | Settle the image name/tag scheme (`latest` tracks newest; version tags follow the distribution version) | ✅ | | | Settled as D10 (2026-07-18) and applied 2026-07-19: tags derive from the Dockerfile `DIST_VERSION` ARG (single source); version management is `make dist-version.<v>` (bump all three) + `make versions` (show), replacing the retired `release.bash` (D21). |
 | | M5.2 | Reworked GitHub Actions: reusable `image.yml` + 3 thin callers | 🔄 | | ← M2.1 · ← M2.2 · ← M2.3 · ← M5.1 | 2026-07-19 authored + locally validated (yamllint + `make check` clean): reusable `workflow_call` (D9) does build+`load` -> run `gate.bash` (M4.2) -> publish `latest`+`<DIST_VERSION>` (D10) only on a manual `workflow_dispatch` on master after the gate (D8; no auto-publish on merge). `release.bash` retired. Concurrency group + `gate.bash`/`image.yml` path filters added. PENDING: CI-green verification via a PR to master (deferred to merge-prep per owner). |
 | | M5.3 | Publish to Docker Hub | 🔒 | | ← G2 | Tags visible on Docker Hub per the M5.1 scheme. |
-| M6 Documentation | M6.1 | Documentation overhaul per D14: keep only needed documents, create new ones where warranted, retire obsolete ones (README, ARCHITECTURE.md, SUPPORT.md in scope) | ⬜ | ▶ | ← M2.1 · ← M3.1 · ← M5.2 | Non-ASCII markdown check and `git diff --check` pass; every remaining document matches the shipped structure; retired documents are recorded in the removing commit. |
+| M6 Documentation | M6.1 | Documentation overhaul per D14 | ✅ | | ← M2.1 · ← M3.1 · ← M5.2 | 2026-07-19: README, ARCHITECTURE.md, SUPPORT.md rewritten for the shipped architecture — image composition (distribution consumption, ENV bake, procServ/con, pruned packages), local + reusable-CI build flow, container gate, DIST_VERSION-based versioning. Stale refs (release.bash, setEnv, env.local, old versions) gone; docs index intact. `make check` (non-ASCII + whitespace) passes. No further documents needed retiring (RELEASE.md and the 2025 refactor plan were removed earlier). |
 | M7 Deferred | M7.1 | mdbook image modernization | ⬜ | | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages template flow (scheduled independently, outside this cycle). |
 | | M7.2 | Image vulnerability scanning (report-only) | ⬜ | | | Backlogged per D15; done-when defined when picked up. |
 | | M7.3 | Runtime-only slim image variant (D18 option 2): no compiler/`-devel`, minimal NEEDED set only, separate tag; for pure IOC execution (softIoc/runtime), not runner builds | ⬜ | | | Backlogged per D18; done-when defined when picked up. |

@@ -8,36 +8,50 @@ This document describes the repository structure, build flow, configuration file
 
 ## Overview
 
-The repository defines a maintained set of Docker images for ALS GitLab runner and documentation environments. Local helper scripts and Makefile targets share the same image directory configuration used by GitHub Actions workflows.
+The repository defines a maintained set of Docker images for ALS GitLab runner, container IOC, and test environments. The three EPICS images (`debian13`, `rocky8`, `rocky10`) consume a prebuilt EPICS environment from `EPICS-env-distribution`; `mdbook` is a separate documentation-rendering image. Local helper scripts, Makefile targets, and GitHub Actions workflows share the same per-image directory configuration.
+
+## Image Composition
+
+Each EPICS image is single-stage and layered as:
+
+| Layer | Contents |
+|---|---|
+| OS packages | Build toolchain plus the runtime libraries the shipped tree links, pruned to what the distribution and in-container consumer IOC builds need. |
+| Distribution | A sparse fetch of one `EPICS-env-distribution` OS tree (`<DIST_VERSION>/<os>/<epics-version>`) placed under `/opt/epics`, with a bake manifest recording component commits. |
+| IOC runtime tools | `procServ` and `con`, built in-layer with a transient autotools set that is removed in the same layer. |
+| Baked environment | `EPICS_PATH`, `EPICS_BASE`, `EPICS_MODULES`, `EPICS_HOST_ARCH`, `PATH`, `LD_LIBRARY_PATH` set via `ENV`, so the environment is present without sourcing. |
+
+No EPICS source is compiled during the image build; the consumer build toolchain ships in the image because runner jobs compile IOCs in-container.
 
 ## Build Flow
 
+Local build:
+
 ```text
-image directory
-  |
-  +-- Dockerfile
-  +-- env.conf
+<image>/Dockerfile + <image>/env.conf
         |
         v
-docker_builder.bash
+docker_builder.bash  (reads env.conf for the image name and build options)
         |
         v
-docker build from image directory
+docker build  ->  <account>/<image>-epics:latest
 ```
 
-GitHub Actions follows the same image-directory boundary:
+CI build (EPICS images), a thin per-OS caller into one reusable workflow:
 
 ```text
-push or pull request
+push / pull_request / workflow_dispatch
         |
         v
-.github/workflows/<image>.yml
+.github/workflows/<image>.yml  (path filters, concurrency)
         |
         v
-docker/build-push-action
+.github/workflows/image.yml  (reusable, workflow_call)
         |
-        +-- pull request: build only
-        +-- master push: build only (Docker Hub publish currently disabled)
+        +-- build and load the image into the runner daemon
+        +-- run gate.bash against the loaded image
+        +-- publish latest + <DIST_VERSION>
+              (workflow_dispatch on master only, after the gate passes)
 ```
 
 ## Directory Structure
@@ -67,12 +81,14 @@ docker/build-push-action
 
 ## Active Image Set
 
-| Image directory | Workflow | Release tag updates |
+| Image directory | Workflow | EPICS image (gated + versioned) |
 |---|---|---|
 | `debian13/` | `.github/workflows/debian13.yml` | Yes |
 | `mdbook/` | `.github/workflows/mdbook.yml` | No |
 | `rocky8/` | `.github/workflows/rocky8.yml` | Yes |
 | `rocky10/` | `.github/workflows/rocky10.yml` | Yes |
+
+The EPICS images call the shared `.github/workflows/image.yml`; `mdbook` has its own standalone workflow.
 
 ## Configuration Scope
 

@@ -38,6 +38,19 @@ versions at any time:
 make versions
 ```
 
+## Run the Container Gate
+
+Verify a built image with the container gate (11 checks against the installed
+tree and runtime tools). Build the image first, then:
+
+```bash
+make gate.debian13
+```
+
+`make gate` runs it across all EPICS images. The gate runs in the default
+bridge network; do not add `--network=host`, which breaks the localhost
+Channel Access and pvAccess checks.
+
 ## Trigger Active Image Rebuilds
 
 Use the trigger helper when a rebuild is required without changing an image directory.
