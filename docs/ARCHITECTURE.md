@@ -37,7 +37,7 @@ push or pull request
 docker/build-push-action
         |
         +-- pull request: build only
-        +-- master push: build and push configured tag
+        +-- master push: build only (Docker Hub publish currently disabled)
 ```
 
 ## Directory Structure

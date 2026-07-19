@@ -45,7 +45,7 @@ The helper scripts remain available for direct use.
 ./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.6.0"
 ```
 
-GitHub Actions workflows build only the image directory relevant to the workflow. Pull requests build without Docker Hub login or push. Push events to `master` log in to Docker Hub and publish the configured `DOCKER_TAG`.
+GitHub Actions workflows build only the image directory relevant to the workflow. Pull requests build without Docker Hub login or push. Docker Hub publishing is currently disabled in all image workflows pending the gated publish rework.
 
 Release tag updates are applied to active release workflows:
 
