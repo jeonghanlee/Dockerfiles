@@ -38,7 +38,7 @@ ENV TZ=${TZ}
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
-        ca-certificates git build-essential perl bash sudo vim \
+        ca-certificates git openssh-client build-essential perl bash sudo vim \
         python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
         iproute2 socat \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \

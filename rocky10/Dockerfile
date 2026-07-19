@@ -40,7 +40,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     dnf config-manager --set-enabled crb && \
     dnf install -y epel-release && \
     dnf --setopt=install_weak_deps=False install -y \
-        git sudo bash make gcc-c++ perl perl-devel rpcgen \
+        git openssh-clients sudo bash make gcc-c++ perl perl-devel rpcgen \
         python3 python3-pip iproute socat \
         readline-devel libevent-devel net-snmp net-snmp-utils net-snmp-devel \
         libtirpc libtirpc-devel libxml2-devel systemd-devel \
