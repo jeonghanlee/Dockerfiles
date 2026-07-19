@@ -34,7 +34,9 @@ ENV TZ=${TZ}
 # distribution version bump does not invalidate this cache layer.
 # Package baseline: ansible-provision inventory/group_vars/debian13.yml
 # pkg_standard plus the Python consumer set; analyzers excluded per D5.
-# Exact runtime pruning is register task M2.4.
+# Pruned per M2.4 (10-lane dependency review rs20260718_192908): dropped
+# X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
+# tree, referenced by module headers, or used by any consumer IOC build.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
@@ -42,11 +44,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
         iproute2 socat \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
-        libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev libbz2-dev \
-        libhdf5-dev libnetcdf-dev libtiff-dev libjpeg-dev libpng-dev libz-dev \
-        libboost-dev libboost-regex-dev libboost-filesystem-dev \
-        libssh2-1-dev libhidapi-dev libhidapi-libusb0 \
-        libxt-dev libxmu-dev libxpm-dev libmotif-dev && \
+        libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
+        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Distribution layer: sparse fetch of exactly one OS tree, placed at the

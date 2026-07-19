@@ -32,7 +32,11 @@ ENV TZ=${TZ}
 # pkg_standard minus VM-only entries (firewalld); libevent-devel added
 # explicitly (pvxs links the system libevent; absent from the VM baseline).
 # The `python` links serve base's MAKERPATH, which invokes plain python.
-# Exact runtime pruning is register task M2.4.
+# Pruned per M2.4 (review rs20260718_192908): dropped X11/Motif, netcdf/tiff/
+# png, boost, the PCRE1 pcre-devel family, libcurl, and the legacy libusb 0.1
+# API — none linked, header-referenced, or used by any consumer IOC build.
+# (pcre2-devel stays: a transitive capability dep of libselinux-devel, not
+# cleanly removable; deferred to M7.3.)
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled powertools && \
@@ -42,11 +46,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         python39 python39-pip iproute socat \
         readline-devel libevent-devel net-snmp net-snmp-utils net-snmp-devel \
         libtirpc libtirpc-devel libxml2-devel systemd-devel \
-        libusb-devel libusbx-devel hdf5-devel netcdf-devel \
-        libtiff-devel libjpeg-turbo-devel libpng-devel \
-        boost-devel libssh2 libssh2-devel python3-devel \
-        flex-devel ncurses-devel pcre-devel libcurl-devel \
-        libXt-devel libXmu-devel libXpm-devel motif-devel && \
+        libusbx-devel hdf5-devel libjpeg-turbo-devel \
+        libssh2 libssh2-devel python3-devel \
+        flex-devel ncurses-devel && \
     ln -snf /usr/bin/python3.9 /usr/local/bin/python && \
     ln -snf /usr/bin/python3.9 /usr/local/bin/python3 && \
     dnf clean all && rm -rf /var/cache/dnf /var/cache/yum

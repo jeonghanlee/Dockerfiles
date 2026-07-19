@@ -30,35 +30,35 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 
 ```
 In progress (🔄):  M5.1 (scheme settled as D10; consistency application rides M5.2)
-Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D17)
-                   · M2.1/M2.2/M2.3 all three images built and verified (1.21/1.11/1.31GB;
-                     debian13 and rocky8 deep gates 24/24 public-scope green)
+Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D18)
+                   · M2 COMPLETE (4/4): three images built, verified, and pruned
+                     (912/891/944MB after M2.4; deep gate 30/35 unchanged post-prune)
 
 Next entry points:
-  ▶ ready now:   M2.4 (runtime package set) · M3.1 (procServ + con)
-  planned order: M2.4 → M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
+  ▶ ready now:   M3.1 (procServ + con)
+  planned order: M3.1 · M3.2 → M4.1 → M5.2 → M4.2 → [G2] M5.3 → M6.1
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  none standing (G2 arrives at M5.3; G4 sequencing planned after M2)
 
-Next session entry point: apply the M2.1 Dockerfile pattern to rocky8
-(`rocky8/Dockerfile`, dnf package baseline) and rocky10 (10.2 pinned per D12),
-then derive the M2.4 runtime package set across all three images.
+Next session entry point: M2.4 — prune pure-surplus packages (candidate cuts
+opencv, unused X11/motif dev headers) from all three images, confirming each cut
+is unused via in-image readelf NEEDED, then rebuild through the deep gate.
 ```
 
-Tally: 18 tasks — ✅ 6 · 🔄 1 · ⬜ 9 · 🔒 2 / ready(▶) 2 · external gates 4 (G1 satisfied · G2·G3·G4 open)
+Tally: 19 tasks — ✅ 7 · 🔄 1 · ⬜ 9 · 🔒 2 / ready(▶) 1 · external gates 4 (G1 satisfied · G2·G3·G4 open)
 
 ## Groups (L1)
 
 | Group | Name | Progress | Status | Next |
 | :-- | :-- | :-- | :-- | :-- |
 | M1 | Legacy trim (#26) | 3/3 | ✅ | |
-| M2 | Distribution-based images (#27) | 3/4 | 🔄 | ▶ M2.4 |
+| M2 | Distribution-based images (#27) | 4/4 | ✅ | |
 | M3 | IOC runtime layer (#28) | 0/3 | ⬜ | ▶ M3.1 |
 | M4 | Verification gates (#29) | 0/2 | ⬜ | |
-| M5 | CI and publish (#30) | 0/3 | ⬜ | ▶ M5.1 |
+| M5 | CI and publish (#30) | 0/3 | 🔄 | |
 | M6 | Documentation (#31) | 0/1 | ⬜ | |
-| M7 | Deferred follow-ups (#32) | 0/1 | ⬜ | |
+| M7 | Deferred follow-ups (#32) | 0/3 | ⬜ | |
 
 ## Tasks (L2)
 
@@ -72,7 +72,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | M2 Distribution images | M2.1 | Rewrite debian13 Dockerfile: consume `EPICS-env-distribution` `1.2.1/debian-13/7.0.10` (ARG-pinned version); OS package layer separate; sparse fetch (`--depth 1 --filter=blob:none` + sparse-checkout of the one OS tree) with `.git` removed in the same RUN; bake manifest | ✅ | | ← M1.2 · ← D2 · ← D3 | 2026-07-18: built and verified — all baked variables present without sourcing; PATH = pmac+pvxs+base bins; LD_LIBRARY_PATH = base lib only; gcc/make/perl/python resolve; manifest records distribution commit e2c1b4e; module inventory 64/64; size 1.21GB (legacy rocky9 was 2.2GB). Smoke beyond done-when: `pvxinfo -V` loads (system libevent OK), softIoc registers a calc record. Deep gate (definitive, container-native): 35/35 cloned, 30 green, 5 fails all external — converges with rocky8/rocky10 exactly. Per-OS sweep found and fixed an image gap: `openssh-client` was absent (git-over-ssh impossible); now explicit in all three package layers. |
 | | M2.2 | Apply the pattern to rocky 8.10 | ✅ | | ← M2.1 | 2026-07-18: built first-try; env baked, tools resolve, 64/64 modules, pvxinfo loads (el8 system libevent), record registers; 1.11GB. Deep gate (definitive, container-native): 35/35 cloned, 30 green, 5 fails all external (4 site-module + nsls2 bpc-ioc) — matches rocky10 exactly. |
 | | M2.3 | Apply the pattern to rocky 10.x (10.2 pinned per D12) | ✅ | | ← M2.1 | 2026-07-18: built first-try on `rockylinux:10.2` (os-release 10.2 confirmed); el10 package renames applied (crb, pcre2-devel, libusb1-devel, python3 default); same verification battery green; 1.31GB. Deep gate (definitive, container-native with seeded known_hosts): 35/35 cloned, 30 green on the el10 toolchain — zero image-attributable failures. Fails: 4 site-module IOCs (llrf/mks937b/rga/vac-plc, D17) + alsu/nsls2 `bpc-ioc` (new-line repo defect, alliocs M4 territory). Earlier 23/24 counts were host-tree snapshot subsets, not build differences. |
-| | M2.4 | Derive and pin the minimal per-OS runtime package set (pvxs links system libevent) | ⬜ | ▶ | ← M2.1 | NEEDED set derived in-image (`readelf`/`ldd` over base bin + modules); per-OS package list pinned in the Dockerfiles; lists are needs-verification until executed in-image. |
+| | M2.4 | Prune pure surplus from the dev-carrying images (D18 option 1) | ✅ | | ← M2.1 · ← D18 | 2026-07-18: 10-lane dependency review (rs20260718_192908) — cut X11/Motif (Xt/Xmu/Xpm/motif), netcdf/tiff/png, boost, plus per-OS libbz2/hidapi (debian), `pcre-devel` PCRE1 family (rocky8) / `pcre2-devel` (rocky10), libcurl, legacy libusb-0.1 (rocky); GUI extensions confirmed out of scope (owner). All cuts have zero linkage, zero module-header reference, zero consumer-IOC-build reference. Verified per image: `ldd` over base+modules clean (no "not found"), softIoc/pvxs smoke green, deep gate unchanged 30/35. Size: debian13 1.22->0.91GB, rocky8 1.11->0.89GB, rocky10 1.31->0.94GB. Residue deferred to M7.3: runtime-vs-dev downgrades, flex/ncurses-devel (disputed), and `pcre2-devel` on rocky8 (unavoidable transitive dep of `libselinux-devel`; `--whatrequires` by name empty, pulled by pcre2 capability). |
 | M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ⬜ | ▶ | ← M2.1 · ← M2.2 · ← M2.3 | Both executables present and runnable in all three images. |
 | | M3.2 | Include the `tools` IOC generator | ⬜ | | ← M3.1 | Inside a container: generate an IOC, build it, start it. |
 | | M3.3 | Reintroduce ioc-runner (container execution mode) | 🔒 | | ← M3.1 · ← G3 | ioc-runner start/stop works in a systemd-less container. |
@@ -84,6 +84,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | M6 Documentation | M6.1 | Documentation overhaul per D14: keep only needed documents, create new ones where warranted, retire obsolete ones (README, ARCHITECTURE.md, SUPPORT.md in scope) | ⬜ | | ← M2.1 · ← M3.1 · ← M5.2 | Non-ASCII markdown check and `git diff --check` pass; every remaining document matches the shipped structure; retired documents are recorded in the removing commit. |
 | M7 Deferred | M7.1 | mdbook image modernization | ⬜ | | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages template flow (scheduled independently, outside this cycle). |
 | | M7.2 | Image vulnerability scanning (report-only) | ⬜ | | | Backlogged per D15; done-when defined when picked up. |
+| | M7.3 | Runtime-only slim image variant (D18 option 2): no compiler/`-devel`, minimal NEEDED set only, separate tag; for pure IOC execution (softIoc/runtime), not runner builds | ⬜ | | | Backlogged per D18; done-when defined when picked up. |
 
 ## External gates (G)
 
@@ -115,6 +116,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | D15 | Image vulnerability scanning deferred to the backlog (M7.2) — base-OS findings are not actionable here (session D-8) | 2026-07-18 |
 | D16 | In-image install root is `/opt/epics/<dist-version>/<os-dir>/<epics-version>` — the distribution tree shape preserved under `/opt/epics`, version visible in the path | 2026-07-18 |
 | D17 | Consumer-compile deep gate = alliocs harness run in-container with the exclusion set recorded as alliocs M4.5 (2 GitHub regressions + 5 credential-gated clones). Site-module IOCs (llrf, mks937b, rga, vac-plc) are outside public-image scope: llrf resolves at distribution 1.3.0 (feed goes public — bump the `DIST_VERSION` ARG); the other three stay site-scoped | 2026-07-18 |
+| D18 | Package footprint split in two designs: (1) prune only pure surplus while keeping the runner dev toolchain — priority, this cycle as M2.4; (2) a separate runtime-only slim image with no toolchain for pure execution — backlog as M7.3 | 2026-07-18 |
 
 ## Conventions
 

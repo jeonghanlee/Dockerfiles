@@ -34,7 +34,9 @@ ENV TZ=${TZ}
 # updates: crb replaces powertools, pcre2-devel replaces pcre-devel,
 # libusb1-devel replaces libusb(x)-devel, python3 (3.12) is the distro
 # default. libevent-devel explicit (pvxs links the system libevent).
-# Exact runtime pruning is register task M2.4.
+# Pruned per M2.4 (review rs20260718_192908): dropped X11/Motif, netcdf/tiff/
+# png, boost, pcre2, libcurl — none linked, header-referenced, or used by any
+# consumer IOC build.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled crb && \
@@ -44,11 +46,9 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         python3 python3-pip iproute socat \
         readline-devel libevent-devel net-snmp net-snmp-utils net-snmp-devel \
         libtirpc libtirpc-devel libxml2-devel systemd-devel \
-        libusb1-devel hdf5-devel netcdf-devel \
-        libtiff-devel libjpeg-turbo-devel libpng-devel \
-        boost-devel libssh2 libssh2-devel python3-devel \
-        ncurses-devel pcre2-devel libcurl-devel \
-        libXt-devel libXmu-devel libXpm-devel motif-devel && \
+        libusb1-devel hdf5-devel libjpeg-turbo-devel \
+        libssh2 libssh2-devel python3-devel \
+        ncurses-devel && \
     ln -snf /usr/bin/python3 /usr/local/bin/python && \
     dnf clean all && rm -rf /var/cache/dnf /var/cache/yum
 
