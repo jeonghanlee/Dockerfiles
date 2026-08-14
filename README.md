@@ -43,7 +43,7 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
-./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-07-19 BUILD_VERSION=1.2.1"
+./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-08-13 BUILD_VERSION=1.2.2"
 ```
 
 GitHub Actions builds each EPICS image through a shared reusable workflow, loads it into the runner, and runs the container verification gate (`gate.bash`) against it. Pull requests and master pushes build and gate only. Docker Hub publishing runs solely on a manual `workflow_dispatch` on `master`, after the gate passes, tagging `latest` and the distribution version.

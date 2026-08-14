@@ -19,8 +19,8 @@ set -uo pipefail
 declare -i PASS_COUNT=0
 declare -i FAIL_COUNT=0
 
-# Expected shared-module entry count for the pinned distribution. At 1.2.1 the
-# modules directory holds 64 entries (symlink + version-dir pairs); this counts
+# Expected shared-module entry count for the pinned distribution. The modules
+# directory holds 64 entries (symlink + version-dir pairs); this counts
 # entries, not module identities (name/version identity is the distribution's
 # manifest concern, out of this gate's scope).
 declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-64}"
