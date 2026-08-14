@@ -1,7 +1,7 @@
 VARS_EXCLUDES += image_targets
 
-.PHONY: all build dry-run check check-tools check-images check-scripts
-.PHONY: check-workflows check-docs check-diff release.dry-run trigger versions
+.PHONY: all build dry-run gate check check-tools check-images check-scripts
+.PHONY: check-workflows check-docs check-diff trigger versions
 
 ##@ General
 all: check ## Run the default validation suite
@@ -17,6 +17,11 @@ versions: ## Print project and tool versions
 	$(QUIET) shellcheck --version | sed -n '1p'
 	$(QUIET) yamllint --version
 	$(QUIET) if command -v docker >/dev/null 2>&1; then docker --version; else printf "%s\n" "docker not found"; fi
+	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
+	    v="$$(grep -m1 -oE 'DIST_VERSION=[0-9.]+' "$(TOP)/$$d/Dockerfile" | cut -d= -f2)"; \
+	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$$v"; \
+	done
+	$(QUIET) printf "%s = %s\n" "repo git" "$$(git -C $(TOP) describe --tags --always 2>/dev/null)"
 
 ##@ Validation
 check-tools: ## Verify tools required by validation targets
@@ -41,8 +46,12 @@ check-workflows: ## Lint and parse GitHub Actions workflow YAML files
 	$(QUIET) yamllint $(WORKFLOW_FILES)
 	$(QUIET) ruby -e 'require "yaml"; ARGV.each { |path| YAML.load_file(path) }' $(WORKFLOW_FILES)
 
+# docs/milestone.md is the Work Register; its format persists status markers
+# (emoji, typed arrows), so it is exempt from the non-ASCII gate. The
+# gitignored work/ scratch directory (issue drafts, commit messages) is
+# not a tracked source and is excluded as a whole.
 check-docs: ## Reject non-ASCII characters in Markdown sources
-	$(QUIET) if LC_ALL=C grep -rnP '[^\x00-\x7F]' --include='*.md' .; then \
+	$(QUIET) if LC_ALL=C grep -rnP '[^\x00-\x7F]' --include='*.md' --exclude=milestone.md --exclude-dir=work .; then \
 	    printf "%s\n" "error: non-ASCII Markdown content found"; \
 	    exit 1; \
 	fi
@@ -55,12 +64,14 @@ build: $(IMAGE_BUILD_TARGETS) ## Build all active Docker images
 
 dry-run: $(IMAGE_DRY_RUN_TARGETS) ## Preview all active Docker builds
 
-##@ Release
-release.dry-run: ## Preview release tag update with latest
-	$(QUIET) $(RELEASE_TOOL) -n -f
+gate: $(IMAGE_GATE_TARGETS) ## Run the container gate against all EPICS images
 
-release.%: ## Update release workflow tags to the specified tag
-	$(QUIET) $(RELEASE_TOOL) $*
+##@ Release
+dist-version.%: ## Set DIST_VERSION across all EPICS image Dockerfiles (e.g. dist-version.1.2.2)
+	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
+	    sed -i -E "s/^(ARG DIST_VERSION=).*/\1$*/" "$(TOP)/$$d/Dockerfile"; \
+	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$*"; \
+	done
 
 trigger: ## Update tracked CI rebuild trigger file
 	$(QUIET) $(TRIGGER_TOOL)
@@ -76,5 +87,17 @@ dry-run.$(1): ## Preview $(1) Docker build command
 endef
 
 $(foreach image, $(IMAGE_DIRS), $(eval $(call image_targets,$(image))))
+
+# Container gate targets, EPICS images only (RELEASE_IMAGE_DIRS excludes mdbook).
+# The image name comes from the image's env.conf; gate.bash is mounted read-only
+# and run in the default bridge network so localhost CA/PVA stays isolated.
+define gate_target
+.PHONY: gate.$(1)
+
+gate.$(1): ## Run the container gate against the $(1) image
+	$$(QUIET) . $$(TOP)/$(1)/env.conf; docker run --rm -v $$(GATE_TOOL):/gate.bash:ro $$$${DOCKER_ID}/$$$${TARGET_NAME} bash /gate.bash
+endef
+
+$(foreach image, $(RELEASE_IMAGE_DIRS), $(eval $(call gate_target,$(image))))
 
 FORCE:

@@ -1,6 +1,6 @@
 # Dockerfile Collections for GitLab Local Runners
 
-This repository contains Docker image definitions for ALS GitLab runner and documentation environments. The images are built by GitHub Actions and published under the `jeonghanlee` Docker Hub account.
+This repository contains Docker image definitions for ALS GitLab runner, container IOC, and test environments. The EPICS images consume a prebuilt EPICS environment from `EPICS-env-distribution` and are built by GitHub Actions under the `jeonghanlee` Docker Hub account.
 
 ## Scope
 
@@ -12,16 +12,14 @@ This repository covers Dockerfiles, local helper scripts, and GitHub Actions wor
 
 | Image directory | Docker repository | Primary purpose |
 |---|---|---|
-| `debian12/` | `jeonghanlee/debian12-epics` | Debian 12 EPICS environment. |
 | `debian13/` | `jeonghanlee/debian13-epics` | Debian 13 EPICS environment. |
-| `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8 EPICS environment. |
-| `rocky9/` | `jeonghanlee/rocky9-epics` | Rocky Linux 9 EPICS environment. |
-| `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10 EPICS environment. |
+| `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8.10 EPICS environment. |
+| `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10.2 EPICS environment. |
 | `mdbook/` | `jeonghanlee/mdbook` | mdbook and document rendering tools. |
 
 ## Build Data Flow
 
-Local builds read `<image>/env.conf`, apply optional CLI overrides, and run `docker build` from the image directory.
+Each EPICS image consumes a prebuilt `EPICS-env-distribution` tree, bakes the environment via `ENV`, and carries `procServ`/`con` plus the consumer build toolchain. Local builds read `<image>/env.conf`, apply optional CLI overrides, and run `docker build` from the image directory. See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the layer breakdown and CI topology.
 
 ## Makefile Workflow
 
@@ -33,7 +31,8 @@ make check
 make dry-run
 make dry-run.debian13
 make build.debian13
-make release.dry-run
+make gate.debian13
+make versions
 ```
 
 The `make check` target runs script validation, workflow YAML parsing, markdown character checks, whitespace checks, and Docker build dry-runs for all active images.
@@ -44,19 +43,16 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
-./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-05-17 BUILD_VERSION=2.6.0"
+./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-08-13 BUILD_VERSION=1.2.2"
 ```
 
-GitHub Actions workflows build only the image directory relevant to the workflow. Pull requests build without Docker Hub login or push. Push events to `master` log in to Docker Hub and publish the configured `DOCKER_TAG`.
+GitHub Actions builds each EPICS image through a shared reusable workflow, loads it into the runner, and runs the container verification gate (`gate.bash`) against it. Pull requests and master pushes build and gate only. Docker Hub publishing runs solely on a manual `workflow_dispatch` on `master`, after the gate passes, tagging `latest` and the distribution version.
 
-Release tag updates are applied to active release workflows:
+An image's version is the `EPICS-env-distribution` version pinned in its `DIST_VERSION` build argument, which CI reads for the published tags. Bump it across all EPICS images at once:
 
 ```bash
-./release.bash 2.6.0
-./release.bash -f
+make dist-version.1.2.2
 ```
-
-The `-f` form selects `latest` without an interactive prompt.
 
 ## CI Rebuild Trigger
 
@@ -72,5 +68,5 @@ The `.trigger/random` file is a tracked rebuild trigger for image workflows that
 |---|---|
 | `docs/README.md` | Documentation index. |
 | `docs/ARCHITECTURE.md` | Repository architecture and data flow. |
-| `docs/repository-refactor-plan.md` | Refactor scope, phases, safety rules, and verification gates. |
-| `SUPPORT.md` | Maintenance procedures for adding images and updating tags. |
+| `docs/milestone.md` | Work Register for the 2026 image rework cycle. |
+| `SUPPORT.md` | Maintenance procedures: add an image, bump the distribution version, run the gate. |
