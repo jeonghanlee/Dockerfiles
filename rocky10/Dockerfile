@@ -10,7 +10,7 @@
 FROM rockylinux/rockylinux:10.2
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
-ARG DIST_VERSION=1.2.1
+ARG DIST_VERSION=1.2.2
 ARG OS_DIR=rocky-10.2
 ARG EPICS_VERSION=7.0.10
 ARG INSTALL_ROOT=/opt/epics
