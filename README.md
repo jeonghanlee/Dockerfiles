@@ -43,7 +43,7 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
-./docker_builder.bash -t debian13 -a "BUILD_DATE=2026-08-13 BUILD_VERSION=1.2.2"
+./docker_builder.bash -t debian13 -a "BUILD_DATE=<YYYY-MM-DD> BUILD_VERSION=<version>"
 ```
 
 GitHub Actions builds each EPICS image through a shared reusable workflow, loads it into the runner, and runs the container verification gate (`gate.bash`) against it. Pull requests and master pushes build and gate only. Docker Hub publishing runs solely on a manual `workflow_dispatch` on `master`, after the gate passes, tagging `latest` and the distribution version.
@@ -68,5 +68,6 @@ The `.trigger/random` file is a tracked rebuild trigger for image workflows that
 |---|---|
 | `docs/README.md` | Documentation index. |
 | `docs/ARCHITECTURE.md` | Repository architecture and data flow. |
-| `docs/milestone.md` | Work Register for the 2026 image rework cycle. |
+| `docs/milestone-5c186b4.md` | Work Register for the remaining 2026 image rework. |
+| `docs/CLOSED_DOORS.md` | Examined candidates deliberately left unchanged. |
 | `SUPPORT.md` | Maintenance procedures: add an image, bump the distribution version, run the gate. |
