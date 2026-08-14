@@ -2,11 +2,11 @@
 #  email   : jeonghan.lee@gmail.com
 #  version : 2.0.0
 #
-# Distribution-consuming EPICS environment image (register M2.1).
+# Distribution-consuming EPICS environment image.
 # Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is
-# compiled while building this image (D2). The consumer build toolchain is
+# compiled while building this image. The consumer build toolchain is
 # resident because runner jobs compile IOCs inside the running container.
-# The environment is baked via ENV (D3) - no setEnv sourcing contract.
+# The environment is baked via ENV - no setEnv sourcing contract.
 FROM debian:trixie-slim
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
@@ -33,8 +33,9 @@ ENV TZ=${TZ}
 # OS package layer, kept separate from the distribution fetch so a
 # distribution version bump does not invalidate this cache layer.
 # Package baseline: ansible-provision inventory/group_vars/debian13.yml
-# pkg_standard plus the Python consumer set; analyzers excluded per D5.
-# Pruned per M2.4 (10-lane dependency review rs20260718_192908): dropped
+# pkg_standard plus the Python consumer set; analyzers are excluded because
+# the GitLab tester jobs that used them were removed on the consumer side.
+# Pruned after a dependency review: dropped
 # X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
 # tree, referenced by module headers, or used by any consumer IOC build.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
@@ -57,7 +58,7 @@ RUN git clone --depth 1 --filter=blob:none --sparse "${DIST_REPO}" /tmp/dist && 
     printf '%s %s %s %s\n' EPICS-env-distribution "${DIST_REPO}" "$(git -C /tmp/dist rev-parse HEAD)" "$(date -u +%FT%TZ)" > /etc/epics-bake.manifest && \
     rm -rf /tmp/dist
 
-# IOC runtime tools (register M3.1): procServ and con, built from source in the
+# IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
 # autotools set procServ needs (autoconf/automake/libtool) is not needed by
 # consumer IOC builds, so it is installed and removed within this one layer.
@@ -75,7 +76,7 @@ RUN set -e; \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
-# Baked environment (D3, ratified 2026-07-18): variable list and PATH order
+# Baked environment: variable list and PATH order
 # follow the verified setEpicsEnv.bash baseline; LD_LIBRARY_PATH carries the
 # base lib dir only - modules resolve through their RUNPATH.
 ENV EPICS_PATH=${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}

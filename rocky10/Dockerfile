@@ -2,8 +2,8 @@
 #  email   : jeonghan.lee@gmail.com
 #  version : 2.0.0
 #
-# Distribution-consuming EPICS environment image (register M2.3).
-# Same pattern as debian13 (M2.1). Base pinned to 10.2 per D12: it matches
+# Distribution-consuming EPICS environment image.
+# Same pattern as debian13. Base pinned to 10.2 because it matches
 # the distribution build OS (rocky-10.2); new minors are followed promptly
 # with a distribution rebuild - the rocky10 line exists to catch next-stable
 # problems early.
@@ -34,7 +34,7 @@ ENV TZ=${TZ}
 # updates: crb replaces powertools, pcre2-devel replaces pcre-devel,
 # libusb1-devel replaces libusb(x)-devel, python3 (3.12) is the distro
 # default. libevent-devel explicit (pvxs links the system libevent).
-# Pruned per M2.4 (review rs20260718_192908): dropped X11/Motif, netcdf/tiff/
+# Pruned after a dependency review: dropped X11/Motif, netcdf/tiff/
 # png, boost, pcre2, libcurl — none linked, header-referenced, or used by any
 # consumer IOC build.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
@@ -61,7 +61,7 @@ RUN git clone --depth 1 --filter=blob:none --sparse "${DIST_REPO}" /tmp/dist && 
     printf '%s %s %s %s\n' EPICS-env-distribution "${DIST_REPO}" "$(git -C /tmp/dist rev-parse HEAD)" "$(date -u +%FT%TZ)" > /etc/epics-bake.manifest && \
     rm -rf /tmp/dist
 
-# IOC runtime tools (register M3.1): procServ and con, built from source in the
+# IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
 # autotools set procServ needs (autoconf/automake/libtool) is not needed by
 # consumer IOC builds, so it is installed and removed within this one layer.
@@ -78,7 +78,7 @@ RUN set -e; \
     rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
-# Baked environment (D3, ratified 2026-07-18): variable list and PATH order
+# Baked environment: variable list and PATH order
 # follow the verified setEpicsEnv.bash baseline; LD_LIBRARY_PATH carries the
 # base lib dir only - modules resolve through their RUNPATH.
 ENV EPICS_PATH=${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}

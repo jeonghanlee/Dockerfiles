@@ -1,12 +1,12 @@
 ---
 name: EPICS image (reusable)
 
-# Reusable build-gate-publish workflow for the distribution-based EPICS images
-# (register M5.2, decisions D8/D9/D10). Callers are the thin per-OS workflows.
+# Reusable build-gate-publish workflow for the distribution-based EPICS images.
+# Callers are the thin per-OS workflows.
 # Flow: build and LOAD the image into the runner daemon, run the container
-# verification gate (gate.bash, M4.1) against it, and publish only on a manual
+# verification gate (gate.bash) against it, and publish only on a manual
 # workflow_dispatch on master after the gate passes -- a master merge never
-# auto-publishes (D8; publish authorization stays with the owner, G2/M5.3).
+# auto-publishes, because publish authorization stays with the owner.
 
 "on":
   workflow_call:

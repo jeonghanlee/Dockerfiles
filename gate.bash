@@ -4,7 +4,7 @@
 #  email   : jeonghan.lee@gmail.com
 #  version : 0.2.0
 #
-# Container verification gate (register M4.1). Runs INSIDE a built image and
+# Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
 # build-time `make check`: this validates a produced image, not the sources.
 #
@@ -28,7 +28,7 @@ declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-64}"
 function pass { printf "PASS  %s\n" "$1"; PASS_COUNT+=1; }
 function fail { printf "FAIL  %s\n" "$1"; FAIL_COUNT+=1; }
 
-# G0 - environment baked without sourcing (D3). Hard precondition: if the baked
+# G0 - environment baked without sourcing. Hard precondition: if the baked
 # environment is absent, the tree gates below cannot run meaningfully, so report
 # and exit rather than let later gates misfire on unset paths.
 function gate_env {
@@ -178,7 +178,7 @@ function gate_linkage {
     (( ok )) && pass "G8 relocatable linkage (non-empty, \$ORIGIN-relative RPATH/RUNPATH)"
 }
 
-# G9 - IOC runtime tools present and runnable (M3.1)
+# G9 - IOC runtime tools present and runnable
 function gate_tools {
     local ok=1
     /usr/local/bin/procServ --version >/dev/null 2>&1 || { fail "G9 procServ not runnable"; ok=0; }

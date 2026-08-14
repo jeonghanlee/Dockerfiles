@@ -2,9 +2,9 @@
 #  email   : jeonghan.lee@gmail.com
 #  version : 2.0.0
 #
-# Distribution-consuming EPICS environment image (register M2.2).
-# Same pattern as debian13 (M2.1): prebuilt EPICS-env-distribution binaries,
-# ENV-baked environment (D3), resident consumer toolchain (D2).
+# Distribution-consuming EPICS environment image.
+# Same pattern as debian13: prebuilt EPICS-env-distribution binaries,
+# ENV-baked environment, resident consumer toolchain.
 FROM rockylinux/rockylinux:8.10
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
@@ -32,11 +32,11 @@ ENV TZ=${TZ}
 # pkg_standard minus VM-only entries (firewalld); libevent-devel added
 # explicitly (pvxs links the system libevent; absent from the VM baseline).
 # The `python` links serve base's MAKERPATH, which invokes plain python.
-# Pruned per M2.4 (review rs20260718_192908): dropped X11/Motif, netcdf/tiff/
+# Pruned after a dependency review: dropped X11/Motif, netcdf/tiff/
 # png, boost, the PCRE1 pcre-devel family, libcurl, and the legacy libusb 0.1
 # API — none linked, header-referenced, or used by any consumer IOC build.
 # (pcre2-devel stays: a transitive capability dep of libselinux-devel, not
-# cleanly removable; deferred to M7.3.)
+# cleanly removable.)
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     dnf install -y dnf-plugins-core && \
     dnf config-manager --set-enabled powertools && \
@@ -62,7 +62,7 @@ RUN git clone --depth 1 --filter=blob:none --sparse "${DIST_REPO}" /tmp/dist && 
     printf '%s %s %s %s\n' EPICS-env-distribution "${DIST_REPO}" "$(git -C /tmp/dist rev-parse HEAD)" "$(date -u +%FT%TZ)" > /etc/epics-bake.manifest && \
     rm -rf /tmp/dist
 
-# IOC runtime tools (register M3.1): procServ and con, built from source in the
+# IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
 # autotools set procServ needs (autoconf/automake/libtool) is not needed by
 # consumer IOC builds, so it is installed and removed within this one layer.
@@ -79,7 +79,7 @@ RUN set -e; \
     rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
-# Baked environment (D3, ratified 2026-07-18): variable list and PATH order
+# Baked environment: variable list and PATH order
 # follow the verified setEpicsEnv.bash baseline; LD_LIBRARY_PATH carries the
 # base lib dir only - modules resolve through their RUNPATH.
 ENV EPICS_PATH=${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}

@@ -38,7 +38,7 @@ function usage {
         printf "  -h             Show this help\n"
         printf "\n"
         printf "Example:\n"
-        printf "  %s -d -t debian13 -a \"BUILD_DATE=2026-05-17 BUILD_VERSION=2.5.1\"\n" "$0"
+        printf "  %s -d -t debian13 -a \"BUILD_DATE=<YYYY-MM-DD> BUILD_VERSION=<version>\"\n" "$0"
         printf "\n"
     } >&2
     exit 1
