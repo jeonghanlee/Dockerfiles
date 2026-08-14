@@ -29,7 +29,7 @@ EPICS") as issues #26-#32, one per M-group; issue closure follows the register.
 ## Now / Next (2026-08-14)
 
 ```
-In progress (🔄):  M2.5 (container gate 11/11 done at 1.2.2; deep gate + sizes remain)
+In progress (🔄):  M2.5 (container gate 11/11 done at 1.2.2; only image sizes remain, deep gate -> alliocs per D24)
 Done 2026-07-18:   M1 complete · G1 · session rs20260718_025216 CLOSED (decisions D8-D18)
                    · M2 COMPLETE (4/4): three images built, verified, pruned (912/891/944MB)
 Done 2026-07-19:   M3.1 (procServ+con) · tools -> M7.4 · M4.1 (gate.bash 11/11, 3 reviewers)
@@ -46,17 +46,18 @@ Done 2026-08-14:   PR #34 green on all three at 1.2.2 — build + gate 11/11 (M4
                      legacy-trim deleted
 
 Next entry points:
-  ▶ ready now:   M2.5 residual — re-run the deep gate at 1.2.2 + recapture image sizes, then close #27
-  planned order: M2.5 residual -> close #27 -> [G2] M5.3 Docker Hub publish (owner-run)
-  external wait: M5.3 ← G2 ; M3.3 ← G3 (#127) ; M2.5 deep gate ← external alliocs harness (D17)
+  ▶ ready now:   decide M2.5 image-size handling (local build failed, no Docker Hub here) — drop from M2.5 or defer; then close #27
+  planned order: decide sizes -> close #27 -> [G2] M5.3 Docker Hub publish (owner-run)
+  external wait: M5.3 ← G2 ; M3.3 ← G3 (#127)
 
 External wait:  M5.3 ← G2 (Docker Hub publish) · M3.3 ← G3 (epics-ioc-runner#127) · M2 rollout ← G4 (consumer cutover, D13)
 Operator action:  M5.3 Docker Hub publish awaits G2 (owner-run); #31 closed on the PR #34 merge (bf6baa9)
 
 Next session entry point: PR #34 merged to master 2026-08-14 (bf6baa9); #31
-closed. Remaining is M2.5's deep-gate re-run at 1.2.2 (external alliocs harness,
-D17) and image-size recapture, after which #27 can close; then the owner-run
-Docker Hub publish (M5.3 <- G2).
+closed. Deep gate scoped to alliocs (D24). The one open decision is M2.5's
+image-size handling: a local build failed on this host (no Docker Hub access),
+so choose to drop sizes from M2.5 or defer to a networked host/CI, then close
+#27. After that, the owner-run Docker Hub publish (M5.3 <- G2).
 ```
 
 Tally: 21 tasks — ✅ 13 · 🔄 1 · ⬜ 4 · 🔒 2 · Conditional 1 / ready(▶) 0 · external gates 4 (G1 satisfied · G2·G3·G4 open) · ⬜ 4 + Conditional 1 = M7 backlog
@@ -66,7 +67,7 @@ Tally: 21 tasks — ✅ 13 · 🔄 1 · ⬜ 4 · 🔒 2 · Conditional 1 / ready
 | Group | Name | Progress | Status | Next |
 | :-- | :-- | :-- | :-- | :-- |
 | M1 | Legacy trim (#26) | 3/3 | ✅ | |
-| M2 | Distribution-based images (#27) | 4/5 | 🔄 | (M2.5 residual: deep gate + image sizes) |
+| M2 | Distribution-based images (#27) | 4/5 | 🔄 | (M2.5 residual: image sizes, owner decision) |
 | M3 | IOC runtime layer (#28) | 1/2 | 🔄 | (M3.3 blocked; tools deferred to M7.4) |
 | M4 | Verification gates (#29) | 2/2 | ✅ | |
 | M5 | CI and publish (#30) | 2/3 | 🔄 | (M5.3 blocked on G2 publish) |
@@ -86,7 +87,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | | M2.2 | Apply the pattern to rocky 8.10 | ✅ | | ← M2.1 | 2026-07-18: built first-try; env baked, tools resolve, 64/64 modules, pvxinfo loads (el8 system libevent), record registers; 1.11GB. Deep gate (definitive, container-native): 35/35 cloned, 30 green, 5 fails all external (4 site-module + nsls2 bpc-ioc) — matches rocky10 exactly. [1.2.1-historical; re-verify at 1.2.2 -> M2.5] |
 | | M2.3 | Apply the pattern to rocky 10.x (10.2 pinned per D12) | ✅ | | ← M2.1 | 2026-07-18: built first-try on `rockylinux:10.2` (os-release 10.2 confirmed); el10 package renames applied (crb, pcre2-devel, libusb1-devel, python3 default); same verification battery green; 1.31GB. Deep gate (definitive, container-native with seeded known_hosts): 35/35 cloned, 30 green on the el10 toolchain — zero image-attributable failures. Fails: 4 site-module IOCs (llrf/mks937b/rga/vac-plc, D17) + alsu/nsls2 `bpc-ioc` (new-line repo defect, alliocs M4 territory). Earlier 23/24 counts were host-tree snapshot subsets, not build differences. [1.2.1-historical; re-verify at 1.2.2 -> M2.5] |
 | | M2.4 | Prune pure surplus from the dev-carrying images (D18 option 1) | ✅ | | ← M2.1 · ← D18 | 2026-07-18: 10-lane dependency review (rs20260718_192908) — cut X11/Motif (Xt/Xmu/Xpm/motif), netcdf/tiff/png, boost, plus per-OS libbz2/hidapi (debian), `pcre-devel` PCRE1 family (rocky8) / `pcre2-devel` (rocky10), libcurl, legacy libusb-0.1 (rocky); GUI extensions confirmed out of scope (owner). All cuts have zero linkage, zero module-header reference, zero consumer-IOC-build reference. Verified per image: `ldd` over base+modules clean (no "not found"), softIoc/pvxs smoke green, deep gate unchanged 30/35. Size: debian13 1.22->0.91GB, rocky8 1.11->0.89GB, rocky10 1.31->0.94GB. Residue deferred to M7.3: runtime-vs-dev downgrades, flex/ncurses-devel (disputed), and `pcre2-devel` on rocky8 (unavoidable transitive dep of `libselinux-devel`; `--whatrequires` by name empty, pulled by pcre2 capability). [1.2.1-historical; re-verify at 1.2.2 -> M2.5] |
-| | M2.5 | Integrated re-verification at `DIST_VERSION=1.2.2`: rebuild the full stack (three images + procServ/con) and re-run every gate, since the whole cycle's evidence was measured on the now-removed 1.2.1 images | 🔄 | | ← M2.1 · ← M2.2 · ← M2.3 · ← M2.4 · ← M3.1 · ← M4.1 · ← D22 | 2026-08-13: Dockerfiles bumped 1.2.1 -> 1.2.2 (`make dist-version.1.2.2`); upstream 1.2.1 removed. Not yet built or gate-verified at 1.2.2. Supersedes the 1.2.1 evidence of M2.1-M2.4, M3.1, M4.1, and M6.1 until re-run. Done when, at 1.2.2, all three images build; procServ/con present; `gate.bash` 11/11 on each; deep gate re-run (expected 30/35, external-only fails); image sizes re-recorded; and docs carry no 1.2.1-only strings. The PR #34 CI run (M4.2/M5.2) is the accepted verification vehicle per D21. Issue #27 reopened 2026-08-13T23:05Z (jeonghanlee) for this re-verification. PR #34 merged to master 2026-08-14 (bf6baa9) without a `Closes #27`, so #27 stays open until the residual below is done, then it is closed by owner action. Progress 2026-08-14: container-gate portion DONE — all three images built and gate 11/11 at 1.2.2 in PR #34 CI (debian13 G0-G10 logged; rocky8/rocky10 gate step success). Stale 1.2.1 doc strings fixed this session (README.md example, gate.bash comment, D10 example). Remaining before M2.5 completes: deep gate (external alliocs harness, D17) not re-run at 1.2.2; image sizes not captured by CI. |
+| | M2.5 | Integrated re-verification at `DIST_VERSION=1.2.2`: rebuild the full stack (three images + procServ/con) and re-run every gate, since the whole cycle's evidence was measured on the now-removed 1.2.1 images | 🔄 | | ← M2.1 · ← M2.2 · ← M2.3 · ← M2.4 · ← M3.1 · ← M4.1 · ← D22 | 2026-08-13: Dockerfiles bumped 1.2.1 -> 1.2.2 (`make dist-version.1.2.2`); upstream 1.2.1 removed. Not yet built or gate-verified at 1.2.2. Supersedes the 1.2.1 evidence of M2.1-M2.4, M3.1, M4.1, and M6.1 until re-run. Done when, at 1.2.2, all three images build; procServ/con present; `gate.bash` 11/11 on each; deep gate re-run (expected 30/35, external-only fails); image sizes re-recorded; and docs carry no 1.2.1-only strings. The PR #34 CI run (M4.2/M5.2) is the accepted verification vehicle per D21. Issue #27 reopened 2026-08-13T23:05Z (jeonghanlee) for this re-verification. PR #34 merged to master 2026-08-14 (bf6baa9) without a `Closes #27`, so #27 stays open until the residual below is done, then it is closed by owner action. Progress 2026-08-14: container-gate portion DONE — all three images built and gate 11/11 at 1.2.2 in PR #34 CI (debian13 G0-G10 logged; rocky8/rocky10 gate step success). Stale 1.2.1 doc strings fixed this session (README.md example, gate.bash comment, D10 example). Owner decision 2026-08-14 (D24, option 1): the consumer-compile deep gate is alliocs-tracked (D17, alliocs M4.5) and is NOT an M2.5 blocker; this repo's owned verification is the container gate (11/11, done at 1.2.2). Remaining before M2.5 completes: image-size recapture at 1.2.2 — a local build on this host failed 2026-08-14 (no Docker Hub registry access), so the size handling (drop from M2.5 vs defer to a networked host/CI) is an open owner decision. |
 | M3 IOC runtime layer | M3.1 | Build procServ and con in the final stage with the resident toolchain (ansible-provision role recipes; sources removed in the same RUN) | ✅ | | ← M2.1 · ← M2.2 · ← M2.3 | 2026-07-19: both built in one RUN with a transient autotools set (autoconf/automake/libtool) installed and removed in-layer; procServ 2.9.0-dev + con present in all three images, commits recorded in the bake manifest. Runnable proof beyond --version: procServ launches a softIoc that stays alive. autotools removal verified not to touch the consumer toolchain (gcc/make/perl intact) — deep gate unchanged 30/35 on all three. Size: debian13 912->914MB, rocky8 891->931MB, rocky10 944->970MB. [1.2.1-historical; re-verify at 1.2.2 -> M2.5] |
 | | M3.3 | Reintroduce ioc-runner (container execution mode) | 🔒 | | ← M3.1 · ← G3 | ioc-runner start/stop works in a systemd-less container. |
 | M4 Verification gates | M4.1 | Container gate script `gate.bash` + `make gate[.<image>]` target | ✅ | | ← M2.1 · ← M2.2 · ← M2.3 | 2026-07-19: `gate.bash` (11 gates G0-G10: env-baked, inventory 64, dead-symlink, pairing, module artifacts, softIoc+record, CA data path, PVA data path via softIocPVA+pvxget, relocatable linkage, IOC tools, bake manifest) runs in a built image; `make gate` covers RELEASE_IMAGE_DIRS (mdbook excluded), gate.bash added to check-scripts. 3-reviewer session rs20260719_005012 caught a blocking G8 false-pass (accepted empty/missing runpath) and its rocky false-fail; G8 rewritten to require a non-empty $ORIGIN-relative runpath (accepts DT_RPATH and DT_RUNPATH), G7 upgraded from pvxinfo to a real PVA round-trip, pairing gate added. Result: 11/11 on debian13/rocky8/rocky10 (run in default bridge net — host net breaks localhost CA/PVA). [1.2.1-historical; re-verify at 1.2.2 -> M2.5] |
@@ -137,6 +138,7 @@ The `Group` cell is written once per group (continuation rows are blank).
 | D21 | Version management: `release.bash` retired (its workflow-tag-sed model is dead). The image content version is the Dockerfile `DIST_VERSION` ARG (single source, read by CI for tags); `make dist-version.<v>` bumps all EPICS images at once; `make versions` shows per-image versions + repo git. Repo releases stay on git tags + GitHub Releases | 2026-07-19 |
 | D22 | `DIST_VERSION` bumped 1.2.1 -> 1.2.2 across the three EPICS Dockerfiles. Upstream `EPICS-env-distribution` removed 1.2.1; 1.2.2 is the only published version, so the M2.1-M2.4 evidence (all recorded against 1.2.1 on 2026-07-18) no longer describes a buildable input. Historical evidence is kept as-is; 1.2.2 re-verification is tracked as the new row M2.5 | 2026-08-13 |
 | D23 | con and procServ-env stay unpinned (floating default-branch HEAD, commit recorded in the bake manifest) for now: procServ-env has no released version number yet. Pin both once procServ-env gets one (owner: procServ has no number yet, add con at the same time). Tracked as the Conditional row M7.5 | 2026-08-14 |
+| D24 | M2.5 completion (option 1): the consumer-compile deep gate is not re-run in this repository. It is the alliocs harness (D17), owned and tracked in the alliocs register (M4.5). This repo's owned verification is the container gate (`gate.bash` 11/11), green at 1.2.2. M2.5 requires only the container gate (done) plus image-size recapture | 2026-08-14 |
 
 ## Conventions
 
