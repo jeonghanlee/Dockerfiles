@@ -7,10 +7,11 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: close GitHub issue #27, whose only open acceptance
-item was the 1.2.2 image-size recapture that M1 completed. After that every
-remaining row waits on an external gate, so there is no startable work here
-until G1, G2, or G3 resolves.
+Next session entry point: nothing here is startable. Every remaining row waits
+on an external gate - G1 for the ioc-runner container mode, G2 for Docker Hub
+publish authorization, G3 for the GitLab consumer cutover. When one resolves,
+open its M row and restore the executable status recorded there. Until then
+the register needs no attention.
 
 This register is the status source of truth for the remaining 2026 image rework.
 It replaces `docs/milestone.md`, whose completed content stays reachable at
