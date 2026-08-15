@@ -7,8 +7,10 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: run `make build` on this host at DIST_VERSION 1.2.2,
-record the three image sizes in M1 / T1, then close M1 and reconcile issue #27.
+Next session entry point: close GitHub issue #27, whose only open acceptance
+item was the 1.2.2 image-size recapture that M1 completed. After that every
+remaining row waits on an external gate, so there is no startable work here
+until G1, G2, or G3 resolves.
 
 This register is the status source of truth for the remaining 2026 image rework.
 It replaces `docs/milestone.md`, whose completed content stays reachable at
@@ -20,14 +22,14 @@ commit 5c186b4.
 
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Images | M1 | Recapture the three image sizes at DIST_VERSION 1.2.2 on this host | Milestone | In progress | No | D5, D6, D7, D12 | Three images build locally at 1.2.2 and their sizes are recorded; [detail](#m1---recapture-image-sizes-at-122) |
+| Images | M1 | Recapture the three image sizes at DIST_VERSION 1.2.2 on this host | Milestone | Complete | No | D5, D6, D7, D12 | Three images build locally at 1.2.2 and their sizes are recorded; [detail](#m1---recapture-image-sizes-at-122) |
 | Runtime | M2 | Reintroduce ioc-runner (container execution mode) | Carry-forward | Blocked | No | G1, D3 | ioc-runner start and stop work in a systemd-less container; [detail](#m2---reintroduce-ioc-runner) |
 | Publish | M3 | Publish the images to Docker Hub | Carry-forward | Blocked | No | G2, D1 | Tags visible on Docker Hub per the D1 scheme; [detail](#m3---publish-to-docker-hub) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | Docker Hub publish authorization and execution | External gate | Open | No | | Owner authorizes and runs the gated publish workflow; [detail](#g2---docker-hub-publish-authorization) |
 | Gates | G3 | GitLab consumer cutover | External gate | Open | No | D2 | Blocks the consumer rollout of the published images, which is executed in `alsu/ci` and has no work row in this register; complete when the template change and the runner-image rollout land together; [detail](#g3---gitlab-consumer-cutover) |
 
-Tally: 3 milestone rows - Complete 0, In progress 1, Blocked 2, Ready 0.
+Tally: 3 milestone rows - Complete 1, In progress 0, Blocked 2, Ready 0.
 External gates: 3 open (G1, G2, G3). Backlog is reported separately below and
 excluded from this tally.
 
@@ -69,15 +71,15 @@ stale; the code now reads on its own and this table is their only record.
 Origin: 5c186b4 / M1
 Identity History: none
 GitHub Issue: #27, https://github.com/jeonghanlee/Dockerfiles/issues/27
-Status: In progress
+Status: Complete
 
 ##### Summary
 
 The 2026 rework measured every image property against `EPICS-env-distribution`
 1.2.1, which upstream has since removed. The Dockerfiles now pin 1.2.2 (D6) and
 the container gate was re-run green at 1.2.2 in the PR #34 CI run. The one
-measurement not yet retaken at 1.2.2 is the image size of the three EPICS
-images. Per D12 that recapture runs on this host.
+measurement not yet retaken at 1.2.2 was the image size of the three EPICS
+images. Per D12 that recapture ran on this host.
 
 ##### Scope
 
@@ -102,49 +104,58 @@ image, which carries no EPICS distribution.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-08-14, in session
+Implementation Authorization: owner, 2026-08-14, in session
 Superseded Plan Artifacts: none
 
 1. Confirm `make versions` reports 1.2.2 for all three EPICS images.
 2. Run `make build.debian13 build.rocky8 build.rocky10` on this host. Plain
    `make build` also builds mdbook, which is out of scope here.
-3. Read each built image size with
-   `docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}'`. On Docker
-   29.x the plain `docker images` table has no SIZE column; `{{.Size}}` is the
-   DISK USAGE value, which is the axis the prior 1.2.1 figures were measured
-   on. CONTENT SIZE is a different axis and is not comparable to them.
-4. Record the three sizes in Verification Results and close M1.
+3. Measure every size axis with the commands defined in
+   `docs/IMAGE_FOOTPRINT.md`. A single measurement is not enough: one image
+   reports four different sizes that differ by up to a factor of five, and the
+   axis a figure sits on decides whether it can be compared to anything.
+4. Record the measurements in `docs/IMAGE_FOOTPRINT.md` and close M1.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Build and measurement | `make build.debian13 build.rocky8 build.rocky10`, then `docker images --format '{{.Repository}}:{{.Tag}} {{.Size}}'` | Local Docker 29.7.1 | Three images built at 1.2.2, each with a recorded DISK USAGE size |
+| T1 | Build and measurement | `make build.debian13 build.rocky8 build.rocky10`, then the four axis commands defined in `docs/IMAGE_FOOTPRINT.md` | Local Docker 29.7.1 | Three images built at 1.2.2, each measured on all four axes |
 
 ##### Verification Results
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Local Docker 29.7.1 | Pending | Prior 1.2.1 sizes for reference: debian13 914MB, rocky8 931MB, rocky10 970MB (commit 5c186b4) |
+| T1 | 2026-08-14 | Local Docker 29.7.1 | Pass | Three images built at 1.2.2 and measured on all four axes; figures recorded in `docs/IMAGE_FOOTPRINT.md` |
+
+`docs/IMAGE_FOOTPRINT.md` is the record for every size figure. It is not
+copied here, so there is one place to read and one place to update. It sits
+outside this register so the history survives future resets.
 
 ##### Closure Evidence
 
-- none
+- Images built at 1.2.2 on this host 2026-08-14 and measured on all four axes;
+  figures and measuring commands recorded in `docs/IMAGE_FOOTPRINT.md`.
+- The same commands were applied to the previous-generation images pulled from
+  Docker Hub, giving the first cross-generation comparison on matching axes.
+- Distribution 1.2.1 could not be re-measured. Upstream published no release
+  for it, the local tree retains only empty directories, and no 1.2.1 image tag
+  reached Docker Hub. Recorded as a known gap rather than closed silently.
 
 ##### GitHub Projection
 
 Title: Rebuild images from the prebuilt EPICS-env-distribution
 Labels: enhancement
 GitHub Milestone: 2.0.0
-Observed State: closed
+Observed State: open
 Observed Labels: enhancement
 Observed Milestone: 2.0.0
-Last Compared: 2026-08-14, register reset
+Last Compared: 2026-08-14, after reopening #27
 
-Reconcile note: the remote issue is closed while M1 is In progress. Reopening
-#27 or splitting the size recapture into its own issue is an open owner action.
+Reconcile note: #27 was reopened 2026-08-14 for the size recapture, which M1
+has since completed. Closing it again is the remaining owner action.
 
 #### M2 - Reintroduce ioc-runner
 

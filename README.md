@@ -43,6 +43,12 @@ The helper scripts remain available for direct use.
 
 ```bash
 ./docker_builder.bash -d -t debian13
+```
+
+Build args are optional and passed through with `-a`. Substitute real values
+for the angle-bracket fields below; they are placeholders, not literals.
+
+```bash
 ./docker_builder.bash -t debian13 -a "BUILD_DATE=<YYYY-MM-DD> BUILD_VERSION=<version>"
 ```
 
@@ -70,4 +76,5 @@ The `.trigger/random` file is a tracked rebuild trigger for image workflows that
 | `docs/ARCHITECTURE.md` | Repository architecture and data flow. |
 | `docs/milestone-5c186b4.md` | Work Register for the remaining 2026 image rework. |
 | `docs/CLOSED_DOORS.md` | Examined candidates deliberately left unchanged. |
+| `docs/IMAGE_FOOTPRINT.md` | Image size axes, measuring commands, and history. |
 | `SUPPORT.md` | Maintenance procedures: add an image, bump the distribution version, run the gate. |
