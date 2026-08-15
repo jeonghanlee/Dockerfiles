@@ -40,10 +40,14 @@ control term `libevent` was found 19 and 12 times respectively, so the scan was
 reading what it claimed to read.
 
 No IOC currently tracked at this site uses it either. Sweeping the 40 IOC
-directories in the `alliocs` repository found 6 matches for the systemd family,
-all unrelated: 4 are word fragments inside APC PDU SNMP MIB object names, and 2
-are host-level network tuning notes. The control term `asyn` matched 4924 times
-in the same sweep.
+directories present in the `alliocs` working tree at `/data/gitsrc/alliocs`
+found 6 matches for the systemd family, all unrelated: 4 are word fragments
+inside APC PDU SNMP MIB object names, and 2 are host-level network tuning
+notes. The control term `asyn` matched 4924 times in the same sweep, which is
+what shows the sweep was reading IOC sources rather than silently skipping
+them. Note that the count is of directories on disk, which exceeds the repos
+listed in that repository's `IOC_REPOS` manifest; the sweep covered what was
+present, not what the manifest declares.
 
 Limit of that evidence: those 40 IOCs are the set this site tracks today, not
 the set of everyone who builds against these images. The images exist to
@@ -57,20 +61,28 @@ headers, and no evidence available here can rule that out. Revisit only if the
 image is redefined so that its consumers are a known, closed set - which is
 what a runtime-only image without a toolchain would be.
 
-## rocky8 and rocky10 binaries emit `DT_RPATH` rather than `DT_RUNPATH`
+## The gate accepts both `DT_RPATH` and `DT_RUNPATH`
 
 Status: Keep (examined, no action)
-Decided: 2026-07-19
-Evidence carried by: commit 5c186b4
+Decided: 2026-07-19, re-observed 2026-08-14
+Evidence carried by: this commit
 
 Premise: the container gate checks that shipped binaries carry a non-empty
-`$ORIGIN`-relative runpath so the tree stays relocatable. On debian the linker
-emits `DT_RUNPATH`; on both rocky lines it emits `DT_RPATH`, because the rocky
-toolchain does not default to `-Wl,--enable-new-dtags`. The gate was briefly
-suspected of a false failure on rocky.
+`$ORIGIN`-relative runpath so the tree stays relocatable. At distribution
+1.2.1 the rocky binaries were observed emitting `DT_RPATH` while debian emitted
+`DT_RUNPATH`, attributed to the rocky toolchain not defaulting to
+`-Wl,--enable-new-dtags`. The gate was briefly suspected of failing rocky for
+that reason, and was written to accept either tag.
 
-Verdict: functionally equivalent for this purpose. Both tags are
-`$ORIGIN`-relative, so relocation works identically, and the gate accepts
-either. The difference originates in how `EPICS-env-distribution` is built
-upstream, not in these images, so there is nothing to change in this
-repository. It was surfaced to the owner and left as is.
+Re-observed at 1.2.2 on 2026-08-14: all three images now emit `DT_RUNPATH`
+only. Scanning the shared objects under `/opt/epics` with `readelf -d` found
+16 `RUNPATH` and zero `RPATH` in each of debian13, rocky8, and rocky10. Why the
+rocky output changed between 1.2.1 and 1.2.2 is not known here; the linker
+flags belong to the upstream `EPICS-env-distribution` build, not to this
+repository.
+
+Verdict: nothing to change. The distinction never affected relocation, since
+both tags are `$ORIGIN`-relative, and the gate accepts either - which is why
+the change in upstream behaviour passed unnoticed and cost nothing. Keep the
+gate tolerant of both rather than narrowing it to whatever the current
+toolchain happens to emit.
