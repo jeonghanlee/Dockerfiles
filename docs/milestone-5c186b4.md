@@ -149,13 +149,10 @@ outside this register so the history survives future resets.
 Title: Rebuild images from the prebuilt EPICS-env-distribution
 Labels: enhancement
 GitHub Milestone: 2.0.0
-Observed State: open
+Observed State: closed
 Observed Labels: enhancement
 Observed Milestone: 2.0.0
-Last Compared: 2026-08-14, after reopening #27
-
-Reconcile note: #27 was reopened 2026-08-14 for the size recapture, which M1
-has since completed. Closing it again is the remaining owner action.
+Last Compared: 2026-08-14, after closing #27 on the completed recapture
 
 #### M2 - Reintroduce ioc-runner
 
