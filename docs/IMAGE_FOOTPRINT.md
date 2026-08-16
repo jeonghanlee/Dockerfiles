@@ -94,7 +94,7 @@ no table above.
 | 1.2.1 | 2026-07-18 | 912 MB | 891 MB | 944 MB | After pruning surplus packages |
 | 1.2.1 | 2026-07-19 | 914 MB | 931 MB | 970 MB | After adding procServ and con |
 
-What is not known about the 1.2.1 rows, and cannot now be recovered:
+What is not known about the 1.2.1 rows:
 
 - Which axis they were measured on. No command was recorded with them. Their
   values sit closest to Real files, but that is a resemblance, not evidence.
@@ -104,9 +104,10 @@ What is not known about the 1.2.1 rows, and cannot now be recovered:
   two axes. The four axes differ by up to a factor of five on the same image,
   so an axis mismatch alone could produce a difference this size.
 
-Re-measuring 1.2.1 would settle all three, and it is not possible: upstream
-published no release for 1.2.1, the local tree at `~/alsu-epics/1.2.1` retains
-only empty directories, and no 1.2.1 image tag ever reached Docker Hub.
+Re-measuring 1.2.1 would settle all three, but it will not be done: the owner
+decided not to pursue it. The distribution tag 1.2.1 still exists, so the data
+is not lost to circumstance - it is simply out of scope. These rows stay as
+recorded, on an unknown axis.
 
 The previous-generation rows have no such gap. Those images were pulled from
 Docker Hub and measured with the same commands as the 1.2.2 row, so the

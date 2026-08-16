@@ -141,9 +141,9 @@ outside this register so the history survives future resets.
   figures and measuring commands recorded in `docs/IMAGE_FOOTPRINT.md`.
 - The same commands were applied to the previous-generation images pulled from
   Docker Hub, giving the first cross-generation comparison on matching axes.
-- Distribution 1.2.1 could not be re-measured. Upstream published no release
-  for it, the local tree retains only empty directories, and no 1.2.1 image tag
-  reached Docker Hub. Recorded as a known gap rather than closed silently.
+- Distribution 1.2.1 was not re-measured, and by owner decision will not be.
+  The axis of its figures stays unknown; the rows are kept as a known gap
+  rather than closed silently.
 
 ##### GitHub Projection
 
