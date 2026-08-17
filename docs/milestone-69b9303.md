@@ -7,11 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M2, modernizing the mdbook image, is Ready - it has no
-dependencies and is the one startable row. The container runtime (M1) is Blocked
-on the upstream gate G1; the consumer cutover is tracked as gate G2. The 1.2.2
-images are built, published, and consumer-verified; that work is complete and
-reachable in Git at commit 69b9303.
+Next session entry point: M2, modernizing the mdbook image, is In progress. The
+image is rebuilt at mdbook 0.5.4 on the trixie base and renders a real book
+locally; the remaining step is the owner-run workflow_dispatch publish, after
+which the consumer doc repos are verified against the published image - EPICS-env
+first, then epics-trainings. The container runtime (M1) is Blocked on the
+upstream gate G1; the consumer cutover is tracked as gate G2. The 1.2.2 images
+are built, published, and consumer-verified; that work is complete and reachable
+in Git at commit 69b9303.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -24,11 +27,11 @@ and decision records stay reachable at commit 69b9303.
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Runtime | M1 | Container runtime: systemd-less ioc-runner on a runtime-only slim image | Carry-forward | Blocked | No | G1 | ioc-runner starts and stops an IOC in a systemd-less container, and a toolchain-free runtime image builds and runs it; [detail](#m1---container-runtime) |
-| Images | M2 | Modernize the mdbook image | Milestone | Not started | Yes | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
+| Images | M2 | Modernize the mdbook image | Milestone | In progress | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 
-Tally: 2 milestone rows - Complete 0, In progress 0, Blocked 1, Not started 1, Ready 1.
+Tally: 2 milestone rows - Complete 0, In progress 1, Blocked 1, Not started 0, Ready 0.
 External gates: 2 open (G1, G2). Backlog is reported separately below and
 excluded from this tally.
 
@@ -123,38 +126,51 @@ systemd-less ioc-runner runtime. A retirement comment records this on #28.
 Origin: 69b9303 / M2
 Identity History: none
 GitHub Issue: #32, https://github.com/jeonghanlee/Dockerfiles/issues/32
-Status: Not started
+Status: In progress
 
 ##### Summary
 
 The mdbook image is the one remaining non-EPICS image in the repository. It was
 left untouched by the 2026 rework and is scheduled independently of it. Its
 workflow differs from the three EPICS images - it uses its own build variables
-rather than the reusable `image.yml`.
+rather than the reusable `image.yml`. Modernized to mdbook 0.5.4 on the trixie
+base, with publishing brought under the same owner-gated `workflow_dispatch`
+model as the three EPICS images. The PDF tool set is kept unchanged.
 
 ##### Scope
 
-Rebuild the mdbook image on a current base with a pinned mdbook release.
+Rebuild the mdbook image on the trixie base with a pinned mdbook 0.5.4 release,
+and gate its publish on `workflow_dispatch` on master.
 
-Out of scope: the three EPICS images.
+Out of scope: the three EPICS images; the consumer doc repositories, whose
+book.toml migration to mdbook 0.5 is handled per repository.
 
 ##### Completion Criteria
 
 - The image builds with the latest pinned mdbook and renders a site through the
   GitLab Pages template flow.
+- The image is published to Docker Hub via the gated `workflow_dispatch`.
 
 ##### Dependencies And Decisions
 
-- None. The row has no dependencies and is Ready.
+- None. The image work has no dependencies.
+- The 0.4 to 0.5 change is breaking for consumer book.toml (Font Awesome 6
+  validates icon prefixes; an old `fa-<brand>` icon such as `fa-gitlab` is
+  rejected, and must become `fab-<brand>`). Consumer repositories fix this per
+  repository; repositories with no `git-repository-icon` line are unaffected.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-08-17, in session
+Implementation Authorization: owner, 2026-08-17, in session
 Superseded Plan Artifacts: none
 
-1. Pin the current mdbook release and rebuild the image on a current base.
+1. Pin mdbook 0.5.4 and rebuild on the trixie base and builder, keeping the PDF
+   tool set.
+2. Gate the publish on `workflow_dispatch` on master, matching the EPICS images.
+3. Verify the image renders a real book; publish; then verify the consumer doc
+   repos against the published image - EPICS-env first, then epics-trainings.
 
 ##### Test Plan
 
@@ -166,11 +182,12 @@ Superseded Plan Artifacts: none
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | mdbook image | Pending | none |
+| T1 | 2026-08-17 | Local, mdbook:0.5.4 image | Pass | Image built (mdbook v0.5.4, Debian 13 trixie, PDF tools present); rendered the epics-trainings book (33 pages) through `mdbook build` after the `fab-gitlab` icon fix |
 
 ##### Closure Evidence
 
-- none
+- Remaining for Complete: the owner-run `workflow_dispatch` publish to Docker
+  Hub, then consumer-repo verification (EPICS-env, then epics-trainings).
 
 ##### GitHub Projection
 
