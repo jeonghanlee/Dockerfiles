@@ -7,11 +7,11 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: nothing here is startable. Every remaining row waits
-on an external gate - G1 for the ioc-runner container mode, G2 for Docker Hub
-publish authorization, G3 for the GitLab consumer cutover. When one resolves,
-open its M row and restore the executable status recorded there. Until then
-the register needs no attention.
+Next session entry point: nothing here is startable. The images are published
+(G2 complete, M3 complete). The two remaining M rows wait on external gates -
+M2 on G1 for the ioc-runner container mode, and the consumer rollout on G3 for
+the GitLab cutover. When a gate resolves, open its M row and restore the
+executable status recorded there. Until then the register needs no attention.
 
 This register is the status source of truth for the remaining 2026 image rework.
 It replaces `docs/milestone.md`, whose completed content stays reachable at
@@ -25,15 +25,15 @@ commit 5c186b4.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Images | M1 | Recapture the three image sizes at DIST_VERSION 1.2.2 on this host | Milestone | Complete | No | D5, D6, D7, D12 | Three images build locally at 1.2.2 and their sizes are recorded; [detail](#m1---recapture-image-sizes-at-122) |
 | Runtime | M2 | Reintroduce ioc-runner (container execution mode) | Carry-forward | Blocked | No | G1, D3 | ioc-runner start and stop work in a systemd-less container; [detail](#m2---reintroduce-ioc-runner) |
-| Publish | M3 | Publish the images to Docker Hub | Carry-forward | Blocked | No | G2, D1 | Tags visible on Docker Hub per the D1 scheme; [detail](#m3---publish-to-docker-hub) |
+| Publish | M3 | Publish the images to Docker Hub | Carry-forward | Complete | No | G2, D1 | latest and 1.2.2 tags live on Docker Hub for all three images; [detail](#m3---publish-to-docker-hub) |
 | Runtime | M8 | Pin `con` and `procServ-env` to a released version | Milestone | Complete | No | D11 | Both clones pinned to released tags in all three Dockerfiles; [detail](#m8---pin-con-and-procserv-env) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
-| Gates | G2 | Docker Hub publish authorization and execution | External gate | Open | No | | Owner authorizes and runs the gated publish workflow; [detail](#g2---docker-hub-publish-authorization) |
+| Gates | G2 | Docker Hub publish authorization and execution | External gate | Complete | No | | Owner ran the gated publish workflow; three images published; [detail](#g2---docker-hub-publish-authorization) |
 | Gates | G3 | GitLab consumer cutover | External gate | Open | No | D2 | Blocks the consumer rollout of the published images, which is executed in `alsu/ci` and has no work row in this register; complete when the template change and the runner-image rollout land together; [detail](#g3---gitlab-consumer-cutover) |
 
-Tally: 4 milestone rows - Complete 2, In progress 0, Blocked 2, Ready 0.
-External gates: 3 open (G1, G2, G3). Backlog is reported separately below and
-excluded from this tally.
+Tally: 4 milestone rows - Complete 3, In progress 0, Blocked 1, Ready 0.
+External gates: 2 open (G1, G3), 1 complete (G2). Backlog is reported separately
+below and excluded from this tally.
 
 ### Decisions
 
@@ -227,7 +227,7 @@ Last Compared: 2026-08-14, register reset
 Origin: 5c186b4 / M3
 Identity History: none
 GitHub Issue: #30, https://github.com/jeonghanlee/Dockerfiles/issues/30
-Status: Blocked
+Status: Complete
 
 ##### Summary
 
@@ -249,15 +249,14 @@ Out of scope: workflow changes, which are complete and carried by the current
 
 ##### Dependencies And Decisions
 
-- G2 must be Complete before work resumes.
+- G2 is Complete: the owner ran the publish workflow.
 - D1 defines the tag scheme.
-- Resume as Not started when G2 is Complete.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-08-17, in session
+Implementation Authorization: owner, 2026-08-17, ran the publish workflow
 Superseded Plan Artifacts: none
 
 1. Owner runs the `workflow_dispatch` publish on master after G2.
@@ -272,21 +271,24 @@ Superseded Plan Artifacts: none
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Docker Hub | Pending | none |
+| T1 | 2026-08-17 | Docker Hub | Pass | `latest` and `1.2.2` present for all three images (debian13, rocky8, rocky10), pushed 2026-08-17 08:57-09:03 UTC |
 
 ##### Closure Evidence
 
-- none
+- Three images published to Docker Hub via `workflow_dispatch` on master:
+  `jeonghanlee/{debian13,rocky8,rocky10}-epics`, each carrying `latest` and
+  `1.2.2`, pushed 2026-08-17 (08:57, 09:00, 09:03 UTC). The gated `image.yml`
+  ran build, verification gate, then publish for each.
 
 ##### GitHub Projection
 
 Title: Modernize the CI matrix and Docker Hub tag scheme
 Labels: enhancement
 GitHub Milestone: 2.0.0
-Observed State: open
+Observed State: closed
 Observed Labels: enhancement
 Observed Milestone: 2.0.0
-Last Compared: 2026-08-14, register reset
+Last Compared: 2026-08-17, after publishing the three images and closing #30
 
 #### M8 - Pin con and procServ-env
 
@@ -376,7 +378,7 @@ owned by the `epics-ioc-runner` repository and sits in its backlog, filed
 
 Origin: 5c186b4 / G2
 GitHub Issue: none
-Status: Open
+Status: Complete
 
 ##### Summary
 
@@ -391,11 +393,13 @@ publish workflow. No agent runs it.
 
 | Observed At | Result | Evidence |
 | --- | --- | --- |
-| Not run | Pending | Owner-run publish |
+| 2026-08-17 | Complete | Owner ran `workflow_dispatch` on master for all three images; publish steps succeeded and tags appear on Docker Hub |
 
 ##### Closure Evidence
 
-- none
+- Owner ran the gated publish workflow on master 2026-08-17; the three EPICS
+  images published to Docker Hub with `latest` and `1.2.2`. See M3 Closure
+  Evidence for the per-image push record.
 
 #### G3 - GitLab consumer cutover
 
