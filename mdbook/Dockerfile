@@ -1,14 +1,14 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.1.0
+#  version : 0.2.0
 ##
-FROM rust:slim-bookworm AS builder
+FROM rust:slim-trixie AS builder
 #
-ARG MDBOOK_VERSION="0.4.52"
+ARG MDBOOK_VERSION="0.5.4"
 #
 RUN cargo install mdbook --version ${MDBOOK_VERSION} --locked
 
-FROM debian:bookworm-slim
+FROM debian:trixie-slim
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 #
 ARG BUILD_DATE
