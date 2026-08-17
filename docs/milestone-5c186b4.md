@@ -26,11 +26,12 @@ commit 5c186b4.
 | Images | M1 | Recapture the three image sizes at DIST_VERSION 1.2.2 on this host | Milestone | Complete | No | D5, D6, D7, D12 | Three images build locally at 1.2.2 and their sizes are recorded; [detail](#m1---recapture-image-sizes-at-122) |
 | Runtime | M2 | Reintroduce ioc-runner (container execution mode) | Carry-forward | Blocked | No | G1, D3 | ioc-runner start and stop work in a systemd-less container; [detail](#m2---reintroduce-ioc-runner) |
 | Publish | M3 | Publish the images to Docker Hub | Carry-forward | Blocked | No | G2, D1 | Tags visible on Docker Hub per the D1 scheme; [detail](#m3---publish-to-docker-hub) |
+| Runtime | M8 | Pin `con` and `procServ-env` to a released version | Milestone | Complete | No | D11 | Both clones pinned to released tags in all three Dockerfiles; [detail](#m8---pin-con-and-procserv-env) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | Docker Hub publish authorization and execution | External gate | Open | No | | Owner authorizes and runs the gated publish workflow; [detail](#g2---docker-hub-publish-authorization) |
 | Gates | G3 | GitLab consumer cutover | External gate | Open | No | D2 | Blocks the consumer rollout of the published images, which is executed in `alsu/ci` and has no work row in this register; complete when the template change and the runner-image rollout land together; [detail](#g3---gitlab-consumer-cutover) |
 
-Tally: 3 milestone rows - Complete 1, In progress 0, Blocked 2, Ready 0.
+Tally: 4 milestone rows - Complete 2, In progress 0, Blocked 2, Ready 0.
 External gates: 3 open (G1, G2, G3). Backlog is reported separately below and
 excluded from this tally.
 
@@ -287,6 +288,64 @@ Observed Labels: enhancement
 Observed Milestone: 2.0.0
 Last Compared: 2026-08-14, register reset
 
+#### M8 - Pin con and procServ-env
+
+Origin: 5c186b4 / M8
+Identity History: moved from Backlog to Milestone when the D11 condition was observed and the pin was completed
+GitHub Issue: none
+Status: Complete
+
+##### Summary
+
+Both `con` and `procServ-env` were cloned at floating default-branch HEAD, with
+the clone commit recorded in the bake manifest. `procServ-env` published version
+1.0.0, satisfying the D11 condition, and both clones are now pinned by tag.
+
+##### Scope
+
+Pin both clones to a released tag in all three Dockerfiles and record the pin in
+the bake manifest.
+
+Out of scope: pinning the EPICS distribution, which is fixed by `DIST_VERSION`.
+
+##### Completion Criteria
+
+- Both clones are pinned in all three Dockerfiles and the pin appears in the
+  bake manifest.
+
+##### Dependencies And Decisions
+
+- D11 held the row Conditional until `procServ-env` published a version number.
+  Observed 2026-08-16: procServ-env released 1.0.0, so the condition is met.
+
+##### Implementation Plan
+
+Plan Status: accepted
+Plan Acceptance: owner, 2026-08-16, in session
+Implementation Authorization: owner, 2026-08-16, in session
+Superseded Plan Artifacts: none
+
+1. Pin `procServ-env` to 1.0.0 and `con` to 1.1.0 by tag in all three
+   Dockerfiles.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Build and manifest | Build each image and read the bake manifest | All three EPICS images | The manifest records the pinned con and procServ-env references |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | 2026-08-16 | All three EPICS images | Pass | Manifest records procServ-env b4bffa5 (1.0.0) and con 0dfe4f2 (1.1.0); pinned in commit f02bbb0 |
+
+##### Closure Evidence
+
+- `con` pinned to 1.1.0 and `procServ-env` to 1.0.0 by tag in all three
+  Dockerfiles, commit f02bbb0. Each rebuilt image's bake manifest records the
+  pinned commits.
+
 #### G1 - epics-ioc-runner container mode
 
 Origin: 5c186b4 / G1
@@ -380,9 +439,8 @@ release tally.
 | Images | M5 | Image vulnerability scanning, report only | Milestone | Deferred | No | D8 | Assignment condition: a new owner decision returns it to current execution; [detail](#m5---image-vulnerability-scanning) |
 | Images | M6 | Runtime-only slim image variant | Milestone | Deferred | No | D9 | Assignment condition: a new owner decision returns it to current execution; [detail](#m6---runtime-only-slim-image-variant) |
 | Runtime | M7 | Include the `tools` IOC generator in the images | Milestone | Deferred | No | D10 | Assignment condition: a new owner decision returns it to current execution; [detail](#m7---include-the-tools-ioc-generator) |
-| Runtime | M8 | Pin `con` and `procServ-env` to a released version | Milestone | Conditional | No | D11 | Condition: `procServ-env` publishes a version number; [detail](#m8---pin-con-and-procserv-env) |
 
-Backlog tally: 5 rows - Open 1, Deferred 3, Conditional 1.
+Backlog tally: 4 rows - Open 1, Deferred 3, Conditional 0.
 
 ### Backlog Details
 
@@ -598,61 +656,11 @@ Superseded Plan Artifacts: none
 
 - none
 
-#### M8 - Pin con and procServ-env
+## Assignment History
 
-Origin: 5c186b4 / M8
-Identity History: none
-GitHub Issue: none
-Status: Conditional
-
-##### Summary
-
-Both `con` and `procServ-env` are cloned at floating default-branch HEAD, with
-the clone commit recorded in the bake manifest. They stay unpinned until
-`procServ-env` publishes a version number (D11).
-
-##### Scope
-
-Pin both clones to a tag or commit in all three Dockerfiles and record the pin
-in the bake manifest.
-
-Out of scope: pinning the EPICS distribution, which is already fixed by
-`DIST_VERSION`.
-
-##### Completion Criteria
-
-- Both clones are pinned in all three Dockerfiles and the pin appears in the
-  bake manifest.
-
-##### Dependencies And Decisions
-
-- D11 holds the row Conditional. The named observable condition is a published
-  `procServ-env` version number. When observed, move the row to Not started.
-
-##### Implementation Plan
-
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
-Superseded Plan Artifacts: none
-
-1. Pin both clones once the condition is observed.
-
-##### Test Plan
-
-| Label | Layer | Method | Environment | Expected Result |
-| --- | --- | --- | --- | --- |
-| T1 | Build and manifest | Build each image and read the bake manifest | All three EPICS images | The manifest records the pinned con and procServ-env references |
-
-##### Verification Results
-
-| Label | Observed At | Environment | Result | Evidence |
-| --- | --- | --- | --- | --- |
-| T1 | Not run | All three EPICS images | Pending | none |
-
-##### Closure Evidence
-
-- none
+| Date | Movement | Synchronization Commit |
+| --- | --- | --- |
+| 2026-08-17 | M8 moved from Backlog to Milestone as Complete after its D11 condition was observed (procServ-env 1.0.0) and the pin landed in f02bbb0 | this synchronization commit |
 
 ## History
 
