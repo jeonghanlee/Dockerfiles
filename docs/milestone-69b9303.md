@@ -7,14 +7,12 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M2, modernizing the mdbook image, is In progress. The
-image is rebuilt at mdbook 0.5.4 on the trixie base and renders a real book
-locally; the remaining step is the owner-run workflow_dispatch publish, after
-which the consumer doc repos are verified against the published image - EPICS-env
-first, then epics-trainings. The container runtime (M1) is Blocked on the
-upstream gate G1; the consumer cutover is tracked as gate G2. The 1.2.2 images
-are built, published, and consumer-verified; that work is complete and reachable
-in Git at commit 69b9303.
+Next session entry point: nothing here is startable. The mdbook image is
+modernized to 0.5.4 and published (M2 complete). The one remaining milestone, the
+container runtime (M1), is Blocked on the upstream gate G1; the consumer cutover
+is tracked as gate G2. When G1 resolves, open M1 and restore the executable
+status recorded there. The 1.2.2 images are built, published, and consumer-
+verified; that work is complete and reachable in Git at commit 69b9303.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -31,7 +29,7 @@ and decision records stay reachable at commit 69b9303.
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 
-Tally: 2 milestone rows - Complete 0, In progress 1, Blocked 1, Not started 0, Ready 0.
+Tally: 2 milestone rows - Complete 1, In progress 0, Blocked 1, Not started 0, Ready 0.
 External gates: 2 open (G1, G2). Backlog is reported separately below and
 excluded from this tally.
 
@@ -126,7 +124,7 @@ systemd-less ioc-runner runtime. A retirement comment records this on #28.
 Origin: 69b9303 / M2
 Identity History: none
 GitHub Issue: #32, https://github.com/jeonghanlee/Dockerfiles/issues/32
-Status: In progress
+Status: Complete
 
 ##### Summary
 
@@ -186,8 +184,14 @@ Superseded Plan Artifacts: none
 
 ##### Closure Evidence
 
-- Remaining for Complete: the owner-run `workflow_dispatch` publish to Docker
-  Hub, then consumer-repo verification (EPICS-env, then epics-trainings).
+- Image modernized to mdbook 0.5.4 on the trixie base, PDF tools kept, publish
+  gated on `workflow_dispatch`; commits 401b202 (image) and 1047990 (register).
+- Published to Docker Hub via the gated `workflow_dispatch` on 2026-08-17
+  (`jeonghanlee/mdbook:latest`, ~191 MB, down from ~352 MB).
+- Consumer verification: EPICS-env is unaffected (no `git-repository-icon`
+  line); epics-trainings was adapted to mdbook 0.5 (icon `fab-` prefix in both
+  configs, rustc check removed from its Pages workflow) and renders 33 pages on
+  the new image.
 
 ##### GitHub Projection
 
@@ -198,6 +202,8 @@ Observed State: open
 Observed Labels: enhancement
 Observed Milestone: 2.0.0
 Last Compared: 2026-08-17, register reset
+Close note: #32 can be closed on the completed modernization and publish; the
+close is an owner-run gh action, not yet performed.
 
 #### G1 - epics-ioc-runner container mode
 
