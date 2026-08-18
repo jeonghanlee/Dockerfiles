@@ -25,7 +25,7 @@ and decision records stay reachable at commit 69b9303.
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Runtime | M1 | Container runtime: systemd-less ioc-runner on a runtime-only slim image | Carry-forward | Blocked | No | G1 | ioc-runner starts and stops an IOC in a systemd-less container, and a toolchain-free runtime image builds and runs it; [detail](#m1---container-runtime) |
-| Images | M2 | Modernize the mdbook image | Milestone | In progress | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
+| Images | M2 | Modernize the mdbook image | Milestone | Complete | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 
