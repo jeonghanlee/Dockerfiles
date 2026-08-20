@@ -1,0 +1,76 @@
+---
+name: Documentation
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "book.toml"
+      - "check_links.rb"
+      - "configure/**"
+      - "docs/**"
+      - "Makefile"
+      - ".github/workflows/docs.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "book.toml"
+      - "check_links.rb"
+      - "configure/**"
+      - "docs/**"
+      - "Makefile"
+      - ".github/workflows/docs.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: "3.1"
+
+      - name: Verify local Markdown links
+        run: make check-links
+
+      - name: Build with mdBook
+        run: make docs
+
+      - name: Configure Pages
+        if: github.event_name != 'pull_request'
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: public
+
+  deploy:
+    if: >-
+      github.event_name != 'pull_request'
+      && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-22.04
+    needs: build
+    steps:
+      - name: Deploy Pages artifact
+        id: deployment
+        uses: actions/deploy-pages@v4

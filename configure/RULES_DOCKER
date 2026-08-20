@@ -1,12 +1,12 @@
 VARS_EXCLUDES += image_targets
 
 .PHONY: all build dry-run gate check check-tools check-images check-scripts
-.PHONY: check-workflows check-docs check-diff trigger versions
+.PHONY: check-workflows check-docs check-links check-diff docs trigger versions
 
 ##@ General
 all: check ## Run the default validation suite
 
-check: check-tools check-images check-scripts check-workflows check-docs check-diff dry-run ## Run repository validation
+check: check-tools check-images check-scripts check-workflows check-docs check-links check-diff dry-run ## Run repository validation
 
 versions: ## Print project and tool versions
 	$(QUIET) printf "%s = %s\n" "APPNAME" "$(APPNAME)"
@@ -28,6 +28,7 @@ check-tools: ## Verify tools required by validation targets
 	$(QUIET) for tool in bash git ruby shellcheck yamllint; do \
 	    if ! command -v "$$tool" >/dev/null 2>&1; then \
 	        printf "%s\n" "error: required command not found: $$tool"; \
+	        printf "%s\n" "install the validation packages listed in docs/SETUP.md"; \
 	        exit 1; \
 	    fi; \
 	done
@@ -54,8 +55,25 @@ check-docs: ## Reject non-ASCII characters in Markdown sources
 	    exit 1; \
 	fi
 
+check-links: ## Verify local file and image targets in Markdown sources
+	$(QUIET) ruby $(LINK_CHECKER)
+
 check-diff: ## Check staged and unstaged diff whitespace
 	$(QUIET) git diff --check
+
+##@ Documentation
+docs: ## Build the mdBook site in public
+	$(QUIET) if ! command -v docker >/dev/null 2>&1; then \
+	    printf "%s\n" "error: required command not found: docker"; \
+	    printf "%s\n" "install Docker Engine as described in docs/SETUP.md"; \
+	    exit 1; \
+	fi
+	$(QUIET) docker run --rm \
+	    --user "$$(id -u):$$(id -g)" \
+	    --volume "$(abspath $(TOP)):/work" \
+	    --workdir /work \
+	    "$(MDBOOK_IMAGE)" \
+	    bash -c "mdbook clean && mdbook build"
 
 ##@ Docker Images
 build: $(IMAGE_BUILD_TARGETS) ## Build all active Docker images

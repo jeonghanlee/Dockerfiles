@@ -2,63 +2,101 @@
 
 ## Scope
 
-This document describes the repository structure, build flow, configuration files, and validation surfaces for the Docker image definitions.
+This document describes the repository structure, image composition, build and publication flows, platform boundary, configuration files, and validation surfaces.
 
-**Out of scope:** Docker Hub account administration, GitHub organization policy, EPICS source maintenance, and downstream GitLab runner deployment.
+**Out of scope:** Host installation procedures, Docker Hub account administration, GitHub organization policy, EPICS source maintenance, and downstream runner deployment.
 
 ## Overview
 
-The repository defines a maintained set of Docker images for ALS GitLab runner, container IOC, and test environments. The three EPICS images (`debian13`, `rocky8`, `rocky10`) consume a prebuilt EPICS environment from `EPICS-env-distribution`; `mdbook` is a separate documentation-rendering image. Local helper scripts, Makefile targets, and GitHub Actions workflows share the same per-image directory configuration.
+The repository defines three EPICS build images (`debian13`, `rocky8`, `rocky10`) and one documentation-rendering image (`mdbook`). Local Makefile targets and GitHub Actions workflows consume the same image definitions and validation code.
+
+## Platform Boundary
+
+All active EPICS images bake `EPICS_HOST_ARCH=linux-x86_64` and consume a matching prebuilt distribution tree. The published `jeonghanlee/mdbook:0.5.4` image is `linux/amd64`. Native builds and the documented host procedure therefore target `x86_64/amd64`.
 
 ## Image Composition
 
-Each EPICS image is single-stage and layered as:
+Each EPICS image has these functional layers:
 
 | Layer | Contents |
 |---|---|
-| OS packages | Build toolchain plus the runtime libraries the shipped tree links, pruned to what the distribution and in-container consumer IOC builds need. |
-| Distribution | A sparse fetch of one `EPICS-env-distribution` OS tree (`<DIST_VERSION>/<os>/<epics-version>`) placed under `/opt/epics`, with a bake manifest recording component commits. |
-| IOC runtime tools | `procServ` and `con`, built in-layer with a transient autotools set that is removed in the same layer. |
-| Baked environment | `EPICS_PATH`, `EPICS_BASE`, `EPICS_MODULES`, `EPICS_HOST_ARCH`, `PATH`, `LD_LIBRARY_PATH` set via `ENV`, so the environment is present without sourcing. |
+| OS packages | Consumer IOC build toolchain and runtime libraries |
+| Distribution | One sparse `EPICS-env-distribution` OS tree under `/opt/epics` |
+| IOC runtime tools | `procServ` and `con` |
+| Baked environment | EPICS paths, host architecture, executable path, and library path |
 
-No EPICS source is compiled during the image build; the consumer build toolchain ships in the image because runner jobs compile IOCs in-container.
+No EPICS source is compiled during an image build. The image carries a prebuilt EPICS tree and the toolchain needed to compile consumer IOCs.
 
-## Build Flow
+The mdBook image uses a Rust builder stage to install the pinned `MDBOOK_VERSION`, then copies the executable into a Debian runtime image with the document rendering tools.
 
-Local build:
+## Local Build Flow
 
 ```text
-<image>/Dockerfile + <image>/env.conf
+<image>/Dockerfile
+<image>/env.conf
+<image>/env.local (optional)
         |
         v
-docker_builder.bash  (reads env.conf for the image name and build options)
+docker_builder.bash
         |
         v
-docker build  ->  <account>/<image>-epics:latest
+docker build -> <account>/<target-name>:latest
 ```
 
-CI build (EPICS images), a thin per-OS caller into one reusable workflow:
+`env.conf` supplies image defaults. A readable `env.local` overrides only the keys it defines for one untracked host configuration, and CLI options take final precedence.
+
+## EPICS Image CI Flow
 
 ```text
 push / pull_request / workflow_dispatch
         |
         v
-.github/workflows/<image>.yml  (path filters, concurrency)
+.github/workflows/<image>.yml
         |
         v
-.github/workflows/image.yml  (reusable, workflow_call)
+.github/workflows/image.yml
         |
-        +-- build and load the image into the runner daemon
-        +-- run gate.bash against the loaded image
-        +-- publish latest + <DIST_VERSION>
-              (workflow_dispatch on master only, after the gate passes)
+        +-- build and load image
+        +-- run gate.bash
+        `-- publish latest + DIST_VERSION
+              (manual master run only)
 ```
+
+The shared workflow must pass the container gate before it can publish an EPICS image.
+
+## Documentation Flow
+
+```text
+book.toml + docs/ + fixed mdbook image
+        |
+        v
+make docs
+        |
+        v
+public/
+        |
+        v
+Pages artifact -> github-pages environment
+```
+
+Pull requests build the book without deploying it. A push to `master` or a manual run on `master` builds and deploys the Pages artifact.
+
+## Proxy Boundaries
+
+| Network path | Configuration owner | Purpose |
+|---|---|---|
+| Docker daemon to registry | Docker service environment | Pull and push image manifests and layers |
+| New build or container to package and source servers | Docker client proxy configuration | Supply proxy build arguments and container environment |
+
+The daemon proxy does not supply package or Git proxy values inside a build. The Docker client configuration does not configure registry traffic from the daemon.
 
 ## Directory Structure
 
 ```text
 .
 |-- Makefile
+|-- book.toml
+|-- check_links.rb
 |-- configure/
 |   |-- CONFIG
 |   |-- RELEASE
@@ -68,11 +106,21 @@ push / pull_request / workflow_dispatch
 |   |-- RULES_FUNC
 |   |-- RULES_DOCKER
 |   `-- RULES_VARS
+|-- docs/
+|   |-- README.md
+|   |-- SUMMARY.md
+|   |-- SETUP.md
+|   |-- ARCHITECTURE.md
+|   |-- MAINTENANCE.md
+|   |-- IMAGE_FOOTPRINT.md
+|   |-- CLOSED_DOORS.md
+|   `-- milestone-69b9303.md
 |-- <image>/
 |   |-- Dockerfile
 |   `-- env.conf
 |-- .github/workflows/
 |   |-- image.yml
+|   |-- docs.yml
 |   `-- <image>.yml
 |-- docker_builder.bash
 |-- gate.bash
@@ -81,32 +129,33 @@ push / pull_request / workflow_dispatch
 
 ## Active Image Set
 
-| Image directory | Workflow | EPICS image (gated + versioned) |
-|---|---|---|
-| `debian13/` | `.github/workflows/debian13.yml` | Yes |
-| `mdbook/` | `.github/workflows/mdbook.yml` | No |
-| `rocky8/` | `.github/workflows/rocky8.yml` | Yes |
-| `rocky10/` | `.github/workflows/rocky10.yml` | Yes |
-
-The EPICS images call the shared `.github/workflows/image.yml`; `mdbook` has its own standalone workflow.
+| Image directory | Workflow | Container gate | Published version tag |
+|---|---|---|---|
+| `debian13/` | `debian13.yml` | Yes | `DIST_VERSION` |
+| `mdbook/` | `mdbook.yml` | No | `MDBOOK_VERSION` |
+| `rocky8/` | `rocky8.yml` | Yes | `DIST_VERSION` |
+| `rocky10/` | `rocky10.yml` | Yes | `DIST_VERSION` |
 
 ## Configuration Scope
 
 | Scope | File | Contents |
 |---|---|---|
-| Project identity | `configure/RELEASE` | Repository name, project URL, Docker account. |
-| Active image list | `configure/CONFIG_SITE` | Image directories, release image directories, default image. |
-| Derived Make variables | `configure/CONFIG_VARS` | Tool paths, workflow list, generated target lists. |
-| Image defaults | `<image>/env.conf` | Local Docker target name, account, build options, build args. |
-| Local overrides | `configure/*.local` | Untracked site-specific Makefile overrides. |
+| Project identity | `configure/RELEASE` | Repository name, URL, and Docker account |
+| Active image and documentation defaults | `configure/CONFIG_SITE` | Image lists, default image, build arguments, fixed mdBook image |
+| Derived Make variables | `configure/CONFIG_VARS` | Helper paths and generated target lists |
+| Image defaults | `<image>/env.conf` | Docker target name, account, build options, and build arguments |
+| Per-image local override | `<image>/env.local` | Untracked override of the keys it defines |
+| Make local override | `configure/*.local` | Untracked Make configuration overrides |
 
 ## Validation Surfaces
 
-| Surface | Make target | Direct command |
+| Surface | Target | Real path |
 |---|---|---|
-| Bash syntax | `make check-scripts` | `bash -n docker_builder.bash gate.bash trigger.bash` |
-| Bash static analysis | `make check-scripts` | `shellcheck -S warning docker_builder.bash gate.bash trigger.bash` |
-| Workflow YAML parse | `make check-workflows` | `ruby -e 'require "yaml"; ARGV.each { |p| YAML.load_file(p) }' .github/workflows/*.yml` |
-| Docker build preview | `make dry-run` | `./docker_builder.bash -d -t <image>` |
-| Container gate | `make gate.<image>` | `docker run --rm -v $PWD/gate.bash:/gate.bash:ro <image> bash /gate.bash` |
-| Diff whitespace | `make check-diff` | `git diff --check` |
+| Bash syntax and static analysis | `make check-scripts` | Repository Bash scripts |
+| Workflow YAML | `make check-workflows` | Every `.github/workflows/*.yml` file |
+| Markdown character set | `make check-docs` | Every Markdown source outside `work/` |
+| Local Markdown targets | `make check-links` | Relative file and image links |
+| Docker build preview | `make dry-run` | Every configured image |
+| EPICS container gate | `make gate.<image>` | Built EPICS image and `gate.bash` |
+| Documentation render | `make docs` | Fixed mdBook image and complete source tree |
+| Diff whitespace | `make check-diff` | Staged and unstaged changes |

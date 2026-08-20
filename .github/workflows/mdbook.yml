@@ -17,6 +17,10 @@ name: mdbook
 permissions:
   contents: read
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
 jobs:
   mdbook:
     runs-on: ubuntu-22.04
@@ -24,11 +28,18 @@ jobs:
       IMAGE_CONTEXT: mdbook
       DOCKER_FILE: mdbook/Dockerfile
       DOCKER_IMAGE: jeonghanlee/mdbook
-      DOCKER_TAG: latest
 
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Read mdBook version from the Dockerfile
+        id: ver
+        run: |
+          df="${IMAGE_CONTEXT}/Dockerfile"
+          v="$(sed -nE 's/^ARG MDBOOK_VERSION="?([0-9.]+)"?$/\1/p' "${df}")"
+          test -n "${v}"
+          printf "mdbook_version=%s\n" "${v}" >> "${GITHUB_OUTPUT}"
 
       - name: Docker meta
         id: meta
@@ -57,7 +68,29 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
+      - name: Reject an existing fixed version tag
+        if: >-
+          github.event_name == 'workflow_dispatch'
+          && github.ref == 'refs/heads/master'
+        env:
+          MDBOOK_VERSION: ${{ steps.ver.outputs.mdbook_version }}
+        run: |
+          fixed_tag="${DOCKER_IMAGE}:${MDBOOK_VERSION}"
+          inspect_error=""
+          if inspect_error="$(docker manifest inspect "$fixed_tag" 2>&1)"; then
+            printf "error: fixed tag already exists: %s\n" "${fixed_tag}" >&2
+            exit 1
+          fi
+          case "${inspect_error}" in
+            *"no such manifest"*|*"manifest unknown"*) ;;
+            *)
+              printf "error: tag lookup failed: %s\n" "${fixed_tag}" >&2
+              printf "%s\n" "${inspect_error}" >&2
+              exit 1
+              ;;
+          esac
+
+      - name: Build and publish
         id: docker_build
         uses: docker/build-push-action@v7
         with:
@@ -66,5 +99,10 @@ jobs:
           push: >-
             ${{ github.event_name == 'workflow_dispatch'
             && github.ref == 'refs/heads/master' }}
-          tags: ${{ env.DOCKER_IMAGE }}:${{ env.DOCKER_TAG }}
+          tags: |
+            ${{ env.DOCKER_IMAGE }}:latest
+            ${{ env.DOCKER_IMAGE }}:${{ steps.ver.outputs.mdbook_version }}
           labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            BUILD_VERSION=${{ steps.ver.outputs.mdbook_version }}

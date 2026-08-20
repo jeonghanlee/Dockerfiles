@@ -2,6 +2,7 @@ IMAGE_DIRS := debian13 mdbook rocky8 rocky10
 RELEASE_IMAGE_DIRS := debian13 rocky8 rocky10
 DEFAULT_IMAGE := debian13
 BUILD_ARGS :=
+MDBOOK_IMAGE := jeonghanlee/mdbook:0.5.4
 
 -include $(TOP)/../CONFIG_SITE.local
 -include $(TOP)/configure/CONFIG_SITE.local
