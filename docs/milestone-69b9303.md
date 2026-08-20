@@ -7,12 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: nothing here is startable. The mdbook image is
-modernized to 0.5.4 and published (M2 complete). The one remaining milestone, the
-container runtime (M1), is Blocked on the upstream gate G1; the consumer cutover
-is tracked as gate G2. When G1 resolves, open M1 and restore the executable
-status recorded there. The 1.2.2 images are built, published, and consumer-
-verified; that work is complete and reachable in Git at commit 69b9303.
+Next session entry point: check G1 in `docs/milestone-69b9303.md`; no repository
+work is startable while it remains Open. Repository documentation is published
+through the GitHub Pages workflow (M3 complete), and the mdbook image is
+modernized to 0.5.4 and published (M2 complete). The one remaining milestone,
+the container runtime (M1), is Blocked on G1; the consumer cutover is tracked
+as gate G2. When G1 resolves, restore M1 to Not started. The 1.2.2 images are
+built, published, and consumer-verified; that work is complete and reachable
+in Git at commit 69b9303.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -26,12 +28,14 @@ and decision records stay reachable at commit 69b9303.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | Runtime | M1 | Container runtime: systemd-less ioc-runner on a runtime-only slim image | Carry-forward | Blocked | No | G1 | ioc-runner starts and stops an IOC in a systemd-less container, and a toolchain-free runtime image builds and runs it; [detail](#m1---container-runtime) |
 | Images | M2 | Modernize the mdbook image | Milestone | Complete | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
+| Documentation | M3 | Publish repository documentation with mdBook and GitHub Pages | Milestone | Complete | No | G3 | The fixed mdBook image renders the repository book, the Actions workflow deploys it, and the live URL serves the result; [detail](#m3---publish-repository-documentation) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
+| Gates | G3 | GitHub Pages Actions source | External gate | Complete | No | | Repository Pages source reports `build_type: workflow`; [detail](#g3---github-pages-actions-source) |
 
-Tally: 2 milestone rows - Complete 1, In progress 0, Blocked 1, Not started 0, Ready 0.
-External gates: 2 open (G1, G2). Backlog is reported separately below and
-excluded from this tally.
+Tally: 3 milestone rows - Complete 2, In progress 0, Blocked 1, Not started 0,
+Ready 0. External gates: 2 open (G1, G2) and 1 complete (G3). Backlog is
+reported separately below and excluded from this tally.
 
 ### Milestone Details
 
@@ -205,6 +209,79 @@ Last Compared: 2026-08-17, register reset
 Close note: #32 can be closed on the completed modernization and publish; the
 close is an owner-run gh action, not yet performed.
 
+#### M3 - Publish repository documentation
+
+Origin: 69b9303 / M3
+Identity History: none
+GitHub Issue: none
+Status: Complete
+
+##### Summary
+
+The repository documentation is organized as an mdBook, rendered with the
+fixed `jeonghanlee/mdbook:0.5.4` image, validated through local and GitHub
+Actions paths, and published at
+https://jeonghanlee.github.io/Dockerfiles/.
+
+##### Scope
+
+Maintain the repository mdBook source, local link validation, fixed-image
+rendering, GitHub Actions build and deployment, and the published Pages site.
+
+Out of scope: consumer documentation repositories, mdbook image modernization
+owned by M2, and custom domain configuration.
+
+##### Completion Criteria
+
+- The repository validation and fixed-image mdBook render pass.
+- The Documentation workflow builds and deploys the Pages artifact.
+- Pages uses the GitHub Actions source and the live URL serves the mdBook.
+
+##### Dependencies And Decisions
+
+- G3 is Complete.
+
+##### Implementation Plan
+
+Plan Status: accepted
+Plan Acceptance: owner, 2026-08-19, in session
+Implementation Authorization: owner, 2026-08-19, in session
+Superseded Plan Artifacts: none
+
+1. Organize setup, architecture, maintenance, historical, and work-register
+   documents under the mdBook source tree.
+2. Add fixed-image rendering and local Markdown link validation.
+3. Add the GitHub Pages workflow, select the Actions source, and verify the
+   deployed site.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Repository validation | Run `make check` | Debian 13 host | Source, workflow, link, and dry-run checks pass |
+| T2 | Documentation render | Run `make docs` through the repository target | Docker with `jeonghanlee/mdbook:0.5.4` | Complete book renders into `public/` |
+| T3 | CI deployment | Run the Documentation workflow from the committed tree | GitHub Actions, `ubuntu-22.04` | Build and deploy jobs pass |
+| T4 | Published site | Request the Pages root and inspect the returned document | GitHub Pages | HTTP 200 response contains the mdBook site |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | 2026-08-19 | Debian 13 host | Pass | `make check` completed successfully |
+| T2 | 2026-08-19 | Docker, `jeonghanlee/mdbook:0.5.4` | Pass | Seven chapters rendered and generated local links passed |
+| T3 | 2026-08-19 | GitHub Actions, `ubuntu-22.04` | Pass | Documentation run 32326076508 completed build and deploy jobs |
+| T4 | 2026-08-19 | GitHub Pages | Pass | Live root returned HTTP 200 with the mdBook title and assets |
+
+##### Closure Evidence
+
+- Commit 7377dd1 added the documentation source, validation, fixed renderer,
+  and Pages workflow.
+- Documentation workflow run 32326076508 built and deployed the committed
+  tree successfully.
+- The Pages API reported `build_type: workflow` on 2026-08-19, closing G3.
+- https://jeonghanlee.github.io/Dockerfiles/ served the mdBook with HTTP 200 on
+  2026-08-19.
+
 #### G1 - epics-ioc-runner container mode
 
 Origin: 69b9303 / G1
@@ -260,6 +337,31 @@ dependency unrelated to the image.
 ##### Closure Evidence
 
 - none
+
+#### G3 - GitHub Pages Actions source
+
+Origin: 69b9303 / G3
+GitHub Issue: none
+Status: Complete
+
+##### Summary
+
+The repository owner selects GitHub Actions as the Pages publishing source so
+the legacy branch-based Jekyll workflow no longer owns publication for M3.
+
+##### Completion Criteria
+
+- The repository Pages API reports `build_type: workflow`.
+
+##### Verification Results
+
+| Observed At | Result | Evidence |
+| --- | --- | --- |
+| 2026-08-19 | Pass | `gh api repos/jeonghanlee/Dockerfiles/pages` reported `build_type: workflow` |
+
+##### Closure Evidence
+
+- The Pages source was changed to GitHub Actions and verified on 2026-08-19.
 
 ## Backlog
 

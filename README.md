@@ -56,7 +56,9 @@ The three EPICS image workflows call the shared `image.yml`, load each image, an
 
 The mdBook image workflow builds on pushes and pull requests. A manual run on `master` publishes `latest` and the fixed `MDBOOK_VERSION`; an existing fixed tag is never replaced.
 
-The documentation workflow builds on pull requests and publishes the mdBook artifact to GitHub Pages on `master` pushes or manual runs. The live site URL will be added after the first deployment is verified.
+The documentation workflow builds on pull requests and publishes the mdBook
+artifact to [GitHub Pages](https://jeonghanlee.github.io/Dockerfiles/) on
+`master` pushes or manual runs.
 
 ## Documentation
 
