@@ -8,14 +8,14 @@ Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
 Next session entry point: start M4 in `docs/milestone-69b9303.md` - add the s6
-supervision suite to the three EPICS image Dockerfiles. M4 and M5 (the Ubuntu
-24.04 image) are Ready and depend on no open gate. The container runtime work is
-split in two: M1 carries the ioc-runner supervision layer and is Blocked on G1,
-and M7 carries the runtime-only slim image that follows it. M6 (the Ubuntu 26.04
-image) is Blocked on G4 until the distribution publishes an `ubuntu-26.04` tree.
-The mdbook image (M2) and the documentation site (M3) are complete, and the
-1.2.2 images are built, published, and consumer-verified in Git at commit
-69b9303.
+supervision suite to the three EPICS image Dockerfiles. M4 is the only Ready
+row and needs no distribution change. Both Ubuntu images (M5, M6) pin
+EPICS-env-distribution 1.3.0 and are Blocked on G4 until that version
+publishes. The container runtime work is split in two: M1 carries the
+ioc-runner supervision layer and is Blocked on G1, and M7 carries the
+runtime-only slim image that follows it. The mdbook image (M2) and the
+documentation site (M3) are complete, and the 1.2.2 images are built,
+published, and consumer-verified in Git at commit 69b9303.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -34,13 +34,14 @@ and decision records stay reachable at commit 69b9303.
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 | Gates | G3 | GitHub Pages Actions source | External gate | Complete | No | | Repository Pages source reports `build_type: workflow`; [detail](#g3---github-pages-actions-source) |
 | Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Not started | Yes | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
-| Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Not started | Yes | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
-| Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
+| Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu24-epics` builds from the 1.3.0 distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
+| Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
 | Runtime | M7 | Runtime-only slim image | Milestone | Not started | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
-| Gates | G4 | EPICS-env-distribution Ubuntu 26.04 tree | External gate | Open | No | | A published distribution version carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-ubuntu-2604-tree) |
+| Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Blocked | No | G4 | The three existing images build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
+| Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Open | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 7 milestone rows - Complete 2, In progress 0, Blocked 2, Not started 3,
-Ready 2 (M4, M5). External gates: 3 open (G1, G2, G4) and 1 complete (G3).
+Tally: 8 milestone rows - Complete 2, In progress 0, Blocked 4, Not started 2,
+Ready 1 (M4). External gates: 3 open (G1, G2, G4) and 1 complete (G3).
 Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
@@ -359,6 +360,10 @@ mdbook image.
   execline 2.9.6.1; Ubuntu 26.04 packages the same versions; Ubuntu 24.04
   packages s6 2.12.0.3, below the floor; Rocky 8.10 and 10.2 carry no s6,
   execline, or skalibs in BaseOS, AppStream, or EPEL. Observed 2026-09-03.
+- The images that carry this layer publish as image version 1.3.0, the value
+  `DIST_VERSION` supplies to the build and the publish tag. The layer itself
+  does not depend on that distribution bump and can be built and gated first,
+  which is why this row stays independent of G4.
 - The build route below is part of the draft plan and is not an accepted
   decision.
 
@@ -409,13 +414,15 @@ Last Compared: 2026-09-03, at issue creation
 Origin: 69b9303 / M5
 Identity History: none
 GitHub Issue: #39, https://github.com/jeonghanlee/Dockerfiles/issues/39
-Status: Not started
+Status: Blocked
 
 ##### Summary
 
-EPICS-env-distribution already publishes an `ubuntu-24.04` tree next to the
-trees the three existing EPICS images consume, so an Ubuntu image can be built
-from the same prebuilt binaries with no distribution work.
+EPICS-env-distribution publishes an `ubuntu-24.04` tree next to the trees the
+three existing EPICS images consume, so an Ubuntu image needs no distribution
+work of its own. The image pins distribution 1.3.0 so both Ubuntu images enter
+the set at one version and publish under the 1.3.0 image tag; 1.2.2 already
+carries the tree, but 1.3.0 is not published yet.
 
 ##### Scope
 
@@ -431,15 +438,20 @@ itself; publishing, which stays an owner-run `workflow_dispatch`.
 
 ##### Completion Criteria
 
-- `make build.ubuntu24` produces the image and `make gate.ubuntu24` passes
-  every check.
+- `make build.ubuntu24` produces the image from distribution 1.3.0 and
+  `make gate.ubuntu24` passes every check.
 - The per-OS workflow builds and gates the image in CI.
 - The README and architecture tables list the image and its Docker Hub name.
 
 ##### Dependencies And Decisions
 
-- None.
-- Distribution 1.2.2 carries an `ubuntu-24.04` tree. Observed 2026-09-03.
+- G4 must be Complete before work resumes; resume as Not started when G4 is
+  Complete.
+- The image pins `DIST_VERSION` 1.3.0 so the Ubuntu images publish at the same
+  image version as the rest of the set, which is what makes this row wait on a
+  distribution version that 1.2.2 already satisfies for the tree alone.
+- Distribution 1.2.2 carries an `ubuntu-24.04` tree; 1.3.0 is unpublished.
+  Observed 2026-09-03.
 - Ubuntu 24.04 packages s6 2.12.0.3, below the runner's 2.13 floor, so this
   image takes the same s6 route as M4 rather than its own package set.
   Observed 2026-09-03.
@@ -452,7 +464,7 @@ Implementation Authorization: none
 Superseded Plan Artifacts: none
 
 1. Add `ubuntu24/Dockerfile` from the debian13 pattern, with the Ubuntu 24.04
-   base and the `ubuntu-24.04` distribution tree.
+   base, `DIST_VERSION` 1.3.0, and the `ubuntu-24.04` distribution tree.
 2. Register the directory in `IMAGE_DIRS` and `RELEASE_IMAGE_DIRS`.
 3. Add the thin per-OS workflow with the image name
    `jeonghanlee/ubuntu24-epics`.
@@ -498,23 +510,22 @@ Status: Blocked
 
 Ubuntu 26.04 LTS is the next long-term base and packages s6 2.13.1.0 and
 execline 2.9.6.1, which meet the supervision-version floor the container
-runtime needs. The distribution does not yet publish an `ubuntu-26.04` tree, so
-the image cannot build until it does; that condition is G4.
+runtime needs. The image pins distribution 1.3.0, which is unpublished and is
+the version expected to carry the `ubuntu-26.04` tree; that condition is G4.
 
 ##### Scope
 
-Add an `ubuntu26` image directory in the same shape as M5, pinned to the
-distribution version that first carries the `ubuntu-26.04` tree, with its per-OS
-workflow, image directory registration, and documentation entries.
+Add an `ubuntu26` image directory in the same shape as M5, pinned to
+`DIST_VERSION` 1.3.0, with its per-OS workflow, image directory registration,
+and documentation entries.
 
 Out of scope: the distribution work that adds the tree (G4); the Ubuntu 24.04
 image (M5).
 
 ##### Completion Criteria
 
-- `make build.ubuntu26` produces the image and `make gate.ubuntu26` passes
-  every check against the distribution version carrying the `ubuntu-26.04`
-  tree.
+- `make build.ubuntu26` produces the image from distribution 1.3.0 and
+  `make gate.ubuntu26` passes every check.
 - The per-OS workflow builds and gates the image in CI.
 - The README and architecture tables list the image and its Docker Hub name.
 
@@ -522,8 +533,8 @@ image (M5).
 
 - G4 must be Complete before work resumes; resume as Not started when G4 is
   Complete.
-- The owner expects the tree in distribution 1.3.0, stated 2026-09-03; the
-  image is pinned to that version when it publishes.
+- The image pins `DIST_VERSION` 1.3.0, the version the owner expects to carry
+  the `ubuntu-26.04` tree, stated 2026-09-03.
 - Ubuntu 26.04 packages s6 2.13.1.0 and execline 2.9.6.1, which meet the
   runner's floor. Observed 2026-09-03.
 - M5 establishes the Ubuntu image pattern this row follows.
@@ -536,7 +547,7 @@ Implementation Authorization: none
 Superseded Plan Artifacts: none
 
 1. Add `ubuntu26/Dockerfile` following the Ubuntu 24.04 image, with the Ubuntu
-   26.04 base and the `ubuntu-26.04` distribution tree.
+   26.04 base, `DIST_VERSION` 1.3.0, and the `ubuntu-26.04` distribution tree.
 2. Keep the directory out of the build and gate lists until the distribution
    tree exists, so CI does not fail on a fetch that cannot succeed.
 3. Add the thin per-OS workflow with the image name
@@ -644,6 +655,91 @@ Observed Labels: none
 Observed Milestone: none
 Last Compared: never
 
+#### M8 - Distribution 1.3.0 image bump
+
+Origin: 69b9303 / M8
+Identity History: none
+GitHub Issue: #41, https://github.com/jeonghanlee/Dockerfiles/issues/41
+Status: Blocked
+
+##### Summary
+
+The three existing EPICS images pin `DIST_VERSION` 1.2.2, the value that
+selects the prebuilt EPICS tree, sets the build version label, and names the
+published image tag. Both Ubuntu images are pinned to 1.3.0, so without this
+bump the set would publish under two different versions.
+
+##### Scope
+
+Move `DIST_VERSION` to 1.3.0 across the three existing image Dockerfiles
+through the repository's coordinated bump target, re-check the container gate's
+expected module count against the 1.3.0 tree, and update the maintenance guide
+where it names the current version in its worked example.
+
+Out of scope: the Ubuntu images, which are created at 1.3.0 by M5 and M6; the
+s6 supervision layer (M4); publishing, which stays an owner-run
+`workflow_dispatch`.
+
+##### Completion Criteria
+
+- The three images build from distribution 1.3.0 and pass every container gate
+  check.
+- The per-OS workflows build and gate the images in CI.
+- The module inventory check passes against the 1.3.0 tree, with its expected
+  count updated if the tree changed.
+
+##### Dependencies And Decisions
+
+- G4 must be Complete before work resumes; resume as Not started when G4 is
+  Complete.
+- The container gate compares the module directory entry count against a
+  constant pinned to the current distribution, so a 1.3.0 tree with a different
+  module set fails that check until the constant is updated.
+- The bump target rewrites every release image directory at once, so it also
+  covers the Ubuntu images once they are registered in those lists.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+1. Run the coordinated bump target for 1.3.0 and review all three Dockerfile
+   changes.
+2. Re-check the gate's expected module count against the 1.3.0 tree and update
+   it when the tree changed.
+3. Update the maintenance guide's worked example version.
+4. Build and gate locally, then in CI.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Image build | Build the three images and run the verification gate | debian13, rocky8, rocky10 images | Build succeeds and every gate check passes against the 1.3.0 tree |
+| T2 | CI | Run the per-OS workflows from the committed tree | GitHub Actions | Build and gate jobs pass |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | debian13, rocky8, rocky10 images | Pending | none |
+| T2 | Not run | GitHub Actions | Pending | none |
+
+##### Closure Evidence
+
+- none
+
+##### GitHub Projection
+
+Title: Move the EPICS images to distribution 1.3.0
+Labels: enhancement
+GitHub Milestone: 2.0.0
+Observed State: open
+Observed Labels: enhancement
+Observed Milestone: 2.0.0
+Last Compared: 2026-09-04, at issue creation
+
 #### G1 - epics-ioc-runner container mode
 
 Origin: 69b9303 / G1
@@ -732,7 +828,7 @@ the legacy branch-based Jekyll workflow no longer owns publication for M3.
 
 - The Pages source was changed to GitHub Actions and verified on 2026-08-19.
 
-#### G4 - EPICS-env-distribution Ubuntu 26.04 tree
+#### G4 - EPICS-env-distribution 1.3.0
 
 Origin: 69b9303 / G4
 GitHub Issue: none
@@ -740,21 +836,21 @@ Status: Open
 
 ##### Summary
 
-The Ubuntu 26.04 image (M6) consumes prebuilt binaries from
-EPICS-env-distribution, which publishes one tree per OS. Version 1.2.2, the only
-published version, carries `debian-13`, `rocky-8.10`, `rocky-10.2`, and
-`ubuntu-24.04`, and no `ubuntu-26.04`. The work is owned by the
-EPICS-env-distribution repository.
+Both Ubuntu images pin `DIST_VERSION` 1.3.0, which supplies the prebuilt
+binaries, the build version, and the publish tag. That distribution version is
+unpublished: 1.2.2 is the only published one, and it carries `debian-13`,
+`rocky-8.10`, `rocky-10.2`, and `ubuntu-24.04` but no `ubuntu-26.04`. The work
+is owned by the EPICS-env-distribution repository.
 
 ##### Completion Criteria
 
-- A published EPICS-env-distribution version carries an `ubuntu-26.04` tree.
+- EPICS-env-distribution 1.3.0 is published and carries an `ubuntu-26.04` tree.
 
 ##### Verification Results
 
 | Observed At | Result | Evidence |
 | --- | --- | --- |
-| 2026-09-03 | Pending | Distribution 1.2.2 is the only published version and carries no `ubuntu-26.04` tree |
+| 2026-09-04 | Pending | Distribution 1.2.2 is the only published version; it carries no `ubuntu-26.04` tree and 1.3.0 does not exist |
 
 ##### Closure Evidence
 
