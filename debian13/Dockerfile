@@ -11,6 +11,7 @@ FROM debian:trixie-slim
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
+ARG IMAGE_VERSION=1.0.0
 ARG OS_DIR=debian-13
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
