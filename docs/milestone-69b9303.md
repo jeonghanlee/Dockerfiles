@@ -7,14 +7,15 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: check G1 in `docs/milestone-69b9303.md`; no repository
-work is startable while it remains Open. Repository documentation is published
-through the GitHub Pages workflow (M3 complete), and the mdbook image is
-modernized to 0.5.4 and published (M2 complete). The one remaining milestone,
-the container runtime (M1), is Blocked on G1; the consumer cutover is tracked
-as gate G2. When G1 resolves, restore M1 to Not started. The 1.2.2 images are
-built, published, and consumer-verified; that work is complete and reachable
-in Git at commit 69b9303.
+Next session entry point: start M4 in `docs/milestone-69b9303.md` - add the s6
+supervision suite to the three EPICS image Dockerfiles. M4 and M5 (the Ubuntu
+24.04 image) are Ready and depend on no open gate. The container runtime work is
+split in two: M1 carries the ioc-runner supervision layer and is Blocked on G1,
+and M7 carries the runtime-only slim image that follows it. M6 (the Ubuntu 26.04
+image) is Blocked on G4 until the distribution publishes an `ubuntu-26.04` tree.
+The mdbook image (M2) and the documentation site (M3) are complete, and the
+1.2.2 images are built, published, and consumer-verified in Git at commit
+69b9303.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -26,16 +27,21 @@ and decision records stay reachable at commit 69b9303.
 
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Runtime | M1 | Container runtime: systemd-less ioc-runner on a runtime-only slim image | Carry-forward | Blocked | No | G1 | ioc-runner starts and stops an IOC in a systemd-less container, and a toolchain-free runtime image builds and runs it; [detail](#m1---container-runtime) |
+| Runtime | M1 | Container runtime: the ioc-runner supervision layer | Carry-forward | Blocked | No | G1, M4 | ioc-runner starts and stops an IOC in a container that runs no systemd, on every EPICS image; [detail](#m1---container-runtime) |
 | Images | M2 | Modernize the mdbook image | Milestone | Complete | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
 | Documentation | M3 | Publish repository documentation with mdBook and GitHub Pages | Milestone | Complete | No | G3 | The fixed mdBook image renders the repository book, the Actions workflow deploys it, and the live URL serves the result; [detail](#m3---publish-repository-documentation) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 | Gates | G3 | GitHub Pages Actions source | External gate | Complete | No | | Repository Pages source reports `build_type: workflow`; [detail](#g3---github-pages-actions-source) |
+| Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Not started | Yes | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
+| Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Not started | Yes | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
+| Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
+| Runtime | M7 | Runtime-only slim image | Milestone | Not started | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
+| Gates | G4 | EPICS-env-distribution Ubuntu 26.04 tree | External gate | Open | No | | A published distribution version carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-ubuntu-2604-tree) |
 
-Tally: 3 milestone rows - Complete 2, In progress 0, Blocked 1, Not started 0,
-Ready 0. External gates: 2 open (G1, G2) and 1 complete (G3). Backlog is
-reported separately below and excluded from this tally.
+Tally: 7 milestone rows - Complete 2, In progress 0, Blocked 2, Not started 3,
+Ready 2 (M4, M5). External gates: 3 open (G1, G2, G4) and 1 complete (G3).
+Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
 
@@ -48,39 +54,55 @@ Status: Blocked
 
 ##### Summary
 
-One runtime story in one row. The images ship procServ and con for direct IOC
-execution today; ioc-runner stays excluded until it gains a systemd-less
-container execution mode, tracked upstream as G1. This milestone joins the two
-halves of that story: reintroducing ioc-runner with systemd-less container
-start and stop, and a runtime-only slim image (no compiler, no `-devel`
-packages) for pure IOC execution under its own tag - the toolchain-free
-counterpart to the dev-carrying images already shipped at 1.2.2.
+The images ship procServ and con for direct IOC execution today; ioc-runner
+stays excluded until it gains a container execution mode that does not require
+systemd, tracked upstream as G1. This row covers reintroducing ioc-runner into
+the EPICS images as a supervision layer: the runner installed from a pinned
+upstream ref, its container setup mode run at image build, and an entry point
+that runs the s6 supervision tree as PID 1. The runtime-only slim image was
+carried in this row until 2026-09-03 and is now M7.
 
 ##### Scope
 
-Reintroduce ioc-runner into the runtime image and verify start and stop inside a
-systemd-less container across the images. Define and build the runtime-only slim
-image with the minimal NEEDED set and its own tag, running IOCs through the
-systemd-less ioc-runner.
+Install epics-ioc-runner from a pinned upstream ref through its Makefile, run
+its container setup mode at image build so the service account, group,
+configuration directory, and CLI are present, and give the image an entry point
+that creates the scan directory and runs `s6-svscan` as PID 1. Verify IOC start
+and stop inside a container on every EPICS image.
 
-Out of scope: the upstream ioc-runner change itself (G1); the existing
-dev-carrying images.
+Out of scope: the upstream ioc-runner change itself (G1); the s6 supervision
+binaries the layer runs on (M4); the runtime-only slim image (M7); the package
+sets of the existing dev-carrying images.
 
 ##### Completion Criteria
 
-- ioc-runner starts and stops an IOC inside a systemd-less container.
-- A runtime-only slim image builds with the minimal set, carries its own tag,
-  and runs an IOC through ioc-runner.
+- ioc-runner starts and stops an IOC inside a container that runs no systemd,
+  on every EPICS image.
+- The image entry point runs `s6-svscan` as PID 1 and IOC output reaches
+  container stdout.
 
 ##### Dependencies And Decisions
 
 - G1 must be Complete before work resumes; resume as Not started when G1 is
   Complete.
+- M4 supplies the supervision binaries this layer runs on and must be Complete
+  first.
 - Direct procServ and con execution covers container IOC use meanwhile, so the
   images are usable without ioc-runner until then.
-- The slim image is the second half of the package-footprint split; the first
-  half - pruning pure surplus while keeping the runner toolchain - already
-  shipped in the 1.2.2 images.
+- The runner contract uses only the s6 supervision binaries, never the
+  s6-overlay entry point and never s6-rc. Stated by the epics-ioc-runner owner
+  on 2026-09-03.
+- The upstream container mode is implemented on a branch and is absent from
+  master and from the 1.3.0 release, so there is no pinnable released ref yet.
+  Observed 2026-09-03.
+- The entry point must create the scan directory itself. A directory made at
+  image build time under `/run` does not survive a runtime that mounts `/run`
+  as tmpfs, so the build-time copy is a convenience only.
+- The container mode is root-only and refuses to run without a live
+  `s6-svscan` on the scan directory, which fixes the entry point as PID 1
+  rather than an optional wrapper.
+- The upstream lifecycle suite needs `CAP_SYS_PTRACE` inside the container for
+  its deep inspect check, so a verification run adds that capability.
 
 ##### Implementation Plan
 
@@ -89,21 +111,28 @@ Plan Acceptance: none
 Implementation Authorization: none
 Superseded Plan Artifacts: none
 
-1. Define the scope once the upstream container execution mode (G1) exists.
+1. Pin the upstream ref once the container execution mode is released, and
+   install the runner through its Makefile.
+2. Run the container setup mode at image build so the service account, group,
+   configuration directory, and CLI are present, with no sudoers entry, no unit
+   template, and no log rotation.
+3. Add the entry point that creates the scan directory and runs `s6-svscan` as
+   PID 1, with the container running as root.
+4. Verify IOC start and stop on every EPICS image.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Container runtime | Start and stop an IOC through ioc-runner in a running container | Runtime image | Start and stop both succeed without systemd |
-| T2 | Image build | Build the runtime-only slim image and run an IOC through ioc-runner | Slim runtime image | Image builds with the minimal set and runs the IOC |
+| T1 | Container runtime | Start and stop an IOC through ioc-runner in a running container | Every EPICS image | Start and stop both succeed with no systemd present |
+| T2 | Supervision entry | Run the image entry point and inspect PID 1 and IOC output | Every EPICS image | PID 1 is `s6-svscan` and IOC output reaches container stdout |
 
 ##### Verification Results
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Runtime image | Pending | none |
-| T2 | Not run | Slim runtime image | Pending | none |
+| T1 | Not run | Every EPICS image | Pending | none |
+| T2 | Not run | Every EPICS image | Pending | none |
 
 ##### Closure Evidence
 
@@ -111,17 +140,17 @@ Superseded Plan Artifacts: none
 
 ##### GitHub Projection
 
-Title: Add the IOC runtime layer: procServ, con, IOC generator tools
+Title: Add the ioc-runner container supervision layer
 Labels: enhancement
 GitHub Milestone: 2.0.0
 Observed State: open
 Observed Labels: enhancement
 Observed Milestone: 2.0.0
-Last Compared: 2026-08-17, register reset
-Scope note: issue #28 spans procServ, con, ioc-runner, and the tools IOC
-generator. procServ and con shipped at 1.2.2; the tools generator was retired
-2026-08-17 (it stays a standalone tool). M1 covers only the remaining half - the
-systemd-less ioc-runner runtime. A retirement comment records this on #28.
+Last Compared: 2026-09-03, after the issue rewrite
+Scope note: issue #28 was filed as the whole IOC runtime layer - procServ, con,
+ioc-runner, and the tools IOC generator. procServ and con shipped at 1.2.2 and
+the tools generator was retired 2026-08-17, so its title and body were narrowed
+on 2026-09-03 to the remaining ioc-runner half that this row covers.
 
 #### M2 - Modernize the mdbook image
 
@@ -282,6 +311,339 @@ Superseded Plan Artifacts: none
 - https://jeonghanlee.github.io/Dockerfiles/ served the mdBook with HTTP 200 on
   2026-08-19.
 
+#### M4 - s6 supervision suite
+
+Origin: 69b9303 / M4
+Identity History: none
+GitHub Issue: #38, https://github.com/jeonghanlee/Dockerfiles/issues/38
+Status: Not started
+
+##### Summary
+
+The ioc-runner container execution mode supervises procServ with s6 instead of
+systemd, so the EPICS images must carry the s6 supervision binaries before that
+runtime can be exercised on them. The runner uses `s6-svscan`, `s6-supervise`,
+`s6-svc`, `s6-svstat`, `s6-svscanctl`, and `s6-setuidgid`, with `s6-svok`
+welcome, and depends on neither the s6-overlay entry point nor s6-rc. The
+version floor is s6 2.13.
+
+##### Scope
+
+Add s6 and its dependencies to the EPICS image builds so those binaries are on
+PATH, record the components and their source revisions in the bake manifest the
+way procServ and con are recorded, and extend the image verification gate with
+a check that each binary is present and runnable.
+
+Out of scope: the ioc-runner layer that consumes these binaries (M1); the
+s6-overlay entry point and s6-rc, which the runner contract excludes; the
+mdbook image.
+
+##### Completion Criteria
+
+- `s6-svscan`, `s6-supervise`, `s6-svc`, `s6-svstat`, `s6-svscanctl`, and
+  `s6-setuidgid` resolve on PATH in every EPICS image, at s6 2.13 or later.
+- The image verification gate fails when any of those binaries is missing or
+  not runnable.
+- The bake manifest records the s6 components and their source revisions.
+
+##### Dependencies And Decisions
+
+- None. The work depends on no other row and no open gate.
+- Requested by the epics-ioc-runner owner on 2026-09-03 as the precondition for
+  that repository's container lifecycle test. It does not block the upstream
+  implementation, only its verification on these images.
+- The upstream lifecycle suite passed in `jeonghanlee/debian13-epics` with s6
+  2.13.1.0 added by hand for the run; the Rocky images are unrun because they
+  carry no s6. Reported by the epics-ioc-runner owner, 2026-09-03.
+- Package availability differs per base: Debian 13 packages s6 2.13.1.0 and
+  execline 2.9.6.1; Ubuntu 26.04 packages the same versions; Ubuntu 24.04
+  packages s6 2.12.0.3, below the floor; Rocky 8.10 and 10.2 carry no s6,
+  execline, or skalibs in BaseOS, AppStream, or EPEL. Observed 2026-09-03.
+- The build route below is part of the draft plan and is not an accepted
+  decision.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+1. Pin skalibs, execline, and s6 release tags at s6 2.13 or later and build
+   them from source in one layer per image, mirroring the procServ-env layer,
+   so every image carries the same s6 version regardless of base.
+2. Record each component and its source revision in the bake manifest.
+3. Extend `gate.bash` with a supervision-binary check.
+4. Build every EPICS image and run the gate.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Image build | Build every EPICS image and run the verification gate | debian13, rocky8, rocky10 images | The gate reports the supervision-binary check as passing |
+| T2 | Supervision runtime | Run `s6-svscan` on a scan directory and drive one procServ service through `s6-svc` and `s6-svstat` | Every EPICS image | The service starts under the service account, IOC output reaches stdout, and stop terminates procServ and its child |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | debian13, rocky8, rocky10 images | Pending | none |
+| T2 | Not run | Every EPICS image | Pending | none |
+
+##### Closure Evidence
+
+- none
+
+##### GitHub Projection
+
+Title: Add the s6 supervision suite to the EPICS images
+Labels: enhancement
+GitHub Milestone: 2.0.0
+Observed State: open
+Observed Labels: enhancement
+Observed Milestone: 2.0.0
+Last Compared: 2026-09-03, at issue creation
+
+#### M5 - Ubuntu 24.04 EPICS image
+
+Origin: 69b9303 / M5
+Identity History: none
+GitHub Issue: #39, https://github.com/jeonghanlee/Dockerfiles/issues/39
+Status: Not started
+
+##### Summary
+
+EPICS-env-distribution already publishes an `ubuntu-24.04` tree next to the
+trees the three existing EPICS images consume, so an Ubuntu image can be built
+from the same prebuilt binaries with no distribution work.
+
+##### Scope
+
+Add an `ubuntu24` image directory whose Dockerfile follows the established
+pattern - OS package layer, sparse distribution fetch, procServ and con built
+from source, the s6 supervision binaries, the baked environment, and the
+`setEnv` contract. Register the directory in the image directory lists, add the
+thin per-OS workflow that calls the reusable image workflow, and add the image
+to the repository documentation tables.
+
+Out of scope: the Ubuntu 26.04 image (M6); any change to the distribution
+itself; publishing, which stays an owner-run `workflow_dispatch`.
+
+##### Completion Criteria
+
+- `make build.ubuntu24` produces the image and `make gate.ubuntu24` passes
+  every check.
+- The per-OS workflow builds and gates the image in CI.
+- The README and architecture tables list the image and its Docker Hub name.
+
+##### Dependencies And Decisions
+
+- None.
+- Distribution 1.2.2 carries an `ubuntu-24.04` tree. Observed 2026-09-03.
+- Ubuntu 24.04 packages s6 2.12.0.3, below the runner's 2.13 floor, so this
+  image takes the same s6 route as M4 rather than its own package set.
+  Observed 2026-09-03.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+1. Add `ubuntu24/Dockerfile` from the debian13 pattern, with the Ubuntu 24.04
+   base and the `ubuntu-24.04` distribution tree.
+2. Register the directory in `IMAGE_DIRS` and `RELEASE_IMAGE_DIRS`.
+3. Add the thin per-OS workflow with the image name
+   `jeonghanlee/ubuntu24-epics`.
+4. Add the image to the README and architecture tables.
+5. Build and gate locally, then in CI.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Image build | Run the repository build and gate targets for the image | Debian 13 host with Docker | Build succeeds and every gate check passes |
+| T2 | CI | Run the per-OS workflow from the committed tree | GitHub Actions | Build and gate jobs pass |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | Debian 13 host with Docker | Pending | none |
+| T2 | Not run | GitHub Actions | Pending | none |
+
+##### Closure Evidence
+
+- none
+
+##### GitHub Projection
+
+Title: Add the Ubuntu 24.04 EPICS image
+Labels: enhancement
+GitHub Milestone: 2.0.0
+Observed State: open
+Observed Labels: enhancement
+Observed Milestone: 2.0.0
+Last Compared: 2026-09-03, at issue creation
+
+#### M6 - Ubuntu 26.04 EPICS image
+
+Origin: 69b9303 / M6
+Identity History: none
+GitHub Issue: #40, https://github.com/jeonghanlee/Dockerfiles/issues/40
+Status: Blocked
+
+##### Summary
+
+Ubuntu 26.04 LTS is the next long-term base and packages s6 2.13.1.0 and
+execline 2.9.6.1, which meet the supervision-version floor the container
+runtime needs. The distribution does not yet publish an `ubuntu-26.04` tree, so
+the image cannot build until it does; that condition is G4.
+
+##### Scope
+
+Add an `ubuntu26` image directory in the same shape as M5, pinned to the
+distribution version that first carries the `ubuntu-26.04` tree, with its per-OS
+workflow, image directory registration, and documentation entries.
+
+Out of scope: the distribution work that adds the tree (G4); the Ubuntu 24.04
+image (M5).
+
+##### Completion Criteria
+
+- `make build.ubuntu26` produces the image and `make gate.ubuntu26` passes
+  every check against the distribution version carrying the `ubuntu-26.04`
+  tree.
+- The per-OS workflow builds and gates the image in CI.
+- The README and architecture tables list the image and its Docker Hub name.
+
+##### Dependencies And Decisions
+
+- G4 must be Complete before work resumes; resume as Not started when G4 is
+  Complete.
+- The owner expects the tree in distribution 1.3.0, stated 2026-09-03; the
+  image is pinned to that version when it publishes.
+- Ubuntu 26.04 packages s6 2.13.1.0 and execline 2.9.6.1, which meet the
+  runner's floor. Observed 2026-09-03.
+- M5 establishes the Ubuntu image pattern this row follows.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+1. Add `ubuntu26/Dockerfile` following the Ubuntu 24.04 image, with the Ubuntu
+   26.04 base and the `ubuntu-26.04` distribution tree.
+2. Keep the directory out of the build and gate lists until the distribution
+   tree exists, so CI does not fail on a fetch that cannot succeed.
+3. Add the thin per-OS workflow with the image name
+   `jeonghanlee/ubuntu26-epics`.
+4. Register the directory and add the documentation entries when G4 completes.
+5. Build and gate locally, then in CI.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Image build | Run the repository build and gate targets for the image | Debian 13 host with Docker | Build succeeds and every gate check passes |
+| T2 | CI | Run the per-OS workflow from the committed tree | GitHub Actions | Build and gate jobs pass |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | Debian 13 host with Docker | Pending | none |
+| T2 | Not run | GitHub Actions | Pending | none |
+
+##### Closure Evidence
+
+- none
+
+##### GitHub Projection
+
+Title: Add the Ubuntu 26.04 EPICS image
+Labels: enhancement
+GitHub Milestone: 2.0.0
+Observed State: open
+Observed Labels: enhancement
+Observed Milestone: 2.0.0
+Last Compared: 2026-09-03, at issue creation
+
+#### M7 - Runtime-only slim image
+
+Origin: 69b9303 / M7
+Identity History: separated from M1 on 2026-09-03; M1 retains the ioc-runner
+supervision layer
+GitHub Issue: none
+Status: Not started
+
+##### Summary
+
+The published images carry the consumer build toolchain because runner jobs
+compile IOCs inside the running container. A pure IOC execution host needs none
+of it. This row defines and builds a toolchain-free image with the minimal set
+under its own tag, the counterpart to the dev-carrying images shipped at 1.2.2.
+
+##### Scope
+
+Define the minimal runtime package set, build the slim image under its own tag,
+and run an IOC on it through ioc-runner.
+
+Out of scope: the ioc-runner supervision layer itself (M1); the package sets of
+the dev-carrying images, already pruned at 1.2.2.
+
+##### Completion Criteria
+
+- The slim image builds with the minimal set and carries its own tag.
+- An IOC starts and stops on the slim image through ioc-runner.
+
+##### Dependencies And Decisions
+
+- M1 must be Complete first; the slim image runs IOCs through the supervision
+  layer M1 delivers.
+- The first half of the package-footprint split - pruning surplus while keeping
+  the runner toolchain - shipped in the 1.2.2 images.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+1. Define the minimal runtime set once the supervision layer exists.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Image build | Build the slim image with the minimal set | Slim runtime image | Image builds and carries its own tag |
+| T2 | Container runtime | Start and stop an IOC through ioc-runner on the slim image | Slim runtime image | Start and stop both succeed |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | Slim runtime image | Pending | none |
+| T2 | Not run | Slim runtime image | Pending | none |
+
+##### Closure Evidence
+
+- none
+
+##### GitHub Projection
+
+Title: Build a runtime-only slim EPICS image
+Labels: enhancement
+GitHub Milestone: 2.0.0
+Observed State: none
+Observed Labels: none
+Observed Milestone: none
+Last Compared: never
+
 #### G1 - epics-ioc-runner container mode
 
 Origin: 69b9303 / G1
@@ -290,8 +652,14 @@ Status: Open
 
 ##### Summary
 
-ioc-runner needs a systemd-less container execution mode before M1 can proceed.
-The work is owned by the `epics-ioc-runner` repository and sits in its backlog.
+ioc-runner needs a container execution mode that does not require systemd
+before M1 can proceed. The work is owned by the `epics-ioc-runner` repository.
+The mode adds a `--container` form to both the runner and its setup script: s6
+supervises procServ with one service directory per IOC, the setup form creates
+the accounts, configuration directory, and scan skeleton without a sudoers
+entry, unit template, or log rotation, and the runner requires root and a live
+`s6-svscan` on the scan directory. It is implemented on an upstream branch and
+is neither merged nor released.
 
 ##### Completion Criteria
 
@@ -301,7 +669,8 @@ The work is owned by the `epics-ioc-runner` repository and sits in its backlog.
 
 | Observed At | Result | Evidence |
 | --- | --- | --- |
-| Not run | Pending | jeonghanlee/epics-ioc-runner#127, backlog |
+| 2026-09-03 | Pending | epics-ioc-runner 1.3.0 published without the container setup mode - its `setup-system-infra.bash` accepts only `--full`; jeonghanlee/epics-ioc-runner#127 remains open in the Backlog milestone |
+| 2026-09-03 | Pending | Container mode implemented on the upstream branch `feature/container-execution` at commit add145f, carrying `--container` in the runner and the setup script plus a container lifecycle suite; not merged, no pull request open, and jeonghanlee/epics-ioc-runner#127 still open |
 
 ##### Closure Evidence
 
@@ -362,6 +731,34 @@ the legacy branch-based Jekyll workflow no longer owns publication for M3.
 ##### Closure Evidence
 
 - The Pages source was changed to GitHub Actions and verified on 2026-08-19.
+
+#### G4 - EPICS-env-distribution Ubuntu 26.04 tree
+
+Origin: 69b9303 / G4
+GitHub Issue: none
+Status: Open
+
+##### Summary
+
+The Ubuntu 26.04 image (M6) consumes prebuilt binaries from
+EPICS-env-distribution, which publishes one tree per OS. Version 1.2.2, the only
+published version, carries `debian-13`, `rocky-8.10`, `rocky-10.2`, and
+`ubuntu-24.04`, and no `ubuntu-26.04`. The work is owned by the
+EPICS-env-distribution repository.
+
+##### Completion Criteria
+
+- A published EPICS-env-distribution version carries an `ubuntu-26.04` tree.
+
+##### Verification Results
+
+| Observed At | Result | Evidence |
+| --- | --- | --- |
+| 2026-09-03 | Pending | Distribution 1.2.2 is the only published version and carries no `ubuntu-26.04` tree |
+
+##### Closure Evidence
+
+- none
 
 ## Backlog
 
