@@ -330,14 +330,17 @@ version floor is s6 2.13.
 
 ##### Scope
 
-Add s6 and its dependencies to the EPICS image builds so those binaries are on
-PATH, record the components and their source revisions in the bake manifest the
-way procServ and con are recorded, and extend the image verification gate with
-a check that each binary is present and runnable.
+Add the s6 supervision suite to the three EPICS image builds so the required
+binaries are on PATH, by two routes that meet the same 2.13 floor: the
+distribution package on Debian 13, and a source build of skalibs, execline, and
+s6 on the two Rocky images. Keep the full s6 toolset in both routes. Record the
+s6 delivery in the bake manifest, and extend the image verification gate with a
+check that each binary is present and runnable.
 
 Out of scope: the ioc-runner layer that consumes these binaries (M1); the
-s6-overlay entry point and s6-rc, which the runner contract excludes; the
-mdbook image.
+s6-overlay entry point and s6-rc, which the runner contract excludes; the Ubuntu
+images (M5, M6), which take the matching route on their own rows; the mdbook
+image.
 
 ##### Completion Criteria
 
@@ -364,36 +367,60 @@ mdbook image.
   `DIST_VERSION` supplies to the build and the publish tag. The layer itself
   does not depend on that distribution bump and can be built and gated first,
   which is why this row stays independent of G4.
-- The build route below is part of the draft plan and is not an accepted
-  decision.
+- Delivery route, accepted 2026-09-04: the distribution package where it meets
+  the floor, a source build where it does not. Debian 13 installs the `s6` and
+  `execline` packages together in the OS package layer; Rocky 8.10 and 10.2
+  build skalibs, execline, and s6 from pinned tags, statically linked, then drop
+  the libraries, headers, and sources in that one layer, mirroring the
+  procServ-env layer.
+- Version pinned to s6 2.13.1.0 with execline 2.9.6.1, which is what apt
+  provides on Debian 13, so the package and source routes ship the identical s6
+  and execline. The source build adds skalibs 2.14.3.0 internally; it is static
+  and not shipped.
+- The full s6 toolset is kept, not pruned to the named binaries. A prune to the
+  seven binaries was tested on both Rocky images on 2026-09-04 and broke the
+  lifecycle: the service did not start and `s6-svc -wD` died with `unable to
+  exec s6-svlisten1`, because the named tools exec other s6 binaries at run
+  time. Keeping the full set costs about 3.5 MB per Rocky image.
+- Both routes were validated in base images on 2026-09-04. `s6-svscan`
+  supervised a service that dropped to `ioc-srv:ioc` through `s6-setuidgid`, its
+  stdout reached the svscan stdout, `s6-svc -wD` stopped it with no orphan, and
+  `s6-svscanctl -t` tore the tree down. Confirmed on debian:trixie-slim and
+  ubuntu:26.04 by package, and on rockylinux:8.10, rockylinux:10.2, and
+  ubuntu:24.04 by source build. This validates the route, not the shipped
+  images; T1 and T2 run against the built EPICS images.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-09-04, in session
 Implementation Authorization: none
 Superseded Plan Artifacts: none
 
-1. Pin skalibs, execline, and s6 release tags at s6 2.13 or later and build
-   them from source in one layer per image, mirroring the procServ-env layer,
-   so every image carries the same s6 version regardless of base.
-2. Record each component and its source revision in the bake manifest.
-3. Extend `gate.bash` with a supervision-binary check.
-4. Build every EPICS image and run the gate.
+1. On Debian 13, install the `s6` and `execline` packages together in the OS
+   package layer.
+2. On Rocky 8.10 and 10.2, build skalibs 2.14.3.0, execline 2.9.6.1, and s6
+   2.13.1.0 from pinned tags in one layer, statically linked, then remove the
+   libraries, headers, and sources in that layer.
+3. Record the s6 delivery in the bake manifest: the source revisions on the
+   Rocky images, the package version on Debian 13.
+4. Extend `gate.bash` with a check that the required binaries are present and
+   runnable.
+5. Build the three images and run the gate.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
 | T1 | Image build | Build every EPICS image and run the verification gate | debian13, rocky8, rocky10 images | The gate reports the supervision-binary check as passing |
-| T2 | Supervision runtime | Run `s6-svscan` on a scan directory and drive one procServ service through `s6-svc` and `s6-svstat` | Every EPICS image | The service starts under the service account, IOC output reaches stdout, and stop terminates procServ and its child |
+| T2 | Supervision runtime | Run `s6-svscan` on a scan directory and drive one procServ service through `s6-svc` and `s6-svstat` | The three EPICS images | The service starts under the service account, IOC output reaches stdout, and stop terminates procServ and its child |
 
 ##### Verification Results
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
 | T1 | Not run | debian13, rocky8, rocky10 images | Pending | none |
-| T2 | Not run | Every EPICS image | Pending | none |
+| T2 | Not run | The three EPICS images | Pending | none |
 
 ##### Closure Evidence
 
