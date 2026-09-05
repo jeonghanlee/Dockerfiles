@@ -178,12 +178,18 @@ function gate_linkage {
     (( ok )) && pass "G8 relocatable linkage (non-empty, \$ORIGIN-relative RPATH/RUNPATH)"
 }
 
-# G9 - IOC runtime tools present and runnable
+# G9 - IOC runtime tools present and runnable. The s6 supervision binaries are
+# the set the ioc-runner container mode drives; they must resolve on PATH at the
+# 2.13 version floor. The full toolset ships, but only the driven binaries are
+# asserted here.
 function gate_tools {
-    local ok=1
+    local ok=1 b
     /usr/local/bin/procServ --version >/dev/null 2>&1 || { fail "G9 procServ not runnable"; ok=0; }
     [[ -x /usr/local/bin/con ]] || { fail "G9 con not present"; ok=0; }
-    (( ok )) && pass "G9 IOC runtime tools (procServ runnable, con present)"
+    for b in s6-svscan s6-supervise s6-svc s6-svstat s6-svscanctl s6-setuidgid; do
+        command -v "${b}" >/dev/null 2>&1 || { fail "G9 ${b} not on PATH"; ok=0; }
+    done
+    (( ok )) && pass "G9 IOC runtime tools (procServ, con, s6 supervision suite)"
 }
 
 # G10 - bake manifest records the shipped components

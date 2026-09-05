@@ -16,6 +16,9 @@ ARG OS_DIR=debian-13
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
 ARG CON_VERSION=1.1.0
+ARG SKALIBS_VERSION=2.14.3.0
+ARG EXECLINE_VERSION=2.9.6.1
+ARG S6_VERSION=2.13.1.0
 ARG INSTALL_ROOT=/opt/epics
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -47,6 +50,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         ca-certificates git openssh-client build-essential perl bash sudo vim \
         python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
         iproute2 socat \
+        s6 execline \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
         libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
