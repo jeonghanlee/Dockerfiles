@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.1.0
+#  version : 2.2.0
 #
 # Distribution-consuming EPICS environment image.
 # Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is
@@ -11,7 +11,7 @@ FROM debian:trixie-slim
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
-ARG IMAGE_VERSION=1.0.0
+ARG IMAGE_VERSION=1.0.1
 ARG OS_DIR=debian-13
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
@@ -49,7 +49,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     apt-get install -y --no-install-recommends \
         ca-certificates git openssh-client build-essential perl bash sudo vim \
         python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
-        iproute2 socat \
+        iproute2 socat lsof \
         s6 execline \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \

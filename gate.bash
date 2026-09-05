@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.3.0
+#  version : 0.4.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -190,7 +190,14 @@ function gate_tools {
     for b in s6-svscan s6-supervise s6-svc s6-svstat s6-svscanctl s6-setuidgid; do
         command -v "${b}" >/dev/null 2>&1 || { fail "G9 ${b} not on PATH"; ok=0; }
     done
-    (( ok )) && pass "G9 IOC runtime tools (procServ, con, s6 entry points)"
+    # lsof, ps, awk, and ss are the runtime utilities ioc-runner hard-requires
+    # for container-mode inspection: lsof for the control-socket server PID, ps
+    # for process state, awk for parsing, ss for socket peer tracing. It exits
+    # if any is absent, so the gate asserts the full set.
+    for b in lsof ps awk ss; do
+        command -v "${b}" >/dev/null 2>&1 || { fail "G9 ${b} not on PATH (ioc-runner requires it)"; ok=0; }
+    done
+    (( ok )) && pass "G9 IOC runtime tools (procServ, con, s6 entry points, lsof, ps, awk, ss)"
 }
 
 # G11 - s6 supervision cycle. G9 only proves the runner can find what it
