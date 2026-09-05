@@ -31,7 +31,7 @@ make gate.<image>
 
 ## Update the EPICS Environment Version
 
-The three EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
+The four EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
 
 ```bash
 make dist-version.1.2.2
@@ -39,7 +39,7 @@ make versions
 make check
 ```
 
-Review all three Dockerfile changes. The EPICS image workflows publish `latest` and `<IMAGE_VERSION>` only from a manual `workflow_dispatch` on `master`, after their container gates pass.
+Review all four Dockerfile changes. The EPICS image workflows publish `latest` and `<IMAGE_VERSION>` only from a manual `workflow_dispatch` on `master`, after their container gates pass.
 
 ## Update the mdBook Version
 
