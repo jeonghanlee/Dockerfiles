@@ -16,9 +16,6 @@ ARG OS_DIR=debian-13
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
 ARG CON_VERSION=1.1.0
-ARG SKALIBS_VERSION=2.14.3.0
-ARG EXECLINE_VERSION=2.9.6.1
-ARG S6_VERSION=2.13.1.0
 ARG INSTALL_ROOT=/opt/epics
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -44,6 +41,9 @@ ENV TZ=${TZ}
 # Pruned after a dependency review: dropped
 # X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
 # tree, referenced by module headers, or used by any consumer IOC build.
+# s6 and execline provide the container supervision suite the ioc-runner drives.
+# Debian 13 packages s6 2.13, at the runner's version floor, so the suite comes
+# from apt here; the Rocky and Ubuntu 24.04 images build it from source instead.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
@@ -83,6 +83,8 @@ RUN set -e; \
     git clone --depth 1 --branch "${CON_VERSION}" https://github.com/jeonghanlee/con /tmp/con && \
     make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    printf '%s %s %s %s\n' s6 apt "$(dpkg -s s6 | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    printf '%s %s %s %s\n' execline apt "$(dpkg -s execline | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
     apt-get purge -y autoconf automake libtool && apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
