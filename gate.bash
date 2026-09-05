@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.2.0
+#  version : 0.3.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -178,12 +178,53 @@ function gate_linkage {
     (( ok )) && pass "G8 relocatable linkage (non-empty, \$ORIGIN-relative RPATH/RUNPATH)"
 }
 
-# G9 - IOC runtime tools present and runnable
+# G9 - IOC runtime tools present and runnable. The six s6 binaries are the
+# ioc-runner container mode's entry points, the tools it calls directly; this
+# check names a missing one precisely. Whether the suite actually works is not
+# a question a binary list can answer (the tools exec others among themselves),
+# so sufficiency is G11's job.
 function gate_tools {
-    local ok=1
+    local ok=1 b
     /usr/local/bin/procServ --version >/dev/null 2>&1 || { fail "G9 procServ not runnable"; ok=0; }
     [[ -x /usr/local/bin/con ]] || { fail "G9 con not present"; ok=0; }
-    (( ok )) && pass "G9 IOC runtime tools (procServ runnable, con present)"
+    for b in s6-svscan s6-supervise s6-svc s6-svstat s6-svscanctl s6-setuidgid; do
+        command -v "${b}" >/dev/null 2>&1 || { fail "G9 ${b} not on PATH"; ok=0; }
+    done
+    (( ok )) && pass "G9 IOC runtime tools (procServ, con, s6 entry points)"
+}
+
+# G11 - s6 supervision cycle. G9 only proves the runner can find what it
+# calls; whether the suite runs depends on the s6 binaries those tools exec
+# among themselves (s6-svc -w* execs s6-svlisten1, for one), and the full
+# toolset ships precisely because that closure was never measured. So
+# sufficiency is asserted by behaviour, not by a binary count: run a real
+# supervision tree, drop a service to an unprivileged account, stop it with the
+# wait options the runner uses, and tear the tree down. The options exercised
+# (-wD -T, -o) are the ones that fix the runner's 2.13 version floor, so a
+# sub-floor s6 fails here without a separate version check.
+function gate_s6 {
+    local dir pid ok=1
+    dir="$(mktemp -d /tmp/gate_s6.XXXXXX)"
+    mkdir -p "${dir}/svc"
+    printf '#!/bin/sh\nexec s6-setuidgid nobody /bin/sh -c "exec sleep 300"\n' > "${dir}/svc/run"
+    chmod +x "${dir}/svc/run"
+    s6-svscan "${dir}" >/dev/null 2>&1 &
+    pid=$!
+    sleep 2
+    [[ "$(s6-svstat -o up "${dir}/svc" 2>/dev/null)" == "true" ]] || { fail "G11 s6: service did not come up under s6-svscan"; ok=0; }
+    if (( ok )); then
+        s6-svc -wD -T 5000 -d "${dir}/svc" >/dev/null 2>&1 || { fail "G11 s6: s6-svc -wD did not stop the service"; ok=0; }
+        [[ "$(s6-svstat -o up "${dir}/svc" 2>/dev/null)" == "false" ]] || { fail "G11 s6: service still up after s6-svc -d"; ok=0; }
+    fi
+    s6-svscanctl -t "${dir}" >/dev/null 2>&1 || true
+    sleep 1
+    if kill -0 "${pid}" 2>/dev/null; then
+        fail "G11 s6: s6-svscan still running after s6-svscanctl -t"; ok=0
+        kill "${pid}" 2>/dev/null || true
+    fi
+    wait "${pid}" 2>/dev/null || true
+    rm -rf "${dir}"
+    (( ok )) && pass "G11 s6 supervision cycle (svscan up, svc -wD stop, svscanctl -t teardown)"
 }
 
 # G10 - bake manifest records the shipped components
@@ -209,6 +250,7 @@ function main {
     gate_pva
     gate_linkage
     gate_tools
+    gate_s6
     gate_manifest
     printf -- "-- %d passed, %d failed --\n" "${PASS_COUNT}" "${FAIL_COUNT}"
     (( FAIL_COUNT == 0 ))

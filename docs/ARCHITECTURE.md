@@ -8,7 +8,7 @@ This document describes the repository structure, image composition, build and p
 
 ## Overview
 
-The repository defines three EPICS build images (`debian13`, `rocky8`, `rocky10`) and one documentation-rendering image (`mdbook`). Local Makefile targets and GitHub Actions workflows consume the same image definitions and validation code.
+The repository defines four EPICS build images (`debian13`, `rocky8`, `rocky10`, `ubuntu24`) and one documentation-rendering image (`mdbook`). Local Makefile targets and GitHub Actions workflows consume the same image definitions and validation code.
 
 ## Platform Boundary
 
@@ -58,7 +58,7 @@ push / pull_request / workflow_dispatch
         |
         +-- build and load image
         +-- run gate.bash
-        `-- publish latest + DIST_VERSION
+        `-- publish latest + IMAGE_VERSION
               (manual master run only)
 ```
 
@@ -131,10 +131,11 @@ The daemon proxy does not supply package or Git proxy values inside a build. The
 
 | Image directory | Workflow | Container gate | Published version tag |
 |---|---|---|---|
-| `debian13/` | `debian13.yml` | Yes | `DIST_VERSION` |
+| `debian13/` | `debian13.yml` | Yes | `IMAGE_VERSION` |
 | `mdbook/` | `mdbook.yml` | No | `MDBOOK_VERSION` |
-| `rocky8/` | `rocky8.yml` | Yes | `DIST_VERSION` |
-| `rocky10/` | `rocky10.yml` | Yes | `DIST_VERSION` |
+| `rocky8/` | `rocky8.yml` | Yes | `IMAGE_VERSION` |
+| `rocky10/` | `rocky10.yml` | Yes | `IMAGE_VERSION` |
+| `ubuntu24/` | `ubuntu24.yml` | Yes | `IMAGE_VERSION` |
 
 ## Configuration Scope
 

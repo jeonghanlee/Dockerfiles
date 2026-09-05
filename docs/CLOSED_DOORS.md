@@ -86,3 +86,26 @@ both tags are `$ORIGIN`-relative, and the gate accepts either - which is why
 the change in upstream behaviour passed unnoticed and cost nothing. Keep the
 gate tolerant of both rather than narrowing it to whatever the current
 toolchain happens to emit.
+
+## The Dockerfile header `version` stays separate from `IMAGE_VERSION`
+
+Status: Keep (examined, no action)
+Decided: 2026-09-05
+Evidence carried by: commit e27224a (the header became 2.0.0 with the
+distribution rewrite); the seven files carrying the header block
+
+Premise: each EPICS Dockerfile now shows two version numbers, the
+`#  version :` header (2.x) and `ARG IMAGE_VERSION` (1.x), and a reader could
+take them for one concept drifting apart. They are two axes. The header is the
+file-generation marker of a repository-wide author/email/version block shared by
+seven files, including `gate.bash` and `docker_builder.bash`; it moved
+0.0.3 -> 0.0.4 -> 2.0.0, so it bumps on meaningful change, and 2.0.0 marks the
+distribution-consuming rewrite. `IMAGE_VERSION` is the published image series,
+deliberately restarted at 1.0.0 when the tag was split from `DIST_VERSION`.
+Nothing reads the header; the ARG is what the workflow publishes.
+
+Verdict: keep both. Relabeling or removing the header in four files would break
+the seven-file convention to cure a cosmetic ambiguity, and syncing it to
+`IMAGE_VERSION` would conflate two different things. The header follows its own
+rule instead: 2.1.0 for this generation's s6 and version-split additions, with
+`gate.bash` at 0.3.0 for its new supervision check.

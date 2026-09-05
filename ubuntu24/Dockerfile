@@ -3,16 +3,16 @@
 #  version : 2.1.0
 #
 # Distribution-consuming EPICS environment image.
-# Same pattern as debian13. Base pinned to 10.2 because it matches
-# the distribution build OS (rocky-10.2); new minors are followed promptly
-# with a distribution rebuild - the rocky10 line exists to catch next-stable
-# problems early.
-FROM rockylinux/rockylinux:10.2
+# Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is
+# compiled while building this image. The consumer build toolchain is
+# resident because runner jobs compile IOCs inside the running container.
+# The environment is baked via ENV - no setEnv sourcing contract.
+FROM ubuntu:24.04
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
 ARG IMAGE_VERSION=1.0.0
-ARG OS_DIR=rocky-10.2
+ARG OS_DIR=ubuntu-24.04
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
 ARG CON_VERSION=1.1.0
@@ -27,8 +27,8 @@ ARG TZ=America/Los_Angeles
 LABEL maintainer="Jeong Han Lee <jeonghan.lee@gmail.com>"
 LABEL org.label-schema.schema-version="1.0"
 LABEL org.label-schema.build-date=$BUILD_DATE
-LABEL org.label-schema.name="jeonghanlee/rocky10-epics"
-LABEL org.label-schema.description="Rocky Linux 10.2 EPICS environment from EPICS-env-distribution"
+LABEL org.label-schema.name="jeonghanlee/ubuntu24-epics"
+LABEL org.label-schema.description="Ubuntu 24.04 EPICS environment from EPICS-env-distribution"
 LABEL org.label-schema.url="https://github.com/jeonghanlee/Dockerfiles/"
 LABEL org.label-schema.version=$BUILD_VERSION
 LABEL epics.distribution-version=$DIST_VERSION
@@ -36,27 +36,27 @@ LABEL epics.base-version=$EPICS_VERSION
 
 ENV TZ=${TZ}
 
-# OS package layer. Derived from the rocky8 baseline with el10 package-name
-# updates: crb replaces powertools, pcre2-devel replaces pcre-devel,
-# libusb1-devel replaces libusb(x)-devel, python3 (3.12) is the distro
-# default. libevent-devel explicit (pvxs links the system libevent).
-# Pruned after a dependency review: dropped X11/Motif, netcdf/tiff/
-# png, boost, pcre2, libcurl — none linked, header-referenced, or used by any
-# consumer IOC build.
+# OS package layer, kept separate from the distribution fetch so a
+# distribution version bump does not invalidate this cache layer.
+# Package baseline: adapted from the debian13 image (both Debian-family apt).
+# pkg_standard plus the Python consumer set; analyzers are excluded because
+# the GitLab tester jobs that used them were removed on the consumer side.
+# Pruned after a dependency review: dropped
+# X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
+# tree, referenced by module headers, or used by any consumer IOC build.
+# Package versions follow the Ubuntu 24.04 archive rather than being pinned,
+# matching the debian13 image.
+# hadolint ignore=DL3008
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
-    dnf install -y dnf-plugins-core && \
-    dnf config-manager --set-enabled crb && \
-    dnf install -y epel-release && \
-    dnf --setopt=install_weak_deps=False install -y \
-        git openssh-clients sudo bash make gcc-c++ perl perl-devel rpcgen \
-        python3 python3-pip iproute socat \
-        readline-devel libevent-devel net-snmp net-snmp-utils net-snmp-devel \
-        libtirpc libtirpc-devel libxml2-devel systemd-devel \
-        libusb1-devel hdf5-devel libjpeg-turbo-devel \
-        libssh2 libssh2-devel python3-devel \
-        ncurses-devel && \
-    ln -snf /usr/bin/python3 /usr/local/bin/python && \
-    dnf clean all && rm -rf /var/cache/dnf /var/cache/yum
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends \
+        ca-certificates git openssh-client build-essential perl bash sudo vim \
+        python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
+        iproute2 socat \
+        libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
+        libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
+        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
+    apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Distribution layer: sparse fetch of exactly one OS tree at the DIST_VERSION
 # tag, placed at the versioned install root, bake manifest recorded, .git
@@ -75,8 +75,10 @@ RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
 # autotools set procServ needs (autoconf/automake/libtool) is not needed by
 # consumer IOC builds, so it is installed and removed within this one layer.
+# hadolint ignore=DL3008
 RUN set -e; \
-    dnf install -y autoconf automake libtool && \
+    apt-get update -y && \
+    apt-get install -y --no-install-recommends autoconf automake libtool && \
     git clone --depth 1 --branch "${PROCSERV_ENV_VERSION}" https://github.com/jeonghanlee/procServ-env /tmp/procServ-env && \
     make -C /tmp/procServ-env init && make -C /tmp/procServ-env conf && \
     make -C /tmp/procServ-env build && make -C /tmp/procServ-env install && \
@@ -84,14 +86,15 @@ RUN set -e; \
     git clone --depth 1 --branch "${CON_VERSION}" https://github.com/jeonghanlee/con /tmp/con && \
     make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
-    dnf remove -y autoconf automake libtool && dnf clean all && \
-    rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
+    apt-get purge -y autoconf automake libtool && apt-get autoremove -y && \
+    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
-# s6 supervision suite: no s6, execline, or skalibs package exists on Rocky, so
-# skalibs -> execline -> s6 are built from pinned tags and statically linked,
-# mirroring the procServ-env layer. The image toolchain already carries make,
-# gcc-c++, and git, so nothing extra is installed. The static libraries,
+# s6 supervision suite: Ubuntu 24.04 packages s6 2.12, below the 2.13 floor the
+# runner contract needs, so skalibs -> execline -> s6 are built from pinned tags
+# and statically linked, mirroring the procServ-env layer. The image toolchain
+# already carries build-essential and git, so nothing extra is installed. The
+# static libraries,
 # headers, and sources are dropped in this one layer; only the binaries remain.
 # The runner drives s6-svscan and its family, and the full toolset is kept
 # because those tools exec other s6 binaries at run time.

@@ -8,7 +8,7 @@ This document prepares a Debian 13 `amd64` host to validate, build, and test the
 
 ## Platform Requirements
 
-The published mdBook image is `linux/amd64`. The three EPICS images bake `EPICS_HOST_ARCH=linux-x86_64`, so the verified host scope is Debian 13 on `amd64`.
+The published mdBook image is `linux/amd64`. The four EPICS images bake `EPICS_HOST_ARCH=linux-x86_64`, so the verified host scope is Debian 13 on `amd64`.
 
 Confirm the host architecture:
 

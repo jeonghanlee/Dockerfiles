@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.0.0
+#  version : 2.1.0
 #
 # Distribution-consuming EPICS environment image.
 # Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is
@@ -11,6 +11,7 @@ FROM debian:trixie-slim
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
+ARG IMAGE_VERSION=1.0.0
 ARG OS_DIR=debian-13
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
@@ -40,12 +41,16 @@ ENV TZ=${TZ}
 # Pruned after a dependency review: dropped
 # X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
 # tree, referenced by module headers, or used by any consumer IOC build.
+# s6 and execline provide the container supervision suite the ioc-runner drives.
+# Debian 13 packages s6 2.13, at the runner's version floor, so the suite comes
+# from apt here; the Rocky and Ubuntu 24.04 images build it from source instead.
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
         ca-certificates git openssh-client build-essential perl bash sudo vim \
         python3 python3-pip python3-numpy python3-pyparsing python-is-python3 \
         iproute2 socat \
+        s6 execline \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
         libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
@@ -78,6 +83,8 @@ RUN set -e; \
     git clone --depth 1 --branch "${CON_VERSION}" https://github.com/jeonghanlee/con /tmp/con && \
     make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    printf '%s %s %s %s\n' s6 apt "$(dpkg -s s6 | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    printf '%s %s %s %s\n' execline apt "$(dpkg -s execline | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
     apt-get purge -y autoconf automake libtool && apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con

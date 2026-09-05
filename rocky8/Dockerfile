@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.0.0
+#  version : 2.1.0
 #
 # Distribution-consuming EPICS environment image.
 # Same pattern as debian13: prebuilt EPICS-env-distribution binaries,
@@ -9,10 +9,14 @@ FROM rockylinux/rockylinux:8.10
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
+ARG IMAGE_VERSION=1.0.0
 ARG OS_DIR=rocky-8.10
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
 ARG CON_VERSION=1.1.0
+ARG SKALIBS_VERSION=2.14.3.0
+ARG EXECLINE_VERSION=2.9.6.1
+ARG S6_VERSION=2.13.1.0
 ARG INSTALL_ROOT=/opt/epics
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -84,6 +88,32 @@ RUN set -e; \
     dnf remove -y autoconf automake libtool && dnf clean all && \
     rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
+
+# s6 supervision suite: no s6, execline, or skalibs package exists on Rocky, so
+# skalibs -> execline -> s6 are built from pinned tags and statically linked,
+# mirroring the procServ-env layer. The image toolchain already carries make,
+# gcc-c++, and git, so nothing extra is installed. The static libraries,
+# headers, and sources are dropped in this one layer; only the binaries remain.
+# The runner drives s6-svscan and its family, and the full toolset is kept
+# because those tools exec other s6 binaries at run time.
+# The skarnet configure scripts run from their source directory, so each build
+# steps into it inside a subshell rather than a WORKDIR.
+# hadolint ignore=DL3003
+RUN set -e; \
+    git clone --depth 1 --branch "v${SKALIBS_VERSION}" https://github.com/skarnet/skalibs /tmp/skalibs && \
+    ( cd /tmp/skalibs && ./configure --prefix=/usr/local --disable-shared --enable-static && make -j"$(nproc)" && make install ) && \
+    printf '%s %s %s %s\n' skalibs https://github.com/skarnet/skalibs "$(git -C /tmp/skalibs rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    git clone --depth 1 --branch "v${EXECLINE_VERSION}" https://github.com/skarnet/execline /tmp/execline && \
+    ( cd /tmp/execline && ./configure --prefix=/usr/local --disable-shared --enable-static --enable-allstatic && make -j"$(nproc)" && make install ) && \
+    printf '%s %s %s %s\n' execline https://github.com/skarnet/execline "$(git -C /tmp/execline rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    git clone --depth 1 --branch "v${S6_VERSION}" https://github.com/skarnet/s6 /tmp/s6 && \
+    ( cd /tmp/s6 && ./configure --prefix=/usr/local --disable-shared --enable-static --enable-allstatic && make -j"$(nproc)" && make install ) && \
+    printf '%s %s %s %s\n' s6 https://github.com/skarnet/s6 "$(git -C /tmp/s6 rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
+    rm -rf /usr/local/lib/libexecline.a /usr/local/lib/libs6.a \
+           /usr/local/lib/libs6auto.a /usr/local/lib/libskarnet.a /usr/local/lib/skalibs \
+           /usr/local/include/execline /usr/local/include/s6 /usr/local/include/skalibs \
+           /tmp/skalibs /tmp/execline /tmp/s6 && \
+    test -x /usr/local/bin/s6-svscan && test -x /usr/local/bin/s6-setuidgid
 
 # Baked environment: variable list and PATH order
 # follow the verified setEpicsEnv.bash baseline; LD_LIBRARY_PATH carries the
