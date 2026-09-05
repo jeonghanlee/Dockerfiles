@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.1.0
+#  version : 2.2.0
 #
 # Distribution-consuming EPICS environment image.
 # Same pattern as debian13. Base pinned to 10.2 because it matches
@@ -11,7 +11,7 @@ FROM rockylinux/rockylinux:10.2
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
 ARG DIST_VERSION=1.2.2
-ARG IMAGE_VERSION=1.0.0
+ARG IMAGE_VERSION=1.0.1
 ARG OS_DIR=rocky-10.2
 ARG EPICS_VERSION=7.0.10
 ARG PROCSERV_ENV_VERSION=1.0.0
@@ -49,7 +49,7 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
     dnf install -y epel-release && \
     dnf --setopt=install_weak_deps=False install -y \
         git openssh-clients sudo bash make gcc-c++ perl perl-devel rpcgen \
-        python3 python3-pip iproute socat \
+        python3 python3-pip iproute socat lsof procps-ng \
         readline-devel libevent-devel net-snmp net-snmp-utils net-snmp-devel \
         libtirpc libtirpc-devel libxml2-devel systemd-devel \
         libusb1-devel hdf5-devel libjpeg-turbo-devel \
