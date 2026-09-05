@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.0.0
+#  version : 2.1.0
 #
 # Distribution-consuming EPICS environment image.
 # Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is

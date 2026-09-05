@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.0.0
+#  version : 2.1.0
 #
 # Distribution-consuming EPICS environment image.
 # Same pattern as debian13: prebuilt EPICS-env-distribution binaries,
