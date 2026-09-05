@@ -15,6 +15,7 @@ This repository covers Dockerfiles, local build helpers, validation gates, docum
 | `debian13/` | `jeonghanlee/debian13-epics` | Debian 13 EPICS environment |
 | `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8.10 EPICS environment |
 | `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10.2 EPICS environment |
+| `ubuntu24/` | `jeonghanlee/ubuntu24-epics` | Ubuntu 24.04 EPICS environment |
 | `mdbook/` | `jeonghanlee/mdbook` | mdBook and document rendering tools |
 
 The verified local host scope is Debian 13 on `x86_64/amd64`. Start with [docs/SETUP.md](docs/SETUP.md) for package installation, Docker access, proxy configuration, and the first build.
