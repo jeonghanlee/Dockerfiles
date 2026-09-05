@@ -96,6 +96,9 @@ RUN set -e; \
 # headers, and sources are dropped in this one layer; only the binaries remain.
 # The runner drives s6-svscan and its family, and the full toolset is kept
 # because those tools exec other s6 binaries at run time.
+# The skarnet configure scripts run from their source directory, so each build
+# steps into it inside a subshell rather than a WORKDIR.
+# hadolint ignore=DL3003
 RUN set -e; \
     git clone --depth 1 --branch "v${SKALIBS_VERSION}" https://github.com/skarnet/skalibs /tmp/skalibs && \
     ( cd /tmp/skalibs && ./configure --prefix=/usr/local --disable-shared --enable-static && make -j"$(nproc)" && make install ) && \

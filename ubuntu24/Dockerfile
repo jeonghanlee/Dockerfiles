@@ -44,6 +44,9 @@ ENV TZ=${TZ}
 # Pruned after a dependency review: dropped
 # X11/Motif, netcdf/tiff/png/bz2, boost, hidapi — none linked by the shipped
 # tree, referenced by module headers, or used by any consumer IOC build.
+# Package versions follow the Ubuntu 24.04 archive rather than being pinned,
+# matching the debian13 image.
+# hadolint ignore=DL3008
 RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone && \
     apt-get update -y && \
     apt-get install -y --no-install-recommends \
@@ -72,6 +75,7 @@ RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
 # autotools set procServ needs (autoconf/automake/libtool) is not needed by
 # consumer IOC builds, so it is installed and removed within this one layer.
+# hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -y && \
     apt-get install -y --no-install-recommends autoconf automake libtool && \
@@ -94,6 +98,9 @@ RUN set -e; \
 # headers, and sources are dropped in this one layer; only the binaries remain.
 # The runner drives s6-svscan and its family, and the full toolset is kept
 # because those tools exec other s6 binaries at run time.
+# The skarnet configure scripts run from their source directory, so each build
+# steps into it inside a subshell rather than a WORKDIR.
+# hadolint ignore=DL3003
 RUN set -e; \
     git clone --depth 1 --branch "v${SKALIBS_VERSION}" https://github.com/skarnet/skalibs /tmp/skalibs && \
     ( cd /tmp/skalibs && ./configure --prefix=/usr/local --disable-shared --enable-static && make -j"$(nproc)" && make install ) && \
