@@ -346,8 +346,9 @@ image.
 
 - `s6-svscan`, `s6-supervise`, `s6-svc`, `s6-svstat`, `s6-svscanctl`, and
   `s6-setuidgid` resolve on PATH in every EPICS image, at s6 2.13 or later.
-- The image verification gate fails when any of those binaries is missing or
-  not runnable.
+- The image verification gate fails when any of the six entry-point binaries
+  is missing or not runnable, or when a real supervision cycle - service up,
+  `s6-svc -wD` stop, `s6-svscanctl -t` teardown - does not complete.
 - The bake manifest records the s6 components and their source revisions.
 
 ##### Dependencies And Decisions
@@ -389,6 +390,27 @@ image.
   ubuntu:26.04 by package, and on rockylinux:8.10, rockylinux:10.2, and
   ubuntu:24.04 by source build. This validates the route, not the shipped
   images; T1 and T2 run against the built EPICS images.
+- Gate strategy, decided 2026-09-05 after a coherence review: the six s6
+  binaries the runner names are its entry points, not a sufficiency set. A
+  prune to those six plus `s6-svok` broke the lifecycle (`s6-svc -wD` execs
+  `s6-svlisten1`, and the service did not start), and the true exec closure was
+  never measured; the full toolset ships for that reason. So G9 asserts the
+  entry points for a precise diagnostic, and G11 asserts sufficiency by
+  behaviour: a real `s6-svscan` tree, a service dropped to `nobody` through
+  `s6-setuidgid`, stopped with `s6-svc -wD -T`, torn down with
+  `s6-svscanctl -t`. Observed 12/12 on all four images on 2026-09-05.
+- The 2.13 version floor needs no separate numeric check: the options G11
+  exercises (`-wD -T`, `-o`) are the ones that fixed the floor, so a sub-floor
+  s6 fails G11. Skarnet tools print no version and the apt and source routes
+  record it differently, so a numeric check would be redundant and uneven.
+- The debian13 apt route is explained in its package-layer comment, matching
+  the source-build comment on the other images; its three unused s6 version
+  ARGs were removed, and its manifest records the apt `s6` and `execline`
+  package versions so every image records its s6 delivery.
+- The Dockerfile header version is a file-generation marker distinct from
+  `IMAGE_VERSION`, kept as two axes (recorded in CLOSED_DOORS). It moves to
+  2.1.0 for this generation's s6 and version-split additions, and gate.bash
+  to 0.3.0 for G11.
 
 ##### Implementation Plan
 
@@ -412,7 +434,7 @@ Superseded Plan Artifacts: none
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Image build | Build every EPICS image and run the verification gate | debian13, rocky8, rocky10 images | The gate reports the supervision-binary check as passing |
+| T1 | Image build | Build every EPICS image and run the verification gate | debian13, rocky8, rocky10 images | The gate reports the s6 entry points present and the supervision cycle passing |
 | T2 | Supervision runtime | Run `s6-svscan` on a scan directory and drive one procServ service through `s6-svc` and `s6-svstat` | The three EPICS images | The service starts under the service account, IOC output reaches stdout, and stop terminates procServ and its child |
 
 ##### Verification Results
