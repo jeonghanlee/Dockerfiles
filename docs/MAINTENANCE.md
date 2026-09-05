@@ -39,7 +39,7 @@ make versions
 make check
 ```
 
-Review all three Dockerfile changes. The EPICS image workflows publish `latest` and `<DIST_VERSION>` only from a manual `workflow_dispatch` on `master`, after their container gates pass.
+Review all three Dockerfile changes. The EPICS image workflows publish `latest` and `<IMAGE_VERSION>` only from a manual `workflow_dispatch` on `master`, after their container gates pass.
 
 ## Update the mdBook Version
 
