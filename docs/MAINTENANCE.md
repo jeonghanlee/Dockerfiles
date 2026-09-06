@@ -29,6 +29,18 @@ For an EPICS image:
 make gate.<image>
 ```
 
+## Version Axes
+
+Three version values are tracked independently, each with its own source and purpose. They do not move together.
+
+| Axis | Set in | Purpose |
+|---|---|---|
+| `IMAGE_VERSION` | `ARG IMAGE_VERSION` in each Dockerfile | Published image tag |
+| `DIST_VERSION` | `make dist-version.<v>` | Distribution tree consumed |
+| Generation header | `# version :` in each `Dockerfile` and `gate.bash` | File definition revision |
+
+`IMAGE_VERSION` is published as the Docker Hub tag and, through the workflow's `BUILD_VERSION`, the `org.label-schema.version` label. It is decoupled from `DIST_VERSION`: an image can be republished without a distribution change, and a distribution bump does not force an image version. `DIST_VERSION` selects the prebuilt EPICS binaries and is recorded in the `epics.distribution-version` label. The generation header marks a change to the file's own definition and is neither an image nor a distribution version.
+
 ## Update the EPICS Environment Version
 
 The four EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
