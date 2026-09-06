@@ -5,7 +5,7 @@ Milestone index: 69b9303
 Canonical path: `docs/milestone-69b9303.md`
 Canonical branch or ref: master
 Git upstream: origin/master
-Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 2.0.0 ("Lean images, everlasting EPICS")
+Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
 Next session entry point: no Ready row remains. The s6 supervision suite (M4)
 and the Ubuntu 24.04 image (M5) shipped at image version 1.0.0 on
@@ -142,10 +142,10 @@ Superseded Plan Artifacts: none
 
 Title: Add the ioc-runner container supervision layer
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: open
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-09-03, after the issue rewrite
 Scope note: issue #28 was filed as the whole IOC runtime layer - procServ, con,
 ioc-runner, and the tools IOC generator. procServ and con shipped at 1.2.2 and
@@ -230,10 +230,10 @@ Superseded Plan Artifacts: none
 
 Title: Modernize the mdbook image
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: open
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-08-17, register reset
 Close note: #32 can be closed on the completed modernization and publish; the
 close is an owner-run gh action, not yet performed.
@@ -454,10 +454,10 @@ Superseded Plan Artifacts: none
 
 Title: Add the s6 supervision suite to the EPICS images
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: closed
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-09-05, at close
 
 #### M5 - Ubuntu 24.04 EPICS image
@@ -548,10 +548,10 @@ Superseded Plan Artifacts: none
 
 Title: Add the Ubuntu 24.04 EPICS image
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: closed
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-09-05, at close
 
 #### M6 - Ubuntu 26.04 EPICS image
@@ -632,10 +632,10 @@ Superseded Plan Artifacts: none
 
 Title: Add the Ubuntu 26.04 EPICS image
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: open
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-09-03, at issue creation
 
 #### M7 - Runtime-only slim image
@@ -704,7 +704,7 @@ Superseded Plan Artifacts: none
 
 Title: Build a runtime-only slim EPICS image
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: none
 Observed Labels: none
 Observed Milestone: none
@@ -792,10 +792,10 @@ Superseded Plan Artifacts: none
 
 Title: Move the EPICS images to distribution 1.3.0
 Labels: enhancement
-GitHub Milestone: 2.0.0
+GitHub Milestone: 1.0.0
 Observed State: open
 Observed Labels: enhancement
-Observed Milestone: 2.0.0
+Observed Milestone: 1.0.0
 Last Compared: 2026-09-04, at issue creation
 
 #### G1 - epics-ioc-runner container mode
