@@ -52,7 +52,7 @@ Backlog is reported separately below and excluded from this tally.
 Origin: 69b9303 / M1
 Identity History: none
 GitHub Issue: #28, https://github.com/jeonghanlee/Dockerfiles/issues/28
-Status: Not started
+Status: In progress
 
 ##### Summary
 
@@ -121,19 +121,24 @@ sets of the existing dev-carrying images.
   variant (B) follows by hand later. No infrastructure orchestrates the
   develop-to-run handoff, so the pipeline is operated manually, which favors A
   first and a hand-managed move to B once A stabilizes.
+- The `run-setup-system-infra.bash` launcher refuses to run as root - it is the
+  unprivileged user wrapper that invokes sudo - so the image build runs
+  `setup-system-infra.bash --container` directly. Observed 2026-09-07 during the
+  first runner-image build.
 
 ##### Implementation Plan
 
 Plan Status: accepted
 Plan Acceptance: owner, 2026-09-07, in session
-Implementation Authorization: none
+Implementation Authorization: owner, 2026-09-07, in session
 Superseded Plan Artifacts: none
 
 1. Define the supervision layer as a reusable build fragment: clone
-   epics-ioc-runner at tag 1.4.0 and run `bin/run-setup-system-infra.bash
-   --container`, which installs the CLI and deploys the service account, group,
-   configuration directory, and scan directory - no sudoers, unit template, or
-   log rotation.
+   epics-ioc-runner at tag 1.4.0 and run `bin/setup-system-infra.bash
+   --container` directly as root, which installs the CLI and deploys the service
+   account, group, configuration directory, and scan directory - no sudoers,
+   unit template, or log rotation. The `run-setup` launcher refuses to run as
+   root, so the build calls the privileged script directly.
 2. Add the entry point that creates `/run/s6-procserv` and runs
    `s6-svscan /run/s6-procserv` as PID 1, with the container running as root.
 3. Apply the fragment on a development-plus-supervision image per OS (A),
@@ -153,8 +158,8 @@ Superseded Plan Artifacts: none
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Every EPICS image | Pending | none |
-| T2 | Not run | Every EPICS image | Pending | none |
+| T1 | 2026-09-07 | All four -epics-runner images | Pass | container-lifecycle suite 64/64 via docker exec on the baked entry point (debian13, rocky8, rocky10, ubuntu24); each image also passes the container gate 13/13 (G0-G12) |
+| T2 | 2026-09-07 | All four -epics-runner images | Pass | PID 1 is s6-svscan, the container stays up, and s6-svscanctl -z reaches the supervisor on the scan directory |
 
 ##### Closure Evidence
 

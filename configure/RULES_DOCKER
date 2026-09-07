@@ -116,4 +116,16 @@ endef
 
 $(foreach image, $(RELEASE_IMAGE_DIRS), $(eval $(call gate_target,$(image))))
 
+# Runner gate targets. The runner image's ENTRYPOINT is s6-svscan, so the gate
+# runs under an explicit bash entry point; GATE_RUNNER enables the runner-only
+# supervision-layer check (G12).
+define runner_gate_target
+.PHONY: gate.$(1)
+
+gate.$(1): ## Run the container gate against the $(1) runner image
+	$$(QUIET) . $$(TOP)/$(1)/env.conf; docker run --rm --entrypoint bash -e GATE_RUNNER=1 -v $$(GATE_TOOL):/gate.bash:ro $$$${DOCKER_ID}/$$$${TARGET_NAME} /gate.bash
+endef
+
+$(foreach image, $(RUNNER_IMAGE_DIRS), $(eval $(call runner_gate_target,$(image))))
+
 FORCE:

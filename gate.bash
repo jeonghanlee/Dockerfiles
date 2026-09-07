@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.4.0
+#  version : 0.5.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -24,6 +24,10 @@ declare -i FAIL_COUNT=0
 # entries, not module identities (name/version identity is the distribution's
 # manifest concern, out of this gate's scope).
 declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-64}"
+
+# G12 runs only on runner images (GATE_RUNNER=1); the development images they are
+# built FROM carry no ioc-runner supervision layer.
+declare -i RUNNER_GATE="${GATE_RUNNER:-0}"
 
 function pass { printf "PASS  %s\n" "$1"; PASS_COUNT+=1; }
 function fail { printf "FAIL  %s\n" "$1"; FAIL_COUNT+=1; }
@@ -245,6 +249,17 @@ function gate_manifest {
     fi
 }
 
+# G12 - ioc-runner supervision layer (runner images only). Asserts the CLI and
+# the s6-svscan entry point the supervised image adds on top of its base image.
+# The IOC lifecycle itself is verified by the runner's container-lifecycle
+# harness, not by this in-image gate.
+function gate_runner {
+    local ok=1
+    command -v ioc-runner >/dev/null 2>&1 || { fail "G12 ioc-runner not on PATH"; ok=0; }
+    [[ -x /usr/local/bin/s6-svscan-entrypoint ]] || { fail "G12 s6-svscan entry point missing or not executable"; ok=0; }
+    (( ok )) && pass "G12 ioc-runner supervision layer (CLI + s6-svscan entry point)"
+}
+
 function main {
     printf "== Container gate: %s ==\n" "${EPICS_PATH:-<EPICS_PATH unset>}"
     gate_env
@@ -259,6 +274,7 @@ function main {
     gate_tools
     gate_s6
     gate_manifest
+    (( RUNNER_GATE )) && gate_runner
     printf -- "-- %d passed, %d failed --\n" "${PASS_COUNT}" "${FAIL_COUNT}"
     (( FAIL_COUNT == 0 ))
 }

@@ -1,0 +1,38 @@
+---
+name: Debian 13 EPICS runner
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "debian13-epics-runner/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/debian13-epics-runner.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "debian13-epics-runner/**"
+      - "gate.bash"
+      - ".github/workflows/debian13-epics-runner.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  debian13-epics-runner:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: debian13-epics-runner
+      image_name: jeonghanlee/debian13-epics-runner
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

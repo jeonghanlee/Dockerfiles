@@ -10,7 +10,7 @@ This document records the container runtime scenario for the EPICS images: the r
 
 The current four EPICS images (`debian13`, `rocky8`, `rocky10`, `ubuntu24`) are development images. They carry the build toolchain, run `softIoc`, `procServ`, and `con` directly, default to an interactive shell (`CMD ["/bin/bash"]`), and serve the existing CI consumers that invoke them as `docker run <image> <command>`. IOCs are prepared and built in these images.
 
-Supervised IOC execution ships as a separate image; the development images are not converted to a supervision entry point. See Design Decision below.
+Supervised IOC execution ships as a separate image per OS - `debian13-epics-runner`, `rocky8-epics-runner`, `rocky10-epics-runner`, and `ubuntu24-epics-runner` (variant A: the development image plus the supervision layer). The development images are not converted to a supervision entry point. See Design Decision below.
 
 ## Supervised IOC Lifecycle
 
@@ -19,7 +19,7 @@ A supervision image is an image whose entry point runs `s6-svscan` as PID 1 on t
 The session looks like this; the exact `ioc-runner` subcommands follow the runner CLI in `epics-ioc-runner` 1.4.0:
 
 ```bash
-docker run -d --name ioc <supervision-image>   # s6-svscan becomes PID 1
+docker run -d --name ioc jeonghanlee/debian13-epics-runner   # s6-svscan is PID 1
 docker exec -it ioc bash                        # enter to prepare or build the IOC
 ioc-runner --container generate /path/to/iocBoot  # generate and validate <ioc>.conf
 ioc-runner --container install <ioc>.conf         # install the IOC configuration
@@ -44,6 +44,15 @@ Layering (2026-09-07): the supervision layer - the runner install, its `--contai
 ## Open Decisions
 
 - IOC delivery into the slim runtime image (M7): baked at image build time, or mounted at container runtime.
+
+## Verification
+
+The runner image's `ENTRYPOINT` is `s6-svscan`, so `docker run <image> <command>` passes the command to `s6-svscan` as arguments instead of running it. Both the gate and the lifecycle check must bypass the entry point.
+
+- Container gate: run it under an explicit bash entry point - `make gate.<os>-epics-runner` does this: `docker run --rm --entrypoint bash -e GATE_RUNNER=1 -v <repo>/gate.bash:/gate.bash:ro <image> /gate.bash`. `GATE_RUNNER=1` enables the G12 supervision-layer check.
+- IOC lifecycle (T1): start the container on its own entry point so `s6-svscan` is PID 1, then run the runner's `tests/test-container-lifecycle.bash` through `docker exec` with `CAP_SYS_PTRACE` for deep inspect: `docker run -d --cap-add SYS_PTRACE -v <runner-repo>:/src:ro <image>`, then `docker exec <container> bash /src/tests/test-container-lifecycle.bash`.
+
+Do not run the runner's `run-container-tests.bash` harness against a runner image: it assumes an ENTRYPOINT-less development image, so its command is swallowed by the runner image's `s6-svscan` entry point and the suite never runs. A long verification run should be smoke-checked (container up, first output present) before it is left to complete, and a backgrounded run checked early rather than after it has hung.
 
 ## References
 

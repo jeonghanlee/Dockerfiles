@@ -1,0 +1,38 @@
+---
+name: Rocky Linux 8 EPICS runner
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "rocky8-epics-runner/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/rocky8-epics-runner.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "rocky8-epics-runner/**"
+      - "gate.bash"
+      - ".github/workflows/rocky8-epics-runner.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rocky8-epics-runner:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: rocky8-epics-runner
+      image_name: jeonghanlee/rocky8-epics-runner
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
