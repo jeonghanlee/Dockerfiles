@@ -168,7 +168,7 @@ GitHub Milestone: 1.0.0
 Observed State: open
 Observed Labels: enhancement
 Observed Milestone: 1.0.0
-Last Compared: 2026-09-03, after the issue rewrite
+Last Compared: 2026-09-07, after the plan rewrite projected to the issue
 Scope note: issue #28 was filed as the whole IOC runtime layer - procServ, con,
 ioc-runner, and the tools IOC generator. procServ and con shipped at 1.2.2 and
 the tools generator was retired 2026-08-17, so its title and body were narrowed
