@@ -39,9 +39,10 @@ Decision (2026-09-07): supervised execution ships as a separate image. The curre
 
 Rationale: converting the development images would break `docker run <image> <command>` for the current CI consumers until the GitLab consumer cutover (external gate G2) completes. A separate image keeps supervised execution independent of G2, so it can be built and verified now. This also matches the register, where the runtime-only slim image (M7) is already a separate image.
 
+Layering (2026-09-07): the supervision layer - the runner install, its `--container` setup, and the `s6-svscan` entry point - is built as a reusable fragment. Applied on a development image it yields a build-and-run image (A); applied on the slim runtime image (M7) it yields a run-only image (B). Because no infrastructure orchestrates the develop-to-run handoff, the pipeline is operated by hand: start with A (build and run in one container manually), and move to B by hand once A stabilizes.
+
 ## Open Decisions
 
-- Supervision image layering: whether one toolchain-carrying supervision image serves both preparation and execution, or preparation stays in the current development images while only the slim runtime image (M7) carries the supervision entry point. Resolve before the M1 implementation plan.
 - IOC delivery into the slim runtime image (M7): baked at image build time, or mounted at container runtime.
 
 ## References

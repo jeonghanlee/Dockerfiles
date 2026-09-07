@@ -69,15 +69,15 @@ The runtime scenario, image roles, and open decisions are recorded in
 
 ##### Scope
 
-Install epics-ioc-runner from a pinned upstream ref through its Makefile, run
-its container setup mode at image build so the service account, group,
-configuration directory, and CLI are present, and give the image an entry point
-that creates the scan directory and runs `s6-svscan` as PID 1. Verify IOC start
-and stop inside a container on every EPICS image.
-
-Note: this Scope predates the 2026-09-07 decision to ship supervised execution
-as a separate image (see Dependencies And Decisions); it is rewritten to that
-decision, with the open layering decision resolved, before implementation.
+Define the supervision layer - install epics-ioc-runner from the pinned
+upstream ref, run its `--container` setup at image build, and add an entry
+point that creates the scan directory and runs `s6-svscan` as PID 1 - as a
+reusable build fragment. Apply it now on a development image per OS to yield a
+build-and-run image (A: the development image plus the fragment); the current
+four development images stay unchanged, and that supervised image builds and
+runs an IOC in one container. Keep the same fragment applicable to the slim
+runtime image (M7) to yield a run-only image (B), so that variant can follow
+by hand later. Verify IOC start and stop in a supervised container per OS.
 
 Out of scope: the upstream ioc-runner change itself (G1); the s6 supervision
 binaries the layer runs on (M4); the runtime-only slim image (M7); the package
@@ -85,8 +85,8 @@ sets of the existing dev-carrying images.
 
 ##### Completion Criteria
 
-- ioc-runner starts and stops an IOC inside a container that runs no systemd,
-  on every EPICS image.
+- ioc-runner starts and stops an IOC inside a supervised container per OS
+  that runs no systemd.
 - The image entry point runs `s6-svscan` as PID 1 and IOC output reaches
   container stdout.
 
@@ -116,29 +116,38 @@ sets of the existing dev-carrying images.
   current four EPICS images stay development images and are not converted to a
   supervision entry point. This keeps M1 independent of the GitLab consumer
   cutover (G2). The image roles are recorded in `docs/CONTAINER_RUNTIME.md`.
+- Decision (2026-09-07): build the supervision layer as a reusable fragment and
+  apply it on a development-plus-supervision image now (A); the run-only slim
+  variant (B) follows by hand later. No infrastructure orchestrates the
+  develop-to-run handoff, so the pipeline is operated manually, which favors A
+  first and a hand-managed move to B once A stabilizes.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-09-07, in session
 Implementation Authorization: none
 Superseded Plan Artifacts: none
 
-1. Pin the upstream ref once the container execution mode is released, and
-   install the runner through its Makefile.
-2. Run the container setup mode at image build so the service account, group,
-   configuration directory, and CLI are present, with no sudoers entry, no unit
-   template, and no log rotation.
-3. Add the entry point that creates the scan directory and runs `s6-svscan` as
-   PID 1, with the container running as root.
-4. Verify IOC start and stop on every EPICS image.
+1. Define the supervision layer as a reusable build fragment: clone
+   epics-ioc-runner at tag 1.4.0 and run `bin/run-setup-system-infra.bash
+   --container`, which installs the CLI and deploys the service account, group,
+   configuration directory, and scan directory - no sudoers, unit template, or
+   log rotation.
+2. Add the entry point that creates `/run/s6-procserv` and runs
+   `s6-svscan /run/s6-procserv` as PID 1, with the container running as root.
+3. Apply the fragment on a development-plus-supervision image per OS (A),
+   leaving the current four development images unchanged; keep it reusable so
+   the slim runtime image (M7) can apply it later (B).
+4. Extend the container gate for the supervision entry point, and verify the
+   IOC generate/install/start/stop lifecycle in a supervised container per OS.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Container runtime | Start and stop an IOC through ioc-runner in a running container | Every EPICS image | Start and stop both succeed with no systemd present |
-| T2 | Supervision entry | Run the image entry point and inspect PID 1 and IOC output | Every EPICS image | PID 1 is `s6-svscan` and IOC output reaches container stdout |
+| T1 | Container runtime | Start and stop an IOC through ioc-runner in a running container | Supervised image per OS | Start and stop both succeed with no systemd present |
+| T2 | Supervision entry | Run the image entry point and inspect PID 1 and IOC output | Supervised image per OS | PID 1 is `s6-svscan` and IOC output reaches container stdout |
 
 ##### Verification Results
 
