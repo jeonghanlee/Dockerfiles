@@ -7,16 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M1 (the ioc-runner supervision layer) is the Ready
-row. G1 cleared on 2026-09-06 when epics-ioc-runner 1.4.0 released the container
-execution mode and issue #127 closed; M1 is unblocked. The runtime scenario and
-the decision to ship supervised execution as a separate image, with the four
-EPICS images staying development images, are recorded in
-`docs/CONTAINER_RUNTIME.md`. Before implementing, rewrite M1's Scope and
-Implementation Plan to that decision and resolve its open layering decision. M7
-(runtime-only slim image) follows M1. M6 (Ubuntu 26.04) and M8 (distribution
-1.3.0 bump) remain Blocked on G4 until that version publishes. The mdbook image
-(M2) and the documentation site (M3) are complete.
+Next session entry point: M7 (the runtime-only slim image) is the Ready row. M1
+shipped the four `-epics-runner` supervision images (variant A) in cf1eb59 and
+issue #28 is closed, so the same supervision fragment can now be applied to a
+slim base (variant B). The open decision for M7 is how a finished IOC enters the
+slim image (baked at build time, or mounted at runtime); see
+`docs/CONTAINER_RUNTIME.md`. M6 (Ubuntu 26.04) and M8 (distribution 1.3.0 bump)
+remain Blocked on G4 until that version publishes. The mdbook image (M2) and the
+documentation site (M3) are complete.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -28,7 +26,7 @@ and decision records stay reachable at commit 69b9303.
 
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Runtime | M1 | Container runtime: the ioc-runner supervision layer | Carry-forward | Not started | Yes | G1 | ioc-runner starts and stops an IOC in a container that runs no systemd, on every EPICS image; [detail](#m1---container-runtime) |
+| Runtime | M1 | Container runtime: the ioc-runner supervision layer | Carry-forward | Complete | No | G1 | ioc-runner starts and stops an IOC in a supervised container per OS with no systemd; [detail](#m1---container-runtime) |
 | Images | M2 | Modernize the mdbook image | Milestone | Complete | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
 | Documentation | M3 | Publish repository documentation with mdBook and GitHub Pages | Milestone | Complete | No | G3 | The fixed mdBook image renders the repository book, the Actions workflow deploys it, and the live URL serves the result; [detail](#m3---publish-repository-documentation) |
 | Gates | G1 | epics-ioc-runner container execution mode | External gate | Complete | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
@@ -37,11 +35,11 @@ and decision records stay reachable at commit 69b9303.
 | Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Complete | No | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
 | Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Complete | No | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
 | Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
-| Runtime | M7 | Runtime-only slim image | Milestone | Not started | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
+| Runtime | M7 | Runtime-only slim image | Milestone | Not started | Yes | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Blocked | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Open | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 4, In progress 0, Blocked 2, Not started 2,
+Tally: 8 milestone rows - Complete 5, In progress 0, Blocked 2, Not started 1,
 Ready 1. External gates: 2 open (G2, G4) and 2 complete (G1, G3).
 Backlog is reported separately below and excluded from this tally.
 
@@ -52,7 +50,7 @@ Backlog is reported separately below and excluded from this tally.
 Origin: 69b9303 / M1
 Identity History: none
 GitHub Issue: #28, https://github.com/jeonghanlee/Dockerfiles/issues/28
-Status: In progress
+Status: Complete
 
 ##### Summary
 
@@ -163,17 +161,20 @@ Superseded Plan Artifacts: none
 
 ##### Closure Evidence
 
-- none
+- Shipped the four `-epics-runner` supervision images (variant A) in cf1eb59,
+  pushed to origin/master; build, container gate 13/13 (G0-G12), and the
+  container-lifecycle suite 64/64 verified on all four on 2026-09-07.
+- GitHub issue #28 closed COMPLETED on 2026-09-07.
 
 ##### GitHub Projection
 
 Title: Add the ioc-runner container supervision layer
 Labels: enhancement
 GitHub Milestone: 1.0.0
-Observed State: open
+Observed State: closed
 Observed Labels: enhancement
 Observed Milestone: 1.0.0
-Last Compared: 2026-09-07, after the plan rewrite projected to the issue
+Last Compared: 2026-09-07, after the body sync at close
 Scope note: issue #28 was filed as the whole IOC runtime layer - procServ, con,
 ioc-runner, and the tools IOC generator. procServ and con shipped at 1.2.2 and
 the tools generator was retired 2026-08-17, so its title and body were narrowed
