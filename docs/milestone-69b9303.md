@@ -7,14 +7,16 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: no Ready row remains. The s6 supervision suite (M4)
-and the Ubuntu 24.04 image (M5) shipped at image version 1.0.0 on
-EPICS-env-distribution 1.2.2, published and verified on 2026-09-05 with issues
-#38 and #39 closed. The remaining work is gated: M1 carries the ioc-runner
-supervision layer and is Blocked on G1, with M7 (runtime-only slim image)
-following it; M6 (Ubuntu 26.04) and M8 (distribution 1.3.0 bump) are Blocked on
-G4 until that version publishes. The mdbook image (M2) and the documentation
-site (M3) are complete.
+Next session entry point: M1 (the ioc-runner supervision layer) is the Ready
+row. G1 cleared on 2026-09-06 when epics-ioc-runner 1.4.0 released the container
+execution mode and issue #127 closed; M1 is unblocked. The runtime scenario and
+the decision to ship supervised execution as a separate image, with the four
+EPICS images staying development images, are recorded in
+`docs/CONTAINER_RUNTIME.md`. Before implementing, rewrite M1's Scope and
+Implementation Plan to that decision and resolve its open layering decision. M7
+(runtime-only slim image) follows M1. M6 (Ubuntu 26.04) and M8 (distribution
+1.3.0 bump) remain Blocked on G4 until that version publishes. The mdbook image
+(M2) and the documentation site (M3) are complete.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -26,10 +28,10 @@ and decision records stay reachable at commit 69b9303.
 
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Runtime | M1 | Container runtime: the ioc-runner supervision layer | Carry-forward | Blocked | No | G1 | ioc-runner starts and stops an IOC in a container that runs no systemd, on every EPICS image; [detail](#m1---container-runtime) |
+| Runtime | M1 | Container runtime: the ioc-runner supervision layer | Carry-forward | Not started | Yes | G1 | ioc-runner starts and stops an IOC in a container that runs no systemd, on every EPICS image; [detail](#m1---container-runtime) |
 | Images | M2 | Modernize the mdbook image | Milestone | Complete | No | | Image builds with the latest pinned mdbook and renders a site through the GitLab Pages flow; [detail](#m2---modernize-the-mdbook-image) |
 | Documentation | M3 | Publish repository documentation with mdBook and GitHub Pages | Milestone | Complete | No | G3 | The fixed mdBook image renders the repository book, the Actions workflow deploys it, and the live URL serves the result; [detail](#m3---publish-repository-documentation) |
-| Gates | G1 | epics-ioc-runner container execution mode | External gate | Open | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
+| Gates | G1 | epics-ioc-runner container execution mode | External gate | Complete | No | | Upstream issue jeonghanlee/epics-ioc-runner#127 resolved; [detail](#g1---epics-ioc-runner-container-mode) |
 | Gates | G2 | GitLab consumer cutover | External gate | Open | No | | Consumer rollout of the published images, executed in `alsu/ci`, with no work row here; [detail](#g2---gitlab-consumer-cutover) |
 | Gates | G3 | GitHub Pages Actions source | External gate | Complete | No | | Repository Pages source reports `build_type: workflow`; [detail](#g3---github-pages-actions-source) |
 | Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Complete | No | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
@@ -39,8 +41,8 @@ and decision records stay reachable at commit 69b9303.
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Blocked | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Open | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 4, In progress 0, Blocked 3, Not started 1,
-Ready 0. External gates: 3 open (G1, G2, G4) and 1 complete (G3).
+Tally: 8 milestone rows - Complete 4, In progress 0, Blocked 2, Not started 2,
+Ready 1. External gates: 2 open (G2, G4) and 2 complete (G1, G3).
 Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
@@ -50,7 +52,7 @@ Backlog is reported separately below and excluded from this tally.
 Origin: 69b9303 / M1
 Identity History: none
 GitHub Issue: #28, https://github.com/jeonghanlee/Dockerfiles/issues/28
-Status: Blocked
+Status: Not started
 
 ##### Summary
 
@@ -62,6 +64,9 @@ upstream ref, its container setup mode run at image build, and an entry point
 that runs the s6 supervision tree as PID 1. The runtime-only slim image was
 carried in this row until 2026-09-03 and is now M7.
 
+The runtime scenario, image roles, and open decisions are recorded in
+`docs/CONTAINER_RUNTIME.md`.
+
 ##### Scope
 
 Install epics-ioc-runner from a pinned upstream ref through its Makefile, run
@@ -69,6 +74,10 @@ its container setup mode at image build so the service account, group,
 configuration directory, and CLI are present, and give the image an entry point
 that creates the scan directory and runs `s6-svscan` as PID 1. Verify IOC start
 and stop inside a container on every EPICS image.
+
+Note: this Scope predates the 2026-09-07 decision to ship supervised execution
+as a separate image (see Dependencies And Decisions); it is rewritten to that
+decision, with the open layering decision resolved, before implementation.
 
 Out of scope: the upstream ioc-runner change itself (G1); the s6 supervision
 binaries the layer runs on (M4); the runtime-only slim image (M7); the package
@@ -103,6 +112,10 @@ sets of the existing dev-carrying images.
   rather than an optional wrapper.
 - The upstream lifecycle suite needs `CAP_SYS_PTRACE` inside the container for
   its deep inspect check, so a verification run adds that capability.
+- Decision (2026-09-07): supervised execution ships as a separate image; the
+  current four EPICS images stay development images and are not converted to a
+  supervision entry point. This keeps M1 independent of the GitLab consumer
+  cutover (G2). The image roles are recorded in `docs/CONTAINER_RUNTIME.md`.
 
 ##### Implementation Plan
 
@@ -802,7 +815,7 @@ Last Compared: 2026-09-04, at issue creation
 
 Origin: 69b9303 / G1
 GitHub Issue: jeonghanlee/epics-ioc-runner#127
-Status: Open
+Status: Complete
 
 ##### Summary
 
@@ -812,8 +825,8 @@ The mode adds a `--container` form to both the runner and its setup script: s6
 supervises procServ with one service directory per IOC, the setup form creates
 the accounts, configuration directory, and scan skeleton without a sudoers
 entry, unit template, or log rotation, and the runner requires root and a live
-`s6-svscan` on the scan directory. It is implemented on an upstream branch and
-is neither merged nor released.
+`s6-svscan` on the scan directory. It was merged and released as
+epics-ioc-runner 1.4.0 (2026-09-06); jeonghanlee/epics-ioc-runner#127 is closed.
 
 ##### Completion Criteria
 
@@ -825,10 +838,13 @@ is neither merged nor released.
 | --- | --- | --- |
 | 2026-09-03 | Pending | epics-ioc-runner 1.3.0 published without the container setup mode - its `setup-system-infra.bash` accepts only `--full`; jeonghanlee/epics-ioc-runner#127 remains open in the Backlog milestone |
 | 2026-09-03 | Pending | Container mode implemented on the upstream branch `feature/container-execution` at commit add145f, carrying `--container` in the runner and the setup script plus a container lifecycle suite; not merged, no pull request open, and jeonghanlee/epics-ioc-runner#127 still open |
+| 2026-09-07 | Complete | epics-ioc-runner 1.4.0 released the container execution mode; jeonghanlee/epics-ioc-runner#127 closed COMPLETED, release tag 1.4.0 on merge commit 445baf8, local checkout `git describe` = 1.4.0 |
 
 ##### Closure Evidence
 
-- none
+- epics-ioc-runner#127 closed COMPLETED and the container execution mode
+  released as tag 1.4.0 on merge commit 445baf8 (2026-09-06); verified
+  2026-09-07.
 
 #### G2 - GitLab consumer cutover
 
