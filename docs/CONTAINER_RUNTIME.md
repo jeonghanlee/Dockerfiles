@@ -56,6 +56,16 @@ The runner image's `ENTRYPOINT` is `s6-svscan`, so `docker run <image> <command>
 
 Do not run the runner's `run-container-tests.bash` harness against a runner image: it assumes an ENTRYPOINT-less development image, so its command is swallowed by the runner image's `s6-svscan` entry point and the suite never runs. A long verification run should be smoke-checked (container up, first output present) before it is left to complete, and a backgrounded run checked early rather than after it has hung.
 
+## Slim end-to-end verification
+
+A slim image bakes a specific IOC, so it is verified against a live IOC by running the device simulator on the host and linking the container IOC to it over the host network. Example with tc32sim:
+
+1. Clone tc32sim on the host and start its simulator: `simulator/run_simulators.bash` starts 64 emulators on ports 9400-9463. The simulator is a host-side companion, separate from the copy the image build clones.
+2. Run the slim image on the host network so the IOC's `127.0.0.1:<port>` reaches the host simulator, with `CAP_SYS_PTRACE` for deep inspect: `docker run -d --name ioc --network host --cap-add SYS_PTRACE <slim-image>`.
+3. Drive the baked IOC, regenerating the conf so its `IOC_CHDIR` matches the baked tree. For tc32sim the iocBoot directory is `/opt/ioc/tc32sim/iocBoot/ioctestlab-tc32sim` and the IOC name is `ioctestlab-tc32sim`: `docker exec ioc bash -lc 'cd <iocBoot-dir> && ioc-runner --container generate . && ioc-runner --container install -f ./<name>.conf && ioc-runner --container start <name>'`. The `install -f` skips the save-restore prompt, which otherwise aborts under a non-interactive `docker exec`.
+4. Read records through `docker exec` directly, not `bash -lc`: a login shell reruns `/etc/profile` and drops the EPICS bin from PATH. With the tc32sim device prefix `TC32:008:`: `docker exec ioc caget TC32:008:Ti0` for CA; `docker exec ioc pvxget TC32:008:group` for the PVA group (its pvname is `$(P)$(OBJ)`).
+5. Tear down: `ioc-runner --container stop <name>`, `docker rm -f ioc`, then stop the simulator. `run_simulators.bash --stop` leaves the `socat` listeners running, so also run `pkill -f tc32_emulator` and `pkill -x socat`.
+
 ## References
 
 - Milestone work items and status: `docs/milestone-69b9303.md` (M1 container runtime, M7 runtime-only slim image).
