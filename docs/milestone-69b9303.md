@@ -977,8 +977,12 @@ release tally.
 
 ### Work
 
-The backlog is empty. Two rows carried by the prior generation were retired by
-owner decision on 2026-08-17:
+| Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| Images | M9 | Wire the slim images into the build system and CI | Milestone | Not started | Yes | M7 | The four `-epics-slim` images are listed in `configure/CONFIG_SITE` and built by a CI workflow like the runner images; [detail](#m9---wire-the-slim-images-into-the-build-system-and-ci) |
+
+Two rows carried by the prior generation were retired by owner decision on
+2026-08-17:
 
 - Image vulnerability scanning (report-only): retired because the findings are
   dominated by base-OS packages this repository cannot act on.
@@ -987,6 +991,61 @@ owner decision on 2026-08-17:
 
 Their full prior records remain in Git at commit 69b9303, in
 `docs/milestone-5c186b4.md` (rows M5 and M7).
+
+### Backlog Details
+
+#### M9 - Wire the slim images into the build system and CI
+
+Origin: 69b9303 / M9
+Identity History: none
+GitHub Issue: none
+Status: Not started
+
+##### Summary
+
+The four `-epics-slim` images build only by hand. They are not listed in the
+build system or built by CI, unlike the development and runner images.
+
+##### Scope
+
+Add the slim images to `configure/CONFIG_SITE` (a slim image group beside
+`IMAGE_DIRS` and `RUNNER_IMAGE_DIRS`) and add a per-OS CI workflow that builds
+and gates each slim image, mirroring the runner image workflows.
+
+Out of scope: the slim image contents and their container gate, delivered by M7.
+
+##### Completion Criteria
+
+- The four slim images are listed in the build system configuration.
+- A CI workflow builds and gates each slim image on the normal triggers.
+
+##### Dependencies And Decisions
+
+- M7 delivered the slim images and their gate; this row only wires them into the
+  build system and CI.
+
+##### Implementation Plan
+
+Plan Status: draft
+Plan Acceptance: none
+Implementation Authorization: none
+Superseded Plan Artifacts: none
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | CI | Trigger the slim image workflow | GitHub Actions | Each slim image builds and its gate passes |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | Not run | GitHub Actions | Pending | none |
+
+##### Closure Evidence
+
+- none
 
 ## History
 
