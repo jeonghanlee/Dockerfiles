@@ -16,6 +16,14 @@ This repository covers Dockerfiles, local build helpers, validation gates, docum
 | `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8.10 EPICS environment |
 | `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10.2 EPICS environment |
 | `ubuntu24/` | `jeonghanlee/ubuntu24-epics` | Ubuntu 24.04 EPICS environment |
+| `debian13-epics-runner/` | `jeonghanlee/debian13-epics-runner` | Debian 13 supervised IOC runtime (ioc-runner + s6) |
+| `rocky8-epics-runner/` | `jeonghanlee/rocky8-epics-runner` | Rocky Linux 8.10 supervised IOC runtime (ioc-runner + s6) |
+| `rocky10-epics-runner/` | `jeonghanlee/rocky10-epics-runner` | Rocky Linux 10.2 supervised IOC runtime (ioc-runner + s6) |
+| `ubuntu24-epics-runner/` | `jeonghanlee/ubuntu24-epics-runner` | Ubuntu 24.04 supervised IOC runtime (ioc-runner + s6) |
+| `debian13-epics-slim/` | `jeonghanlee/debian13-epics-slim` | Debian 13 toolchain-free runtime with a baked IOC |
+| `rocky8-epics-slim/` | `jeonghanlee/rocky8-epics-slim` | Rocky Linux 8.10 toolchain-free runtime with a baked IOC |
+| `rocky10-epics-slim/` | `jeonghanlee/rocky10-epics-slim` | Rocky Linux 10.2 toolchain-free runtime with a baked IOC |
+| `ubuntu24-epics-slim/` | `jeonghanlee/ubuntu24-epics-slim` | Ubuntu 24.04 toolchain-free runtime with a baked IOC |
 | `mdbook/` | `jeonghanlee/mdbook` | mdBook and document rendering tools |
 
 The verified local host scope is Debian 13 on `x86_64/amd64`. Start with [docs/SETUP.md](docs/SETUP.md) for package installation, Docker access, proxy configuration, and the first build.
