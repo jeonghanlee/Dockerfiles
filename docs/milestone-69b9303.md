@@ -7,14 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M7 (the runtime-only slim image) is the Ready row. M1
-shipped the four `-epics-runner` supervision images (variant A) in cf1eb59 and
-issue #28 is closed, so the same supervision fragment can now be applied to a
-slim base (variant B). The open decision for M7 is how a finished IOC enters the
-slim image (baked at build time, or mounted at runtime); see
-`docs/CONTAINER_RUNTIME.md`. M6 (Ubuntu 26.04) and M8 (distribution 1.3.0 bump)
-remain Blocked on G4 until that version publishes. The mdbook image (M2) and the
-documentation site (M3) are complete.
+Next session entry point: no Ready row remains. M7 (the runtime-only slim image)
+is Complete - the four `-epics-slim` images (debian13, rocky8, rocky10, ubuntu24)
+bake the tc32sim IOC, pass the container gate 13/0, and start and stop it through
+ioc-runner; GitHub issue #45 is still open pending its close, and the slim images
+are not yet wired into `configure/CONFIG_SITE` or the CI workflows. M6 (Ubuntu
+26.04) and M8 (distribution 1.3.0 bump) remain Blocked on G4 until distribution
+1.3.0 publishes; the open external gates are G2 (GitLab consumer cutover) and G4.
+The mdbook image (M2) and the documentation site (M3) are complete.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -35,12 +35,12 @@ and decision records stay reachable at commit 69b9303.
 | Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Complete | No | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
 | Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Complete | No | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
 | Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Blocked | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
-| Runtime | M7 | Runtime-only slim image | Milestone | Not started | Yes | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
+| Runtime | M7 | Runtime-only slim image | Milestone | Complete | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Blocked | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Open | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 5, In progress 0, Blocked 2, Not started 1,
-Ready 1. External gates: 2 open (G2, G4) and 2 complete (G1, G3).
+Tally: 8 milestone rows - Complete 6, In progress 0, Blocked 2, Not started 0,
+Ready 0. External gates: 2 open (G2, G4) and 2 complete (G1, G3).
 Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
@@ -672,7 +672,7 @@ Origin: 69b9303 / M7
 Identity History: separated from M1 on 2026-09-03; M1 retains the ioc-runner
 supervision layer
 GitHub Issue: #45, https://github.com/jeonghanlee/Dockerfiles/issues/45
-Status: Not started
+Status: Complete
 
 ##### Summary
 
@@ -739,12 +739,19 @@ Superseded Plan Artifacts: none
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Slim runtime image | Pending | none |
-| T2 | Not run | Slim runtime image | Pending | none |
+| T1 | 2026-09-08 | debian13/rocky8/rocky10/ubuntu24 slim images | Pass | Each image builds under its own tag and passes the container gate 13/0 (G8 skipped where readelf is absent) |
+| T2 | 2026-09-08 | debian13/rocky8/rocky10/ubuntu24 slim images | Pass | ioc-runner starts and stops the baked tc32sim: debian13 end-to-end with live CA and PVA records; rocky8/rocky10/ubuntu24 start (s6 up, procServ running) then stop (s6 down, exit 0) |
 
 ##### Closure Evidence
 
-- none
+- Deliverable: four `-epics-slim` images (debian13 in c50ab3e; rocky8, rocky10,
+  ubuntu24 in a559f8f), each a multi-stage build that bakes the tc32sim IOC into
+  a toolchain-free runtime stage carrying the ioc-runner supervision fragment.
+- Verification (2026-09-08): container gate 13/0 on all four; ioc-runner
+  start/stop of the baked IOC on all four (debian13 end-to-end with live CA and
+  PVA, the other three start under s6 then stop with exit 0). No build toolchain
+  ships; the rockylinux base's binutils is removed.
+- GitHub issue #45 remains open pending its close.
 
 ##### GitHub Projection
 
