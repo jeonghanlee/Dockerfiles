@@ -31,7 +31,7 @@ docker stop ioc                                 # stop when done
 
 One container supervises a single IOC or several, since `s6-svscan` supervises every service directory under the scan directory.
 
-The runtime-only slim image (M7) is the toolchain-free supervision image that runs finished IOCs under its own tag; it depends on the supervision layer (M1). Whether IOC preparation and build happen in that same image family or stay in the current development images is an open decision (below).
+The runtime-only slim image (M7) is the toolchain-free supervision image that runs finished IOCs under its own tag; it depends on the supervision layer (M1). Its IOC is baked in at build time - compiled in a development image and copied into the slim final stage (see IOC delivery below), rather than prepared inside the slim family or mounted at runtime.
 
 ## Design Decision
 
