@@ -10,8 +10,8 @@ Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, e
 Next session entry point: no Ready row remains. M7 (the runtime-only slim image)
 is Complete - the four `-epics-slim` images (debian13, rocky8, rocky10, ubuntu24)
 bake the tc32sim IOC, pass the container gate 13/0, and start and stop it through
-ioc-runner; GitHub issue #45 is still open pending its close, and the slim images
-are not yet wired into `configure/CONFIG_SITE` or the CI workflows. M6 (Ubuntu
+ioc-runner; GitHub issue #45 is closed, and the slim images are not yet wired
+into `configure/CONFIG_SITE` or the CI workflows. M6 (Ubuntu
 26.04) and M8 (distribution 1.3.0 bump) remain Blocked on G4 until distribution
 1.3.0 publishes; the open external gates are G2 (GitLab consumer cutover) and G4.
 The mdbook image (M2) and the documentation site (M3) are complete.
@@ -751,17 +751,17 @@ Superseded Plan Artifacts: none
   start/stop of the baked IOC on all four (debian13 end-to-end with live CA and
   PVA, the other three start under s6 then stop with exit 0). No build toolchain
   ships; the rockylinux base's binutils is removed.
-- GitHub issue #45 remains open pending its close.
+- GitHub issue #45 closed on 2026-09-08 with a completion comment.
 
 ##### GitHub Projection
 
 Title: Build a runtime-only slim EPICS image
 Labels: enhancement
 GitHub Milestone: 1.0.0
-Observed State: none
-Observed Labels: none
-Observed Milestone: none
-Last Compared: never
+Observed State: closed
+Observed Labels: enhancement
+Observed Milestone: 1.0.0
+Last Compared: 2026-09-08, at close
 
 #### M8 - Distribution 1.3.0 image bump
 
