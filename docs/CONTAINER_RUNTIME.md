@@ -41,9 +41,11 @@ Rationale: converting the development images would break `docker run <image> <co
 
 Layering (2026-09-07): the supervision layer - the runner install, its `--container` setup, and the `s6-svscan` entry point - is built as a reusable fragment. Applied on a development image it yields a build-and-run image (A); applied on the slim runtime image (M7) it yields a run-only image (B). Because no infrastructure orchestrates the develop-to-run handoff, the pipeline is operated by hand: start with A (build and run in one container manually), and move to B by hand once A stabilizes.
 
+IOC delivery (2026-09-07): a finished IOC is baked into the slim runtime image (variant B) - compiled in a development image (which has the toolchain) and copied into a slim final stage that carries the supervision fragment, a multi-stage build whose result is one immutable image per IOC. Mounting an IOC at runtime was set aside.
+
 ## Open Decisions
 
-- IOC delivery into the slim runtime image (M7): baked at image build time, or mounted at container runtime.
+None open.
 
 ## Verification
 

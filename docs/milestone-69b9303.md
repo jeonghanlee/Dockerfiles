@@ -683,11 +683,14 @@ under its own tag, the counterpart to the dev-carrying images shipped at 1.2.2.
 
 ##### Scope
 
-Define the minimal runtime package set, build the slim image under its own tag,
-and run an IOC on it through ioc-runner.
+Define the minimal runtime package set and build a toolchain-free slim image
+under its own tag that carries the M1 supervision fragment. Bake a finished IOC
+into it with a multi-stage build - compile the IOC in a development-image build
+stage, then COPY it into the slim final stage - and run the baked IOC through
+ioc-runner under s6 supervision.
 
-Out of scope: the ioc-runner supervision layer itself (M1); the package sets of
-the dev-carrying images, already pruned at 1.2.2.
+Out of scope: the ioc-runner supervision layer itself, delivered by M1; the
+package sets of the dev-carrying images, already pruned at 1.2.2.
 
 ##### Completion Criteria
 
@@ -700,15 +703,29 @@ the dev-carrying images, already pruned at 1.2.2.
   layer M1 delivers.
 - The first half of the package-footprint split - pruning surplus while keeping
   the runner toolchain - shipped in the 1.2.2 images.
+- Decision (2026-09-07): the finished IOC is baked into the slim image -
+  compiled in a development-image build stage and copied into the slim final
+  stage - one immutable image per IOC, rather than mounted at runtime.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
+Plan Status: accepted
+Plan Acceptance: owner, 2026-09-07, in session
 Implementation Authorization: none
 Superseded Plan Artifacts: none
 
-1. Define the minimal runtime set once the supervision layer exists.
+1. Define the minimal runtime package set (EPICS runtime libraries, procServ,
+   con, s6, ioc-runner) with no build toolchain.
+2. Write a multi-stage Dockerfile: a build stage on the development image
+   compiles the IOC, and the final stage on a slim base applies the M1
+   supervision fragment and COPYs the built IOC.
+3. Build the slim image under its own tag and run the baked IOC through
+   ioc-runner under s6 supervision.
+4. Register the image and add a gate suited to the slim set: the container
+   gate's module-inventory and artifact checks assume the full EPICS tree, so
+   adjust the expected counts or run a reduced gate for the slim image.
+5. Verify IOC start and stop on the slim image and confirm no build toolchain
+   ships in it.
 
 ##### Test Plan
 
