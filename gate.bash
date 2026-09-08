@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.5.0
+#  version : 0.6.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -153,6 +153,14 @@ function gate_pva {
 # relative; a missing tag, an empty path (the silent-empty-runpath trap), or any
 # absolute component fails.
 function gate_linkage {
+    # A toolchain-free runtime image (the slim variant) ships no readelf; this
+    # check needs it, and linkage is already verified on the dev and runner
+    # images that carry readelf, so skip rather than misreport a missing tool
+    # as a missing RPATH.
+    if ! command -v readelf >/dev/null 2>&1; then
+        pass "G8 linkage skipped (readelf absent; verified on the dev/runner image)"
+        return
+    fi
     local f line paths comp ok=1
     local -a sample=(
         "${EPICS_BASE}/lib/${EPICS_HOST_ARCH}/libdbCore.so"
