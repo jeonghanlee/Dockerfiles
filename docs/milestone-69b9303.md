@@ -671,7 +671,7 @@ Last Compared: 2026-09-03, at issue creation
 Origin: 69b9303 / M7
 Identity History: separated from M1 on 2026-09-03; M1 retains the ioc-runner
 supervision layer
-GitHub Issue: none
+GitHub Issue: #45, https://github.com/jeonghanlee/Dockerfiles/issues/45
 Status: Not started
 
 ##### Summary
@@ -711,7 +711,7 @@ package sets of the dev-carrying images, already pruned at 1.2.2.
 
 Plan Status: accepted
 Plan Acceptance: owner, 2026-09-07, in session
-Implementation Authorization: none
+Implementation Authorization: owner, 2026-09-07, in session
 Superseded Plan Artifacts: none
 
 1. Define the minimal runtime package set (EPICS runtime libraries, procServ,
@@ -721,9 +721,10 @@ Superseded Plan Artifacts: none
    supervision fragment and COPYs the built IOC.
 3. Build the slim image under its own tag and run the baked IOC through
    ioc-runner under s6 supervision.
-4. Register the image and add a gate suited to the slim set: the container
-   gate's module-inventory and artifact checks assume the full EPICS tree, so
-   adjust the expected counts or run a reduced gate for the slim image.
+4. Register the image and gate it. The slim image carries the full EPICS tree,
+   so the module checks pass; the G8 linkage check needs readelf, which a
+   toolchain-free image lacks, so gate.bash skips G8 when readelf is absent
+   (linkage stays verified on the dev and runner images).
 5. Verify IOC start and stop on the slim image and confirm no build toolchain
    ships in it.
 
