@@ -7,15 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M10 (split publish out of the build-gate workflow) is
-In progress and is the one open work row. The split has landed - image.yml
-build-and-gates only, publish.yml publishes owner-run, and the 15 per-OS
-workflows carry no publish step (T1 workflow lint Pass). It closes when the
-owner runs publish.yml once to confirm a publish end-to-end
-(`gh workflow run publish.yml -f image_dir=<image>` on master), recording T2.
-The other nine milestone rows are Complete - M8, M6, and M9 landed with green CI
-and published images, and issues #41 and #40 are closed. The only open external
-gate is G2 (GitLab consumer cutover), which carries no work row here.
+Next session entry point: no milestone work remains open. All ten milestone
+rows are Complete - the distribution 1.3.0 bump (M8), the Ubuntu 26.04 image set
+(M6), the slim build/CI wiring (M9), and the publish split (M10) all landed,
+with green CI on master, images published, and issues #41 and #40 closed.
+Publishing is now the owner-run publish.yml (`gh workflow run publish.yml -f
+image_dir=<image>`); the per-OS workflows build-gate only and are dispatchable
+under the git-workflow Dispatch scope. The only open item is external gate G2
+(GitLab consumer cutover), which carries no work row here.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -39,10 +38,10 @@ and decision records stay reachable at commit 69b9303.
 | Runtime | M7 | Runtime-only slim image | Milestone | Complete | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Complete | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Images | M9 | Wire the slim images into the build system and CI | Milestone | Complete | No | M7 | The five `-epics-slim` images are in `configure/CONFIG_SITE` and built and gated by CI like the runner images; [detail](#m9---wire-the-slim-images-into-the-build-system-and-ci) |
-| CI | M10 | Split publish out of the build-gate workflow | Milestone | In progress | No | M9 | image.yml build-and-gates only, a separate owner-run publish.yml pushes, and the per-OS workflows are dispatchable with no publish step; [detail](#m10---split-publish-out-of-the-build-gate-workflow) |
+| CI | M10 | Split publish out of the build-gate workflow | Milestone | Complete | No | M9 | image.yml build-and-gates only, a separate owner-run publish.yml pushes, and the per-OS workflows are dispatchable with no publish step; [detail](#m10---split-publish-out-of-the-build-gate-workflow) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 10 milestone rows - Complete 9, In progress 1, Blocked 0, Not started 0,
+Tally: 10 milestone rows - Complete 10, In progress 0, Blocked 0, Not started 0,
 Ready 0. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
@@ -1024,7 +1023,7 @@ Implementation Authorization: 2026-09-10, owner approval of the accepted plan
 Origin: 69b9303 / M10
 Identity History: none
 GitHub Issue: none
-Status: In progress
+Status: Complete
 
 ##### Summary
 
@@ -1092,11 +1091,16 @@ Implementation Authorization: 2026-09-10, owner approval of the accepted plan
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
 | T1 | 2026-09-10 | Local | Pass | `make check` passes: yamllint and YAML parse over all workflows; image.yml has no login/push/secrets, publish.yml is well-formed, and no per-OS workflow passes secrets |
-| T2 | Not run | GitHub Actions (owner-run) | Pending | none |
+| T2 | 2026-09-10 | GitHub Actions (owner-run) | Pass | publish.yml run 34505381416 (workflow_dispatch, image_dir=debian13) on master succeeded end to end - Resolve metadata, Build, Verification gate, Login, and Publish all green; debian13-epics latest and 1.1.0 pushed |
 
 ##### Closure Evidence
 
-- none
+- Deliverable: image.yml reduced to build-and-gate (no login/push/secrets), the
+  15 per-OS workflows carry no publish step, and a new owner-run publish.yml
+  builds, gates, then pushes one image by image_dir (commit 2515eb9).
+- Verification (2026-09-10): `make check` passes; the 15 per-OS build-gate
+  workflows pass on master (push CI, no publish step); publish.yml run
+  34505381416 published debian13-epics latest and 1.1.0 end to end.
 
 #### G1 - epics-ioc-runner container mode
 
