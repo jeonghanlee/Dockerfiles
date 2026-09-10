@@ -57,12 +57,23 @@ push / pull_request / workflow_dispatch
 .github/workflows/image.yml
         |
         +-- build and load image
-        +-- run gate.bash
-        `-- publish latest + IMAGE_VERSION
-              (manual master run only)
+        `-- run gate.bash
 ```
 
-The shared workflow must pass the container gate before it can publish an EPICS image.
+Publishing is separate and owner-run:
+
+```text
+workflow_dispatch (owner)
+        |
+        v
+.github/workflows/publish.yml   (image_dir input)
+        |
+        +-- build and load image
+        +-- run gate.bash
+        `-- push latest + IMAGE_VERSION
+```
+
+The per-OS workflows carry no publish step, so they can be dispatched to re-run the build and gate without publishing. `publish.yml` runs the container gate before it pushes. The runner and slim images build `FROM jeonghanlee/<os>-epics:${IMAGE_VERSION}`, so the base image must be published before they are.
 
 ## Documentation Flow
 

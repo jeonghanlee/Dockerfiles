@@ -53,6 +53,8 @@ make check
 
 Review all release-image Dockerfile changes. The per-OS workflows only build and gate; publishing is a separate step. To publish an image, run `.github/workflows/publish.yml` with `workflow_dispatch`, giving the image directory as the `image_dir` input; it builds, gates, then pushes `latest` and `<IMAGE_VERSION>`. Publish a runner or slim image only after its `<os>-epics` base image is published, since it builds from that base.
 
+When a distribution bump changes the shipped image content, raise `IMAGE_VERSION` in the same change so the new content publishes under a new tag. The runner and slim images pin the base `IMAGE_VERSION`, so republishing the same tag would silently change their base.
+
 ## Update the mdBook Version
 
 The mdBook workflow treats each version tag as fixed. It rejects publication when that tag already exists. Only an explicit missing-manifest response permits publication; any other registry lookup failure stops the workflow. Runs on the same branch are serialized so two manual publications cannot pass the tag check concurrently.
