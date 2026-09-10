@@ -1,6 +1,6 @@
-IMAGE_DIRS := debian13 mdbook rocky8 rocky10 ubuntu24 debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner
-RELEASE_IMAGE_DIRS := debian13 rocky8 rocky10 ubuntu24
-RUNNER_IMAGE_DIRS := debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner
+IMAGE_DIRS := debian13 mdbook rocky8 rocky10 ubuntu24 ubuntu26 debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner
+RELEASE_IMAGE_DIRS := debian13 rocky8 rocky10 ubuntu24 ubuntu26
+RUNNER_IMAGE_DIRS := debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner
 DEFAULT_IMAGE := debian13
 BUILD_ARGS :=
 MDBOOK_IMAGE := jeonghanlee/mdbook:0.5.4

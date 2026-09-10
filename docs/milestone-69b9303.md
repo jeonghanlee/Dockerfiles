@@ -35,13 +35,13 @@ and decision records stay reachable at commit 69b9303.
 | Gates | G3 | GitHub Pages Actions source | External gate | Complete | No | | Repository Pages source reports `build_type: workflow`; [detail](#g3---github-pages-actions-source) |
 | Runtime | M4 | s6 supervision suite in the EPICS images | Milestone | Complete | No | | The six supervision binaries the runner uses are on PATH in every EPICS image and the image gate checks them; [detail](#m4---s6-supervision-suite) |
 | Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Complete | No | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
-| Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Not started | Yes | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
+| Images | M6 | Ubuntu 26.04 EPICS image | Milestone | In progress | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
 | Runtime | M7 | Runtime-only slim image | Milestone | Complete | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | In progress | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 6, In progress 1, Blocked 0, Not started 1,
-Ready 1. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
+Tally: 8 milestone rows - Complete 6, In progress 2, Blocked 0, Not started 0,
+Ready 0. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
@@ -588,7 +588,7 @@ Last Compared: 2026-09-05, at close
 Origin: 69b9303 / M6
 Identity History: none
 GitHub Issue: #40, https://github.com/jeonghanlee/Dockerfiles/issues/40
-Status: Not started
+Status: In progress
 
 ##### Summary
 
@@ -599,58 +599,95 @@ the version expected to carry the `ubuntu-26.04` tree; that condition is G4.
 
 ##### Scope
 
-Add an `ubuntu26` image directory in the same shape as M5, pinned to
-`DIST_VERSION` 1.3.0, with its per-OS workflow, image directory registration,
-and documentation entries.
+Add three Ubuntu 26.04 images in the shape of the Ubuntu 24.04 set: the
+`ubuntu26` release image pinned to `DIST_VERSION` 1.3.0 on the `ubuntu-26.04`
+tree, `ubuntu26-epics-runner`, and `ubuntu26-epics-slim`, each at
+`IMAGE_VERSION` 1.1.0, with s6 installed from apt as the Debian 13 image
+does. Register the release and runner images in the image directory
+lists, add their per-OS workflows, and add the README and architecture
+entries. The slim image is added and verified locally but left out of the
+build lists and CI, matching the other slim images until Backlog M9 wires the
+whole slim set in.
 
-Out of scope: the distribution work that adds the tree (G4); the Ubuntu 24.04
-image (M5).
+Out of scope: the distribution work that adds the tree (G4, complete); the
+Ubuntu 24.04 images (M5); wiring the slim set into the build system and CI
+(Backlog M9).
 
 ##### Completion Criteria
 
-- `make build.ubuntu26` produces the image from distribution 1.3.0 and
-  `make gate.ubuntu26` passes every check.
-- The per-OS workflow builds and gates the image in CI.
-- The README and architecture tables list the image and its Docker Hub name.
+- `make build.ubuntu26` builds from distribution 1.3.0 and `make gate.ubuntu26`
+  passes every check with the module inventory at 70.
+- `ubuntu26-epics-runner` builds on the 1.1.0 release image and its gate passes
+  (13/0 with G12); `ubuntu26-epics-slim` builds on it, its gate passes, and it
+  runs the baked IOC end-to-end (CA and PVA read, then stop exit 0).
+- The release and runner per-OS workflows build and gate the images in CI; they
+  pass once the owner has published the 1.1.0 base image.
+- The README and architecture tables list the images and their Docker Hub
+  names.
 
 ##### Dependencies And Decisions
 
-- G4 Complete on 2026-09-09; resumed as Not started.
-- The image pins `DIST_VERSION` 1.3.0, the version the owner expects to carry
-  the `ubuntu-26.04` tree, stated 2026-09-03.
-- Ubuntu 26.04 packages s6 2.13.1.0 and execline 2.9.6.1, which meet the
-  runner's floor. Observed 2026-09-03.
+- G4 Complete on 2026-09-09; the registration deferral no longer applies, so the
+  release and runner images join the build and gate lists from the start.
+- Decision Date 2026-09-10: s6 installs from apt following the Debian 13 image,
+  not built from source. Ubuntu 26.04 apt ships s6 2.13.1.0 and execline
+  2.9.6.1 (verified 2026-09-10), both at or above the runner floor, so the
+  Ubuntu 24.04 source-build layer is unnecessary and the release Dockerfile
+  stays simple.
+- Decision Date 2026-09-10: the milestone delivers all three images (release,
+  runner, slim) at IMAGE_VERSION 1.1.0, matching the other four OS sets. The
+  slim image stays out of the build lists and CI to match its siblings; M9
+  wires the whole slim set.
+- Ordering constraint: the runner and slim images build
+  `FROM jeonghanlee/ubuntu26-epics:1.1.0`, which exists on Docker Hub only after
+  the owner publishes the release image; locally T2 and T3 tag the freshly built
+  release image 1.1.0 first, and in CI the runner workflow passes on a re-run
+  after publication.
 - M5 establishes the Ubuntu image pattern this row follows.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
+Plan Status: accepted
+Plan Acceptance: 2026-09-10, owner direction during plan review (apt s6 per
+Debian 13; IMAGE_VERSION 1.1.0; three-image set; slim left unwired for M9)
+Implementation Authorization: 2026-09-10, owner approval of the accepted plan
 Superseded Plan Artifacts: none
 
-1. Add `ubuntu26/Dockerfile` following the Ubuntu 24.04 image, with the Ubuntu
-   26.04 base, `DIST_VERSION` 1.3.0, and the `ubuntu-26.04` distribution tree.
-2. Keep the directory out of the build and gate lists until the distribution
-   tree exists, so CI does not fail on a fetch that cannot succeed.
-3. Add the thin per-OS workflow with the image name
-   `jeonghanlee/ubuntu26-epics`.
-4. Register the directory and add the documentation entries when G4 completes.
-5. Build and gate locally, then in CI.
+1. Add `ubuntu26/Dockerfile` from the Ubuntu 24.04 release image: base
+   `ubuntu:26.04`, `OS_DIR=ubuntu-26.04`, `DIST_VERSION` 1.3.0, `IMAGE_VERSION`
+   1.1.0, and s6 and execline from apt. Closed by T1.
+2. Add `ubuntu26-epics-runner/Dockerfile` and `ubuntu26-epics-slim/Dockerfile`
+   from their Ubuntu 24.04 counterparts, `FROM jeonghanlee/ubuntu26-epics:1.1.0`
+   at IMAGE_VERSION 1.1.0; the slim image bakes EPICS_PATH on the 1.3.0
+   `ubuntu-26.04` tree. Closed by T2 and T3.
+3. Register `ubuntu26` in `IMAGE_DIRS` and `RELEASE_IMAGE_DIRS` and
+   `ubuntu26-epics-runner` in `RUNNER_IMAGE_DIRS`; leave the slim image
+   unregistered. Closed by `make check`.
+4. Add the `ubuntu26` and `ubuntu26-epics-runner` per-OS workflows with image
+   names `jeonghanlee/ubuntu26-epics` and `jeonghanlee/ubuntu26-epics-runner`.
+   Closed by T4.
+5. Add the README and architecture table entries for the three images. Closed by
+   `make check`.
+6. Build and gate locally (T1, T2, T3), run `make check`, commit and push; CI
+   runs T4.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Image build | Run the repository build and gate targets for the image | Debian 13 host with Docker | Build succeeds and every gate check passes |
-| T2 | CI | Run the per-OS workflow from the committed tree | GitHub Actions | Build and gate jobs pass |
+| T1 | Image build | `make build.ubuntu26` then `make gate.ubuntu26` | Local Docker | Build succeeds and every gate check passes with G1 at 70/70 |
+| T2 | Runner build | Tag the built release image 1.1.0, then `make build.ubuntu26-epics-runner` and `make gate.ubuntu26-epics-runner` | Local Docker | Build succeeds on the 1.1.0 base and the gate passes 13/0 with G12 |
+| T3 | Slim build and runtime | `docker_builder.bash -t ubuntu26-epics-slim`, the container gate with the bash entry point, then a live end-to-end run against the host tc32sim simulator (ioc-runner start, a CA `caget` and a PVA `pvxget` read, then stop) | Local Docker, host tc32sim simulator | Build succeeds, the gate passes 12/0, the CA and PVA reads return live data, and stop exits 0 |
+| T4 | CI | The `ubuntu26` and `ubuntu26-epics-runner` workflows from the pushed tree | GitHub Actions | The release workflow passes; the runner workflow passes on a re-run after the owner publishes 1.1.0 |
 
 ##### Verification Results
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | Debian 13 host with Docker | Pending | none |
-| T2 | Not run | GitHub Actions | Pending | none |
+| T1 | 2026-09-10 | Local Docker, ubuntu26 release image | Pass | Builds from the 1.3.0 ubuntu-26.04 tree with s6 and execline from apt; the container gate reports 12/0 with G1 module inventory 70/70 |
+| T2 | 2026-09-10 | Local Docker, ubuntu26 runner image on the 1.1.0 base | Pass | Builds FROM jeonghanlee/ubuntu26-epics:1.1.0 and the gate reports 13/0 with G1 70/70 and G12 |
+| T3 | 2026-09-10 | Local Docker, ubuntu26 slim image, host tc32sim simulator | Pass | Builds with EPICS_PATH on the 1.3.0 ubuntu-26.04 tree, gate 12/0 with G1 70/70; end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (78.8) and pvxget TC32:008:group returned live data, then stop exitcode 0 |
+| T4 | Not run | GitHub Actions | Pending | none |
 
 ##### Closure Evidence
 

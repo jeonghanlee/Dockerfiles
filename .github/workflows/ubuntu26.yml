@@ -1,0 +1,37 @@
+---
+name: Ubuntu 26.04
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "ubuntu26/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/ubuntu26.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "ubuntu26/**"
+      - "gate.bash"
+      - ".github/workflows/ubuntu26.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ubuntu26:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: ubuntu26
+      image_name: jeonghanlee/ubuntu26-epics
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
