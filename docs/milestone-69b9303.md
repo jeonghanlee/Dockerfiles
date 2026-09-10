@@ -7,14 +7,13 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: no milestone work remains open. All ten milestone
-rows are Complete - the distribution 1.3.0 bump (M8), the Ubuntu 26.04 image set
-(M6), the slim build/CI wiring (M9), and the publish split (M10) all landed,
-with green CI on master, images published, and issues #41 and #40 closed.
-Publishing is now the owner-run publish.yml (`gh workflow run publish.yml -f
-image_dir=<image>`); the per-OS workflows build-gate only and are dispatchable
-under the git-workflow Dispatch scope. The only open item is external gate G2
-(GitLab consumer cutover), which carries no work row here.
+Next session entry point: RELEASED 2026-09-10 as 1.1.0 - annotated tag 1.1.0
+at 6b5e984, GitHub release published, and GitHub milestone 1.0.0 closed. All ten
+milestone rows are Complete: the distribution 1.3.0 bump (M8), the Ubuntu 26.04
+image set (M6), the slim build/CI wiring (M9), and the publish split (M10).
+Publishing is the owner-run publish.yml; the per-OS workflows build-gate only.
+The only open item is external gate G2 (GitLab consumer cutover), which carries
+no work row here. A next cycle opens when new work is scoped.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
