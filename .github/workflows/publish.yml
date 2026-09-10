@@ -1,0 +1,88 @@
+---
+name: Publish image
+
+# Owner-run publisher: build one image, gate it, then push latest and its
+# version to Docker Hub. Split out of image.yml so the per-OS build-gate
+# workflows carry no publish step and can be dispatched under the git-workflow
+# Dispatch scope. Publishing stays here, owner-run, on workflow_dispatch only.
+
+"on":
+  workflow_dispatch:
+    inputs:
+      image_dir:
+        description: "Image directory to publish, e.g. debian13 or rocky8"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-22.04
+    env:
+      IMAGE_DIR: ${{ inputs.image_dir }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve image metadata
+        id: meta
+        run: |
+          df="${IMAGE_DIR}/Dockerfile"
+          test -f "${df}"
+          # shellcheck disable=SC1091
+          . "${IMAGE_DIR}/env.conf"
+          v="$(grep -m1 -oE 'IMAGE_VERSION=[0-9.]+' "${df}" | cut -d= -f2)"
+          test -n "${v}"
+          echo "image_name=${DOCKER_ID}/${TARGET_NAME}" >> "${GITHUB_OUTPUT}"
+          echo "image_version=${v}" >> "${GITHUB_OUTPUT}"
+          case "${IMAGE_DIR}" in
+            *-epics-runner|*-epics-slim) r=true ;;
+            *) r=false ;;
+          esac
+          echo "is_runner=${r}" >> "${GITHUB_OUTPUT}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and load
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ github.workspace }}/${{ inputs.image_dir }}
+          file: ${{ github.workspace }}/${{ inputs.image_dir }}/Dockerfile
+          load: true
+          push: false
+          tags: ${{ steps.meta.outputs.image_name }}:latest
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            BUILD_VERSION=${{ steps.meta.outputs.image_version }}
+
+      - name: Verification gate
+        env:
+          IMAGE_NAME: ${{ steps.meta.outputs.image_name }}
+          IS_RUNNER: ${{ steps.meta.outputs.is_runner }}
+        run: |
+          gate="${GITHUB_WORKSPACE}/gate.bash"
+          if [ "${IS_RUNNER}" = "true" ]; then
+            docker run --rm --entrypoint bash -e GATE_RUNNER=1 \
+              -v "${gate}:/gate.bash:ro" "${IMAGE_NAME}:latest" /gate.bash
+          else
+            docker run --rm -v "${gate}:/gate.bash:ro" \
+              "${IMAGE_NAME}:latest" bash /gate.bash
+          fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Publish latest and the image version
+        env:
+          IMAGE_NAME: ${{ steps.meta.outputs.image_name }}
+          VER: ${{ steps.meta.outputs.image_version }}
+        run: |
+          docker tag "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${VER}"
+          docker push "${IMAGE_NAME}:latest"
+          docker push "${IMAGE_NAME}:${VER}"

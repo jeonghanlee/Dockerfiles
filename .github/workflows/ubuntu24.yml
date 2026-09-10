@@ -32,6 +32,3 @@ jobs:
     with:
       image_dir: ubuntu24
       image_name: jeonghanlee/ubuntu24-epics
-    secrets:
-      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

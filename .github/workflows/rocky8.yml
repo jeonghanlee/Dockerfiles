@@ -32,6 +32,3 @@ jobs:
     with:
       image_dir: rocky8
       image_name: jeonghanlee/rocky8-epics
-    secrets:
-      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

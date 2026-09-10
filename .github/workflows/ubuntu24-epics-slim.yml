@@ -33,6 +33,3 @@ jobs:
       image_dir: ubuntu24-epics-slim
       image_name: jeonghanlee/ubuntu24-epics-slim
       is_runner: true
-    secrets:
-      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

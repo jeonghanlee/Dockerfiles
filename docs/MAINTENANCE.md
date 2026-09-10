@@ -43,7 +43,7 @@ Three version values are tracked independently, each with its own source and pur
 
 ## Update the EPICS Environment Version
 
-The four EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
+The five EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
 
 ```bash
 make dist-version.1.3.0
@@ -51,7 +51,7 @@ make versions
 make check
 ```
 
-Review all four Dockerfile changes. The EPICS image workflows publish `latest` and `<IMAGE_VERSION>` only from a manual `workflow_dispatch` on `master`, after their container gates pass.
+Review all release-image Dockerfile changes. The per-OS workflows only build and gate; publishing is a separate step. To publish an image, run `.github/workflows/publish.yml` with `workflow_dispatch`, giving the image directory as the `image_dir` input; it builds, gates, then pushes `latest` and `<IMAGE_VERSION>`. Publish a runner or slim image only after its `<os>-epics` base image is published, since it builds from that base.
 
 ## Update the mdBook Version
 

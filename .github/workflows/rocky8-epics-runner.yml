@@ -33,6 +33,3 @@ jobs:
       image_dir: rocky8-epics-runner
       image_name: jeonghanlee/rocky8-epics-runner
       is_runner: true
-    secrets:
-      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
-      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
