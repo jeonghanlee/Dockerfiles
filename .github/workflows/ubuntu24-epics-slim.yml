@@ -1,0 +1,38 @@
+---
+name: Ubuntu 24.04 EPICS slim
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "ubuntu24-epics-slim/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/ubuntu24-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "ubuntu24-epics-slim/**"
+      - "gate.bash"
+      - ".github/workflows/ubuntu24-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ubuntu24-epics-slim:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: ubuntu24-epics-slim
+      image_name: jeonghanlee/ubuntu24-epics-slim
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

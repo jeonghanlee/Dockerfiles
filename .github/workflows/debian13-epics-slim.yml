@@ -1,0 +1,38 @@
+---
+name: Debian 13 EPICS slim
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "debian13-epics-slim/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/debian13-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "debian13-epics-slim/**"
+      - "gate.bash"
+      - ".github/workflows/debian13-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  debian13-epics-slim:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: debian13-epics-slim
+      image_name: jeonghanlee/debian13-epics-slim
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

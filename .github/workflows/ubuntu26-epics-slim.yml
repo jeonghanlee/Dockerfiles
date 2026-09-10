@@ -1,0 +1,38 @@
+---
+name: Ubuntu 26.04 EPICS slim
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "ubuntu26-epics-slim/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/ubuntu26-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "ubuntu26-epics-slim/**"
+      - "gate.bash"
+      - ".github/workflows/ubuntu26-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  ubuntu26-epics-slim:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: ubuntu26-epics-slim
+      image_name: jeonghanlee/ubuntu26-epics-slim
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}

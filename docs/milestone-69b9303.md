@@ -7,15 +7,15 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M8 (distribution 1.3.0 bump) and M6 (Ubuntu 26.04)
-are both Ready. G4 is Complete - EPICS-env-distribution 1.3.0 is published as
-annotated tag `1.3.0` carrying six OS trees, including `ubuntu-26.04`. M8 is
-the smaller step: the four existing images move from `DIST_VERSION` 1.2.2 to
-1.3.0 through `make dist-version.1.3.0`; M6 adds the ubuntu26 image directory.
-M7 (the runtime-only slim image) is Complete; GitHub issue #45 is closed, and
-the slim images are not yet wired into `configure/CONFIG_SITE` or the CI
-workflows (Backlog M9). The open external gate is G2 (GitLab consumer cutover).
-The mdbook image (M2) and the documentation site (M3) are complete.
+Next session entry point: no Ready row remains. M8 (distribution 1.3.0 bump),
+M6 (Ubuntu 26.04 image set), and M9 (slim images wired into the build system
+and CI) are all In progress with their local verification complete and pushed;
+each is held only by its CI step, which passes after the owner publishes the
+1.1.0 images through `workflow_dispatch` and the runner and slim workflows
+re-run against the published base. When that publish lands, re-run the pending
+workflows, mark T4/T2 Pass, and close M8, M6, and M9 with issues #41 and #40.
+The open external gate is G2 (GitLab consumer cutover). All other milestones
+are Complete.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -38,9 +38,10 @@ and decision records stay reachable at commit 69b9303.
 | Images | M6 | Ubuntu 26.04 EPICS image | Milestone | In progress | No | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
 | Runtime | M7 | Runtime-only slim image | Milestone | Complete | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | In progress | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
+| Images | M9 | Wire the slim images into the build system and CI | Milestone | In progress | No | M7 | The five `-epics-slim` images are in `configure/CONFIG_SITE` and built and gated by CI like the runner images; [detail](#m9---wire-the-slim-images-into-the-build-system-and-ci) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 6, In progress 2, Blocked 0, Not started 0,
+Tally: 9 milestone rows - Complete 6, In progress 3, Blocked 0, Not started 0,
 Ready 0. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
@@ -686,7 +687,7 @@ Superseded Plan Artifacts: none
 | --- | --- | --- | --- | --- |
 | T1 | 2026-09-10 | Local Docker, ubuntu26 release image | Pass | Builds from the 1.3.0 ubuntu-26.04 tree with s6 and execline from apt; the container gate reports 12/0 with G1 module inventory 70/70 |
 | T2 | 2026-09-10 | Local Docker, ubuntu26 runner image on the 1.1.0 base | Pass | Builds FROM jeonghanlee/ubuntu26-epics:1.1.0 and the gate reports 13/0 with G1 70/70 and G12 |
-| T3 | 2026-09-10 | Local Docker, ubuntu26 slim image, host tc32sim simulator | Pass | Builds with EPICS_PATH on the 1.3.0 ubuntu-26.04 tree, gate 12/0 with G1 70/70; end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (78.8) and pvxget TC32:008:group returned live data, then stop exitcode 0 |
+| T3 | 2026-09-10 | Local Docker, ubuntu26 slim image, host tc32sim simulator | Pass | Builds with EPICS_PATH on the 1.3.0 ubuntu-26.04 tree, supervised gate (GATE_RUNNER, bash entry) 13/0 with G1 70/70, G11, and G12; end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (78.8) and pvxget TC32:008:group returned live data, then stop exitcode 0 |
 | T4 | Not run | GitHub Actions | Pending | none |
 
 ##### Closure Evidence
@@ -905,7 +906,7 @@ Superseded Plan Artifacts: none
 | --- | --- | --- | --- | --- |
 | T1 | 2026-09-10 | Local Docker, debian13/rocky8/rocky10/ubuntu24 release images | Pass | Each image builds from the 1.3.0 tree and the container gate reports 12/0 with G1 module inventory 70/70 (rocky8 passed on a re-run after a transient dnf-mirror build failure) |
 | T2 | 2026-09-10 | Local Docker, four runner images on the 1.1.0 base | Pass | Each runner builds on jeonghanlee/<os>-epics:1.1.0 and the gate reports 13/0 with G1 70/70 and G12 (ioc-runner supervision layer) |
-| T3 | 2026-09-10 | Local Docker, four slim images, host tc32sim simulator | Pass | Each slim builds with EPICS_PATH on the 1.3.0 tree and the gate reports 12/0 with G1 70/70; every OS ran end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (debian13 72.9, rocky8 80.7, rocky10 80.7, ubuntu24 79.5) and pvxget TC32:008:group both returned live data, then stop exitcode 0 |
+| T3 | 2026-09-10 | Local Docker, four slim images, host tc32sim simulator | Pass | Each slim builds with EPICS_PATH on the 1.3.0 tree and the supervised gate (GATE_RUNNER, bash entry) reports 13/0 with G1 70/70, G11, and G12; every OS ran end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (debian13 72.9, rocky8 80.7, rocky10 80.7, ubuntu24 79.5) and pvxget TC32:008:group both returned live data, then stop exitcode 0 |
 | T4 | Not run | GitHub Actions | Pending | none |
 
 ##### Closure Evidence
@@ -921,6 +922,85 @@ Observed State: open
 Observed Labels: enhancement
 Observed Milestone: 1.0.0
 Last Compared: 2026-09-04, at issue creation
+
+#### M9 - Wire the slim images into the build system and CI
+
+Origin: 69b9303 / M9
+Identity History: M9 was a Backlog row through commit f2bc564; promoted to a
+milestone on 2026-09-10.
+GitHub Issue: none
+Status: In progress
+
+##### Summary
+
+The five `-epics-slim` images built only by hand and were gated with the wrong
+mode. They are now listed in the build system and gated by CI like the runner
+images. Both the runner and slim images run s6-svscan as ENTRYPOINT, so their
+container gate runs under an explicit bash entry point with GATE_RUNNER set,
+which adds the G11 supervision cycle and G12 layer checks (13/0, not the 12/0 a
+plain gate reports).
+
+##### Scope
+
+Add `SLIM_IMAGE_DIRS` to `configure/CONFIG_SITE`, list the slim directories in
+`IMAGE_DIRS` for build and dry-run targets, and generate their gate targets
+through the shared supervised-gate macro (renamed from the runner-only name).
+Add a per-OS CI workflow for each slim image, mirroring the runner workflows
+with `is_runner: true` so CI gates them in supervised mode.
+
+Out of scope: the slim image contents and their gate logic, delivered by M7;
+publishing, which stays an owner-run `workflow_dispatch`.
+
+##### Completion Criteria
+
+- The five slim images are listed in the build system and each has
+  `build.<image>` and `gate.<image>` targets.
+- `make gate.<image>` runs each slim image's gate in supervised mode and reports
+  13/0.
+- A CI workflow builds and gates each slim image on the normal triggers.
+
+##### Dependencies And Decisions
+
+- M7 delivered the slim images and their gate; this row wires them into the
+  build system and CI and fixes the gate mode.
+- Decision Date 2026-09-10: the runner and slim gate targets share one macro
+  (`supervised_gate_target`), since both images run s6-svscan as ENTRYPOINT and
+  need the bash entry point with GATE_RUNNER.
+- Ordering constraint: each slim image builds `FROM jeonghanlee/<os>-epics:1.1.0`,
+  so its CI workflow passes only after the owner publishes the 1.1.0 base image,
+  as with the runner images.
+
+##### Implementation Plan
+
+Plan Status: accepted
+Plan Acceptance: 2026-09-10, owner direction to proceed and fix the slim gate
+Implementation Authorization: 2026-09-10, owner approval of the accepted plan
+
+1. Add `SLIM_IMAGE_DIRS` and list the slim directories in `IMAGE_DIRS`
+   (`configure/CONFIG_SITE`). Closed by `make check`.
+2. Add the slim gate targets to `IMAGE_GATE_TARGETS` (`configure/CONFIG_VARS`)
+   and generate them through the shared `supervised_gate_target` macro
+   (`configure/RULES_DOCKER`). Closed by T1.
+3. Add the five per-OS slim workflows with `is_runner: true`. Closed by T2.
+4. Gate locally, then in CI. Closed by T1 and T2.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Gate wiring | `make gate.<image>` for the five slim images | Local Docker | Each runs in supervised mode and reports 13/0 |
+| T2 | CI | The five slim workflows from the pushed tree | GitHub Actions | Each builds and gates; passes on a re-run after the owner publishes the 1.1.0 base |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | 2026-09-10 | Local Docker, five slim images | Pass | `make gate.<image>` reports 13/0 for debian13, rocky8, rocky10, ubuntu24, and ubuntu26 slim images, with G1 70/70, G11, and G12 |
+| T2 | Not run | GitHub Actions | Pending | none |
+
+##### Closure Evidence
+
+- none
 
 #### G1 - epics-ioc-runner container mode
 
@@ -1052,7 +1132,7 @@ release tally.
 
 | Group | ID | Work unit | Type | Status | Ready | Deps | Done when / Evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| Images | M9 | Wire the slim images into the build system and CI | Milestone | Not started | Yes | M7 | The four `-epics-slim` images are listed in `configure/CONFIG_SITE` and built by a CI workflow like the runner images; [detail](#m9---wire-the-slim-images-into-the-build-system-and-ci) |
+No unassigned rows remain.
 
 Two rows carried by the prior generation were retired by owner decision on
 2026-08-17:
@@ -1066,59 +1146,6 @@ Their full prior records remain in Git at commit 69b9303, in
 `docs/milestone-5c186b4.md` (rows M5 and M7).
 
 ### Backlog Details
-
-#### M9 - Wire the slim images into the build system and CI
-
-Origin: 69b9303 / M9
-Identity History: none
-GitHub Issue: none
-Status: Not started
-
-##### Summary
-
-The four `-epics-slim` images build only by hand. They are not listed in the
-build system or built by CI, unlike the development and runner images.
-
-##### Scope
-
-Add the slim images to `configure/CONFIG_SITE` (a slim image group beside
-`IMAGE_DIRS` and `RUNNER_IMAGE_DIRS`) and add a per-OS CI workflow that builds
-and gates each slim image, mirroring the runner image workflows.
-
-Out of scope: the slim image contents and their container gate, delivered by M7.
-
-##### Completion Criteria
-
-- The four slim images are listed in the build system configuration.
-- A CI workflow builds and gates each slim image on the normal triggers.
-
-##### Dependencies And Decisions
-
-- M7 delivered the slim images and their gate; this row only wires them into the
-  build system and CI.
-
-##### Implementation Plan
-
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
-Superseded Plan Artifacts: none
-
-##### Test Plan
-
-| Label | Layer | Method | Environment | Expected Result |
-| --- | --- | --- | --- | --- |
-| T1 | CI | Trigger the slim image workflow | GitHub Actions | Each slim image builds and its gate passes |
-
-##### Verification Results
-
-| Label | Observed At | Environment | Result | Evidence |
-| --- | --- | --- | --- | --- |
-| T1 | Not run | GitHub Actions | Pending | none |
-
-##### Closure Evidence
-
-- none
 
 ## History
 

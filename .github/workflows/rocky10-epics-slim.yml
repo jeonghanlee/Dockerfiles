@@ -1,0 +1,38 @@
+---
+name: Rocky Linux 10 EPICS slim
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "rocky10-epics-slim/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/rocky10-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "rocky10-epics-slim/**"
+      - "gate.bash"
+      - ".github/workflows/rocky10-epics-slim.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  rocky10-epics-slim:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: rocky10-epics-slim
+      image_name: jeonghanlee/rocky10-epics-slim
+      is_runner: true
+    secrets:
+      dockerhub_username: ${{ secrets.DOCKERHUB_USERNAME }}
+      dockerhub_token: ${{ secrets.DOCKERHUB_TOKEN }}
