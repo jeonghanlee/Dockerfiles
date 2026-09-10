@@ -7,7 +7,7 @@
 # the development image and copied into this slim final stage; no build
 # toolchain ships here. Rocky packages no s6/execline, so the statically built
 # supervision binaries are copied from the development image.
-ARG IMAGE_VERSION=1.0.1
+ARG IMAGE_VERSION=1.1.0
 
 # Stage 1: build the IOC in the development image (toolchain + EPICS modules).
 FROM jeonghanlee/rocky10-epics:${IMAGE_VERSION} AS build
@@ -53,7 +53,7 @@ COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /etc/epics-bake.manifest /etc/epics-bake.manifest
 
 # Baked EPICS environment (mirrors the development image).
-ENV EPICS_PATH=/opt/epics/1.2.2/rocky-10.2/7.0.10
+ENV EPICS_PATH=/opt/epics/1.3.0/rocky-10.2/7.0.10
 ENV EPICS_BASE=${EPICS_PATH}/base \
     EPICS_MODULES=${EPICS_PATH}/modules \
     EPICS_HOST_ARCH=linux-x86_64

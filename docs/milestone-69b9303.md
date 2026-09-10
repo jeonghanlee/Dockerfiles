@@ -37,11 +37,11 @@ and decision records stay reachable at commit 69b9303.
 | Images | M5 | Ubuntu 24.04 EPICS image | Milestone | Complete | No | | `jeonghanlee/ubuntu24-epics` builds from the distribution `ubuntu-24.04` tree and passes the image gate; [detail](#m5---ubuntu-2404-epics-image) |
 | Images | M6 | Ubuntu 26.04 EPICS image | Milestone | Not started | Yes | G4 | `jeonghanlee/ubuntu26-epics` builds from the 1.3.0 distribution `ubuntu-26.04` tree and passes the image gate; [detail](#m6---ubuntu-2604-epics-image) |
 | Runtime | M7 | Runtime-only slim image | Milestone | Complete | No | M1 | A toolchain-free image builds with the minimal set, carries its own tag, and runs an IOC through ioc-runner; [detail](#m7---runtime-only-slim-image) |
-| Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Not started | Yes | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
+| Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | In progress | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 8 milestone rows - Complete 6, In progress 0, Blocked 0, Not started 2,
-Ready 2. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
+Tally: 8 milestone rows - Complete 6, In progress 1, Blocked 0, Not started 1,
+Ready 1. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
 ### Milestone Details
@@ -768,7 +768,7 @@ Last Compared: 2026-09-08, at close
 Origin: 69b9303 / M8
 Identity History: none
 GitHub Issue: #41, https://github.com/jeonghanlee/Dockerfiles/issues/41
-Status: Not started
+Status: In progress
 
 ##### Summary
 
@@ -781,22 +781,28 @@ directly at 1.3.0.
 
 ##### Scope
 
-Move `DIST_VERSION` to 1.3.0 across the four image Dockerfiles pinned to 1.2.2
-through the repository's coordinated bump target, re-check the container gate's
-expected module count against the 1.3.0 tree, and update the maintenance guide
-where it names the current version in its worked example.
+Move `DIST_VERSION` to 1.3.0 across the four release image Dockerfiles through
+the repository's coordinated bump target and raise their `IMAGE_VERSION` from
+1.0.1 to 1.1.0 so the 1.3.0 content publishes under its own tag. Follow that
+tag in the four runner and four slim images, whose `IMAGE_VERSION` is both the
+base pin and their own publish tag, and move the slim images' baked
+`EPICS_PATH` to the 1.3.0 tree. Update the gate's expected module count to the
+1.3.0 tree with its generation header, and update the maintenance guide's
+worked example.
 
-Out of scope: the Ubuntu 26.04 image, which is created at 1.3.0 by M6; the
-s6 supervision layer (M4); publishing, which stays an owner-run
-`workflow_dispatch`.
+Out of scope: the Ubuntu 26.04 image (M6); the slim images' build and CI
+wiring (Backlog M9); publishing, which stays an owner-run `workflow_dispatch`;
+a 1.3.0 measurement row in `docs/IMAGE_FOOTPRINT.md`.
 
 ##### Completion Criteria
 
-- The four images build from distribution 1.3.0 and pass every container gate
-  check.
-- The per-OS workflows build and gate the images in CI.
-- The module inventory check passes against the 1.3.0 tree, with its expected
-  count updated if the tree changed.
+- The four release images build from distribution 1.3.0 and pass every
+  container gate check, with the module inventory at the 1.3.0 count.
+- The four runner images build on the 1.1.0 release images and pass the gate;
+  the four slim images build on them, pass the gate, and start and stop the
+  baked IOC through ioc-runner.
+- The per-OS release and runner workflows build and gate the images in CI; the
+  runner workflows pass once the owner has published the 1.1.0 release images.
 
 ##### Dependencies And Decisions
 
@@ -807,34 +813,63 @@ s6 supervision layer (M4); publishing, which stays an owner-run
 - The bump target rewrites every release image directory at once, so it covers
   debian13, rocky8, rocky10, and ubuntu24 together; ubuntu26 joins once M6
   registers it.
+- The 1.3.0 tree carries 70 module entries on every OS where 1.2.2 carried 64:
+  feed-core, QPC, and rgamv2 are new symlink and directory pairs, and ADCore,
+  asyn, calc, ether_ip, iocStats, linStat, pmac, pscdrv, pvxs, sscan, and std
+  change version. Observed 2026-09-09 through
+  `gh api repos/jeonghanlee/EPICS-env-distribution/contents/1.3.0/<os-dir>/7.0.10/modules?ref=1.3.0`.
+- Decision Date 2026-09-09: `IMAGE_VERSION` moves to 1.1.0 with the
+  distribution bump. Republishing 1.3.0 content under the 1.0.1 tag would
+  silently change the base of the runner and slim images, which pin that tag.
+- Decision Date 2026-09-09: the runner and slim images change in the same
+  work - base pin 1.1.0 and, for the slim images, `EPICS_PATH` on the 1.3.0
+  tree - rather than in a later follow-up.
+- Ordering constraint: the runner and slim images build
+  `FROM jeonghanlee/<os>-epics:1.1.0`, which exists on Docker Hub only after
+  the owner publishes the release images. Locally, T2 tags the freshly built
+  release image as 1.1.0 first; in CI, the runner workflows fail on the bump
+  push and pass on a re-run after publication.
 
 ##### Implementation Plan
 
-Plan Status: draft
-Plan Acceptance: none
-Implementation Authorization: none
+Plan Status: accepted
+Plan Acceptance: 2026-09-09, owner direction during plan review (IMAGE_VERSION
+1.1.0; runner and slim images included)
+Implementation Authorization: 2026-09-09, owner approval of the accepted plan
 Superseded Plan Artifacts: none
 
-1. Run the coordinated bump target for 1.3.0 and review all four Dockerfile
-   changes.
-2. Re-check the gate's expected module count against the 1.3.0 tree and update
-   it when the tree changed.
-3. Update the maintenance guide's worked example version.
-4. Build and gate locally, then in CI.
+1. `make dist-version.1.3.0`: `DIST_VERSION` 1.2.2 to 1.3.0 in the debian13,
+   rocky8, rocky10, and ubuntu24 Dockerfiles; review the four diffs. Closed by
+   T1.
+2. `IMAGE_VERSION` 1.0.1 to 1.1.0 in the same four release Dockerfiles. Closed
+   by T1 and, at publication, by the published tag.
+3. `IMAGE_VERSION` 1.0.1 to 1.1.0 in the four `-epics-runner` and four
+   `-epics-slim` Dockerfiles; `EPICS_PATH` 1.2.2 to 1.3.0 in the four slim
+   Dockerfiles. Closed by T2 and T3.
+4. `gate.bash`: `EXPECTED_MODULES` default 64 to 70 with its comment, and the
+   generation header 0.6.0 to 0.7.0. Closed by T1 and T2.
+5. `docs/MAINTENANCE.md`: worked example `make dist-version.1.3.0`. Closed by
+   `make check`.
+6. Build and gate locally (T1, T2, T3), run `make check`, commit and push;
+   CI runs T4.
 
 ##### Test Plan
 
 | Label | Layer | Method | Environment | Expected Result |
 | --- | --- | --- | --- | --- |
-| T1 | Image build | Build the four images and run the verification gate | debian13, rocky8, rocky10, ubuntu24 images | Build succeeds and every gate check passes against the 1.3.0 tree |
-| T2 | CI | Run the per-OS workflows from the committed tree | GitHub Actions | Build and gate jobs pass |
+| T1 | Image build | `make build.<os>` then `make gate.<os>` for the four release images | Local Docker, debian13/rocky8/rocky10/ubuntu24 | Build succeeds and every gate check passes with G1 at 70/70 |
+| T2 | Runner build | `docker tag jeonghanlee/<os>-epics:latest jeonghanlee/<os>-epics:1.1.0`, then `make build.<os>-epics-runner` and `make gate.<os>-epics-runner` | Local Docker, four runner images | Build succeeds on the 1.1.0 base and the gate passes with G1 at 70/70 and G12 |
+| T3 | Slim build and runtime | `docker_builder.bash -t <os>-epics-slim`, the container gate with the bash entry point, then a live end-to-end run of the baked IOC against the host tc32sim simulator (ioc-runner start, a CA `caget` and a PVA `pvxget` read, then stop) on every OS, since OS-specific runtime differences surface only under a live read | Local Docker, four slim images, host tc32sim simulator | Build succeeds, the gate passes, and on every OS the CA and PVA reads return live data and stop exits 0 |
+| T4 | CI | Per-OS release and runner workflows from the pushed tree | GitHub Actions | Release workflows pass; runner workflows pass on a re-run after the owner publishes 1.1.0 |
 
 ##### Verification Results
 
 | Label | Observed At | Environment | Result | Evidence |
 | --- | --- | --- | --- | --- |
-| T1 | Not run | debian13, rocky8, rocky10 images | Pending | none |
-| T2 | Not run | GitHub Actions | Pending | none |
+| T1 | 2026-09-10 | Local Docker, debian13/rocky8/rocky10/ubuntu24 release images | Pass | Each image builds from the 1.3.0 tree and the container gate reports 12/0 with G1 module inventory 70/70 (rocky8 passed on a re-run after a transient dnf-mirror build failure) |
+| T2 | 2026-09-10 | Local Docker, four runner images on the 1.1.0 base | Pass | Each runner builds on jeonghanlee/<os>-epics:1.1.0 and the gate reports 13/0 with G1 70/70 and G12 (ioc-runner supervision layer) |
+| T3 | 2026-09-10 | Local Docker, four slim images, host tc32sim simulator | Pass | Each slim builds with EPICS_PATH on the 1.3.0 tree and the gate reports 12/0 with G1 70/70; every OS ran end-to-end against the host simulator - ioc-runner start, caget TC32:008:Ti0 (debian13 72.9, rocky8 80.7, rocky10 80.7, ubuntu24 79.5) and pvxget TC32:008:group both returned live data, then stop exitcode 0 |
+| T4 | Not run | GitHub Actions | Pending | none |
 
 ##### Closure Evidence
 

@@ -46,7 +46,7 @@ Three version values are tracked independently, each with its own source and pur
 The four EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
 
 ```bash
-make dist-version.1.2.2
+make dist-version.1.3.0
 make versions
 make check
 ```

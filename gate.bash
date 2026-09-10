@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.6.0
+#  version : 0.7.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -20,10 +20,10 @@ declare -i PASS_COUNT=0
 declare -i FAIL_COUNT=0
 
 # Expected shared-module entry count for the pinned distribution. The modules
-# directory holds 64 entries (symlink + version-dir pairs); this counts
+# directory holds 70 entries (symlink + version-dir pairs); this counts
 # entries, not module identities (name/version identity is the distribution's
 # manifest concern, out of this gate's scope).
-declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-64}"
+declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-70}"
 
 # G12 runs only on runner images (GATE_RUNNER=1); the development images they are
 # built FROM carry no ioc-runner supervision layer.

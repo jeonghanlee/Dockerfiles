@@ -8,7 +8,7 @@
 # toolchain ships here. Ubuntu 24.04 packages s6 2.12, below the runner's 2.13
 # floor, so the statically built supervision binaries are copied from the dev
 # image instead.
-ARG IMAGE_VERSION=1.0.1
+ARG IMAGE_VERSION=1.1.0
 
 # Stage 1: build the IOC in the development image (toolchain + EPICS modules).
 FROM jeonghanlee/ubuntu24-epics:${IMAGE_VERSION} AS build
@@ -52,7 +52,7 @@ COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /etc/epics-bake.manifest /etc/epics-bake.manifest
 
 # Baked EPICS environment (mirrors the development image).
-ENV EPICS_PATH=/opt/epics/1.2.2/ubuntu-24.04/7.0.10
+ENV EPICS_PATH=/opt/epics/1.3.0/ubuntu-24.04/7.0.10
 ENV EPICS_BASE=${EPICS_PATH}/base \
     EPICS_MODULES=${EPICS_PATH}/modules \
     EPICS_HOST_ARCH=linux-x86_64

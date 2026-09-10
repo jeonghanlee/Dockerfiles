@@ -7,7 +7,7 @@
 # this image adds ioc-runner and an s6-svscan entry point so an IOC runs under
 # supervision inside a systemd-less container. The same layer applies to a slim
 # runtime base later (variant B).
-ARG IMAGE_VERSION=1.0.1
+ARG IMAGE_VERSION=1.1.0
 FROM jeonghanlee/rocky8-epics:${IMAGE_VERSION}
 
 ARG RUNNER_VERSION=1.4.0
