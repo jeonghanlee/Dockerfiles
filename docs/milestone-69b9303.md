@@ -7,14 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: M11 (re-add the Debian 12 EPICS image set) is In
-progress and is the one open work row - a consumer (alsu/ci) still runs debian12
-jobs, and distribution 1.3.0 carries a debian-12 tree, so debian12, its runner,
-and its slim are re-added at IMAGE_VERSION 1.1.0 with source-built s6. It closes
-when the three images build and gate locally and the owner publishes
-debian12-epics:1.1.0 through publish.yml. The 1.1.0 release (M8, M6, M9, M10)
-already shipped: annotated tag 1.1.0, GitHub release, milestone 1.0.0 closed.
-The only open external gate is G2 (GitLab consumer cutover).
+Next session entry point: no milestone work remains open. All eleven milestone
+rows are Complete - the distribution 1.3.0 bump (M8), the Ubuntu 26.04 set (M6),
+the slim build/CI wiring (M9), the publish split (M10), and the re-added Debian
+12 set (M11, published at 1.1.0). The 1.1.0 release shipped (tag, GitHub release,
+milestone 1.0.0 closed) and all six OS image sets are published on Docker Hub at
+1.1.0. The only open item is external gate G2 (GitLab consumer cutover), whose
+remaining step is the runner-host admin registering the ubuntu24-epics,
+ubuntu26-epics, and debian12-epics GitLab runner tags - infra, not this repo.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -39,10 +39,10 @@ and decision records stay reachable at commit 69b9303.
 | Images | M8 | Move the EPICS images to distribution 1.3.0 | Milestone | Complete | No | G4 | The four images on distribution 1.2.2 build from distribution 1.3.0 and pass the image gate; [detail](#m8---distribution-130-image-bump) |
 | Images | M9 | Wire the slim images into the build system and CI | Milestone | Complete | No | M7 | The five `-epics-slim` images are in `configure/CONFIG_SITE` and built and gated by CI like the runner images; [detail](#m9---wire-the-slim-images-into-the-build-system-and-ci) |
 | CI | M10 | Split publish out of the build-gate workflow | Milestone | Complete | No | M9 | image.yml build-and-gates only, a separate owner-run publish.yml pushes, and the per-OS workflows are dispatchable with no publish step; [detail](#m10---split-publish-out-of-the-build-gate-workflow) |
-| Images | M11 | Re-add the Debian 12 EPICS image set | Milestone | In progress | No | | `jeonghanlee/debian12-epics` (+ runner, slim) builds from the 1.3.0 `debian-12` tree at IMAGE_VERSION 1.1.0 and passes the gate; [detail](#m11---re-add-the-debian-12-epics-image-set) |
+| Images | M11 | Re-add the Debian 12 EPICS image set | Milestone | Complete | No | | `jeonghanlee/debian12-epics` (+ runner, slim) builds from the 1.3.0 `debian-12` tree at IMAGE_VERSION 1.1.0 and passes the gate; [detail](#m11---re-add-the-debian-12-epics-image-set) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
 
-Tally: 11 milestone rows - Complete 10, In progress 1, Blocked 0, Not started 0,
+Tally: 11 milestone rows - Complete 11, In progress 0, Blocked 0, Not started 0,
 Ready 0. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
@@ -1110,7 +1110,7 @@ Identity History: a debian12 image line existed and was removed at commit
 446fb19 ("Remove the debian12 and rocky9 image lines"); this row re-adds it on
 the distribution-consuming model.
 GitHub Issue: none
-Status: In progress
+Status: Complete
 
 ##### Summary
 
@@ -1192,11 +1192,16 @@ Implementation Authorization: 2026-09-10, owner approval of the accepted plan
 | T1 | 2026-09-10 | Local Docker, debian12 release image | Pass | Builds from the 1.3.0 debian-12 tree with source-built s6; EPICS_PATH /opt/epics/1.3.0/debian-12/7.0.10; gate 12/0 with G1 70/70 |
 | T2 | 2026-09-10 | Local Docker, debian12 runner image on the 1.1.0 base | Pass | Builds FROM jeonghanlee/debian12-epics:1.1.0; gate 13/0 with G1 70/70 and G12 |
 | T3 | 2026-09-10 | Local Docker, debian12 slim image, host tc32sim simulator | Pass | Supervised gate 13/0 with G1 70/70, G11, G12; end-to-end against the host simulator - caget TC32:008:Ti0 (49.9) and pvxget TC32:008:group returned live data, then stop exitcode 0 |
-| T4 | Not run | GitHub Actions | Pending | none |
+| T4 | 2026-09-11 | GitHub Actions (owner-run) | Pass | publish.yml published all three at 1.1.0 - debian12-epics (run 34621902357), debian12-epics-runner and debian12-epics-slim (runs 34625679110, 34625682664); each run builds, gates, then pushes, so the gate passed on all three |
 
 ##### Closure Evidence
 
-- none
+- Deliverable: debian12, debian12-epics-runner, debian12-epics-slim at
+  IMAGE_VERSION 1.1.0 from distribution 1.3.0 with source-built s6 (commit
+  c39cd77).
+- Verification (2026-09-10 local, 2026-09-11 CI): local gate 12/0 release and
+  13/0 runner/slim with the tc32sim end-to-end run; publish.yml built, gated,
+  and pushed all three at 1.1.0 to Docker Hub.
 
 #### G1 - epics-ioc-runner container mode
 
