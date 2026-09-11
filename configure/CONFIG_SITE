@@ -1,7 +1,7 @@
-IMAGE_DIRS := debian13 mdbook rocky8 rocky10 ubuntu24 ubuntu26 debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner debian13-epics-slim rocky8-epics-slim rocky10-epics-slim ubuntu24-epics-slim ubuntu26-epics-slim
-RELEASE_IMAGE_DIRS := debian13 rocky8 rocky10 ubuntu24 ubuntu26
-RUNNER_IMAGE_DIRS := debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner
-SLIM_IMAGE_DIRS := debian13-epics-slim rocky8-epics-slim rocky10-epics-slim ubuntu24-epics-slim ubuntu26-epics-slim
+IMAGE_DIRS := debian12 debian13 mdbook rocky8 rocky10 ubuntu24 ubuntu26 debian12-epics-runner debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner debian12-epics-slim debian13-epics-slim rocky8-epics-slim rocky10-epics-slim ubuntu24-epics-slim ubuntu26-epics-slim
+RELEASE_IMAGE_DIRS := debian12 debian13 rocky8 rocky10 ubuntu24 ubuntu26
+RUNNER_IMAGE_DIRS := debian12-epics-runner debian13-epics-runner rocky8-epics-runner rocky10-epics-runner ubuntu24-epics-runner ubuntu26-epics-runner
+SLIM_IMAGE_DIRS := debian12-epics-slim debian13-epics-slim rocky8-epics-slim rocky10-epics-slim ubuntu24-epics-slim ubuntu26-epics-slim
 DEFAULT_IMAGE := debian13
 BUILD_ARGS :=
 MDBOOK_IMAGE := jeonghanlee/mdbook:0.5.4

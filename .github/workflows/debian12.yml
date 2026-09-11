@@ -1,0 +1,34 @@
+---
+name: Debian 12 Bookworm
+
+"on":
+  push:
+    branches: [master]
+    paths:
+      - "debian12/**"
+      - "gate.bash"
+      - ".trigger/**"
+      - ".github/workflows/debian12.yml"
+      - ".github/workflows/image.yml"
+  pull_request:
+    branches: [master]
+    paths:
+      - "debian12/**"
+      - "gate.bash"
+      - ".github/workflows/debian12.yml"
+      - ".github/workflows/image.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  debian12:
+    uses: ./.github/workflows/image.yml
+    with:
+      image_dir: debian12
+      image_name: jeonghanlee/debian12-epics

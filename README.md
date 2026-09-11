@@ -12,16 +12,19 @@ This repository covers Dockerfiles, local build helpers, validation gates, docum
 
 | Image directory | Docker repository | Primary purpose |
 |---|---|---|
+| `debian12/` | `jeonghanlee/debian12-epics` | Debian 12 EPICS environment |
 | `debian13/` | `jeonghanlee/debian13-epics` | Debian 13 EPICS environment |
 | `rocky8/` | `jeonghanlee/rocky8-epics` | Rocky Linux 8.10 EPICS environment |
 | `rocky10/` | `jeonghanlee/rocky10-epics` | Rocky Linux 10.2 EPICS environment |
 | `ubuntu24/` | `jeonghanlee/ubuntu24-epics` | Ubuntu 24.04 EPICS environment |
 | `ubuntu26/` | `jeonghanlee/ubuntu26-epics` | Ubuntu 26.04 EPICS environment |
+| `debian12-epics-runner/` | `jeonghanlee/debian12-epics-runner` | Debian 12 supervised IOC runtime (ioc-runner + s6) |
 | `debian13-epics-runner/` | `jeonghanlee/debian13-epics-runner` | Debian 13 supervised IOC runtime (ioc-runner + s6) |
 | `rocky8-epics-runner/` | `jeonghanlee/rocky8-epics-runner` | Rocky Linux 8.10 supervised IOC runtime (ioc-runner + s6) |
 | `rocky10-epics-runner/` | `jeonghanlee/rocky10-epics-runner` | Rocky Linux 10.2 supervised IOC runtime (ioc-runner + s6) |
 | `ubuntu24-epics-runner/` | `jeonghanlee/ubuntu24-epics-runner` | Ubuntu 24.04 supervised IOC runtime (ioc-runner + s6) |
 | `ubuntu26-epics-runner/` | `jeonghanlee/ubuntu26-epics-runner` | Ubuntu 26.04 supervised IOC runtime (ioc-runner + s6) |
+| `debian12-epics-slim/` | `jeonghanlee/debian12-epics-slim` | Debian 12 toolchain-free runtime with a baked IOC |
 | `debian13-epics-slim/` | `jeonghanlee/debian13-epics-slim` | Debian 13 toolchain-free runtime with a baked IOC |
 | `rocky8-epics-slim/` | `jeonghanlee/rocky8-epics-slim` | Rocky Linux 8.10 toolchain-free runtime with a baked IOC |
 | `rocky10-epics-slim/` | `jeonghanlee/rocky10-epics-slim` | Rocky Linux 10.2 toolchain-free runtime with a baked IOC |

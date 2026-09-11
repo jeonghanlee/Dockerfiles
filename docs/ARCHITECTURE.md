@@ -8,7 +8,7 @@ This document describes the repository structure, image composition, build and p
 
 ## Overview
 
-The repository defines five EPICS build images (`debian13`, `rocky8`, `rocky10`, `ubuntu24`, `ubuntu26`) and one documentation-rendering image (`mdbook`). Local Makefile targets and GitHub Actions workflows consume the same image definitions and validation code.
+The repository defines six EPICS build images (`debian12`, `debian13`, `rocky8`, `rocky10`, `ubuntu24`, `ubuntu26`) and one documentation-rendering image (`mdbook`). Local Makefile targets and GitHub Actions workflows consume the same image definitions and validation code.
 
 ## Platform Boundary
 
@@ -142,6 +142,7 @@ The daemon proxy does not supply package or Git proxy values inside a build. The
 
 | Image directory | Workflow | Container gate | Published version tag |
 |---|---|---|---|
+| `debian12/` | `debian12.yml` | Yes | `IMAGE_VERSION` |
 | `debian13/` | `debian13.yml` | Yes | `IMAGE_VERSION` |
 | `mdbook/` | `mdbook.yml` | No | `MDBOOK_VERSION` |
 | `rocky8/` | `rocky8.yml` | Yes | `IMAGE_VERSION` |
