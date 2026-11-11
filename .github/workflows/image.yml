@@ -4,8 +4,11 @@ name: EPICS image (reusable)
 # Reusable build-and-gate workflow for the distribution-based EPICS images.
 # Callers are the thin per-OS workflows. It builds and LOADS the image into the
 # runner daemon and runs the container verification gate (gate.bash) against it.
-# It never publishes: publishing is the separate owner-run publish.yml, so these
-# per-OS workflows carry no outward-publish step and stay dispatchable.
+# A runner or slim caller passes base_dir; the base image is then built
+# first in the same job and the runner or slim image builds FROM it.
+# It never publishes: publishing is the separate owner-run release.yml (all 18
+# images) or publish.yml (one image), so these per-OS workflows carry no
+# outward-publish step and stay dispatchable.
 
 "on":
   workflow_call:
@@ -23,6 +26,11 @@ name: EPICS image (reusable)
         required: false
         type: boolean
         default: false
+      base_dir:
+        description: "Base image directory built first in the same job"
+        required: false
+        type: string
+        default: ""
 
 permissions:
   contents: read
@@ -34,20 +42,59 @@ jobs:
       IMAGE_DIR: ${{ inputs.image_dir }}
       IMAGE_NAME: ${{ inputs.image_name }}
       IS_RUNNER: ${{ inputs.is_runner }}
+      BASE_DIR: ${{ inputs.base_dir }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Read image version from the Dockerfile
+      - name: Resolve build args from configure/VERSIONS
         id: ver
         run: |
-          df="${IMAGE_DIR}/Dockerfile"
-          v="$(grep -m1 -oE 'IMAGE_VERSION=[0-9.]+' "${df}" | cut -d= -f2)"
-          test -n "${v}"
-          echo "image_version=${v}" >> "${GITHUB_OUTPUT}"
+          args="$(./docker_builder.bash -t "${IMAGE_DIR}" -b)"
+          test -n "${args}"
+          {
+            echo "build_args<<BUILD_ARGS_END"
+            echo "${args}"
+            echo "BUILD_ARGS_END"
+          } >> "${GITHUB_OUTPUT}"
+          if [ -n "${BASE_DIR}" ]; then
+            base_args="$(./docker_builder.bash -t "${BASE_DIR}" -b)"
+            test -n "${base_args}"
+            # shellcheck disable=SC1091
+            . "${BASE_DIR}/env.conf"
+            # shellcheck disable=SC1091
+            . configure/VERSIONS
+            test -n "${IMAGE_VERSION}"
+            echo "base_image=${DOCKER_ID}/${TARGET_NAME}:${IMAGE_VERSION}" \
+              >> "${GITHUB_OUTPUT}"
+            {
+              echo "base_args<<BUILD_ARGS_END"
+              echo "${base_args}"
+              echo "BUILD_ARGS_END"
+            } >> "${GITHUB_OUTPUT}"
+          fi
 
+      # A runner or slim image builds FROM its base at IMAGE_VERSION. The
+      # docker driver lets that FROM resolve the base built in the step
+      # below from the local image store, so the job never needs the base
+      # tag on Docker Hub.
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
+        with:
+          driver: ${{ inputs.base_dir != '' && 'docker' || 'docker-container' }}
+
+      - name: Build the base image
+        if: inputs.base_dir != ''
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ github.workspace }}/${{ inputs.base_dir }}
+          file: ${{ github.workspace }}/${{ inputs.base_dir }}/Dockerfile
+          load: true
+          push: false
+          tags: ${{ steps.ver.outputs.base_image }}
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            ${{ steps.ver.outputs.base_args }}
 
       - name: Build and load
         uses: docker/build-push-action@v7
@@ -59,7 +106,7 @@ jobs:
           tags: ${{ inputs.image_name }}:latest
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
-            BUILD_VERSION=${{ steps.ver.outputs.image_version }}
+            ${{ steps.ver.outputs.build_args }}
 
       - name: Verification gate
         run: |

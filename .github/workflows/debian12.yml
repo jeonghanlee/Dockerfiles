@@ -7,6 +7,8 @@ name: Debian 12 Bookworm
     paths:
       - "debian12/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/debian12.yml"
       - ".github/workflows/image.yml"
@@ -15,6 +17,8 @@ name: Debian 12 Bookworm
     paths:
       - "debian12/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/debian12.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:

@@ -1,16 +1,20 @@
+# check=skip=InvalidDefaultArgInFrom
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.1.0
+#  version : 0.2.0
 #
 # Runtime-only slim image (variant B): a toolchain-free base that runs a baked
 # IOC under the ioc-runner supervision layer. The IOC (tc32sim) is compiled in
 # the development image and copied into this slim final stage; no build
 # toolchain ships here. Rocky packages no s6/execline, so the statically built
 # supervision binaries are copied from the development image.
-ARG IMAGE_VERSION=1.1.0
+ARG IMAGE_VERSION
 
 # Stage 1: build the IOC in the development image (toolchain + EPICS modules).
 FROM jeonghanlee/rocky8-epics:${IMAGE_VERSION} AS build
+# A stable path for the EPICS tree, so that the final stage carries no
+# distribution version.
+RUN ln -s "${EPICS_PATH#/opt/epics/}" /opt/epics/current
 ARG IOC_REPO=https://github.com/jeonghanlee/tc32sim.git
 RUN git clone --depth 1 "${IOC_REPO}" /opt/ioc/tc32sim && \
     printf 'EPICS_BASE=%s\n' "${EPICS_BASE}" > /opt/ioc/tc32sim/configure/RELEASE.local && \
@@ -18,7 +22,7 @@ RUN git clone --depth 1 "${IOC_REPO}" /opt/ioc/tc32sim && \
 
 # Stage 2: slim runtime.
 FROM rockylinux/rockylinux:8.10
-ARG RUNNER_VERSION=1.4.0
+ARG RUNNER_VERSION
 ARG RUNNER_REPO=https://github.com/jeonghanlee/epics-ioc-runner.git
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -52,7 +56,7 @@ COPY --from=build /usr/local/bin /usr/local/bin
 COPY --from=build /etc/epics-bake.manifest /etc/epics-bake.manifest
 
 # Baked EPICS environment (mirrors the development image).
-ENV EPICS_PATH=/opt/epics/1.3.0/rocky-8.10/7.0.10
+ENV EPICS_PATH=/opt/epics/current
 ENV EPICS_BASE=${EPICS_PATH}/base \
     EPICS_MODULES=${EPICS_PATH}/modules \
     EPICS_HOST_ARCH=linux-x86_64
@@ -60,7 +64,8 @@ ENV PATH=${EPICS_MODULES}/pmac/bin/linux-x86_64:${EPICS_MODULES}/pvxs/bin/linux-
 ENV LD_LIBRARY_PATH=${EPICS_BASE}/lib/linux-x86_64
 
 # ioc-runner supervision layer (same fragment as the runner images).
-RUN git clone --depth 1 --branch "${RUNNER_VERSION}" "${RUNNER_REPO}" /tmp/runner && \
+RUN test -n "${RUNNER_VERSION}" && \
+    git clone --depth 1 --branch "${RUNNER_VERSION}" "${RUNNER_REPO}" /tmp/runner && \
     /bin/bash -p /tmp/runner/bin/setup-system-infra.bash --container && \
     printf '%s %s %s %s\n' epics-ioc-runner "${RUNNER_REPO}" "$(git -C /tmp/runner rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
     rm -rf /tmp/runner

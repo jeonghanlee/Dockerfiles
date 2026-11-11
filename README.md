@@ -67,7 +67,7 @@ Local image defaults come from `<image>/env.conf`; untracked `<image>/env.local`
 
 ## Continuous Integration
 
-The four EPICS image workflows call the shared `image.yml`, load each image, and run the container gate. A manual run on `master` publishes `latest` and the image `IMAGE_VERSION` only after the gate passes.
+The 18 EPICS image workflows call the shared `image.yml`, load each image, and run the container gate; they never publish. `release.yml` publishes all 18 images at one `IMAGE_VERSION`, as [docs/RELEASE.md](docs/RELEASE.md) describes. `publish.yml` publishes one image and replaces its tags without the revision label that `make release-verify` checks; see "Update the EPICS Environment Version" in [docs/MAINTENANCE.md](docs/MAINTENANCE.md) before using it.
 
 The mdBook image workflow builds on pushes and pull requests. A manual run on `master` publishes `latest` and the fixed `MDBOOK_VERSION`; an existing fixed tag is never replaced.
 

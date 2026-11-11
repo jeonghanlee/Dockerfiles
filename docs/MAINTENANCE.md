@@ -31,27 +31,29 @@ make gate.<image>
 
 ## Version Axes
 
-Three version values are tracked independently, each with its own source and purpose. They do not move together.
+Every version of the 18 EPICS images is one `KEY=value` line of `configure/VERSIONS`; no EPICS image Dockerfile carries a version value. `docker_builder.bash` and the workflows pass the keys a Dockerfile declares as build arguments, and `make check-versions`, part of `make check`, fails when a Dockerfile pins a version or a consumer does not read the file.
 
 | Axis | Set in | Purpose |
 |---|---|---|
-| `IMAGE_VERSION` | `ARG IMAGE_VERSION` in each Dockerfile | Published image tag |
-| `DIST_VERSION` | `make dist-version.<v>` | Distribution tree consumed |
-| Generation header | `# version :` in each `Dockerfile` and `gate.bash` | File definition revision |
+| `DIST_VERSION` | `configure/VERSIONS`, through `make dist-version.<v>` | Distribution tree consumed |
+| `IMAGE_VERSION` | `configure/VERSIONS`, through `make dist-version.<v>` or `make image-version.<v>` | Published image tag |
+| `EPICS_VERSION` | `configure/VERSIONS`, edited by hand | EPICS base directory inside the distribution tree |
+| Component versions | `configure/VERSIONS`, edited by hand | procServ-env, con, ioc-runner, and the s6 set |
+| Generation header | `# version :` in each `Dockerfile`, `gate.bash`, `docker_builder.bash`, and `check_versions.bash` | File definition revision |
 
-`IMAGE_VERSION` is published as the Docker Hub tag and, through the workflow's `BUILD_VERSION`, the `org.label-schema.version` label. It is decoupled from `DIST_VERSION`: an image can be republished without a distribution change, and a distribution bump does not force an image version. `DIST_VERSION` selects the prebuilt EPICS binaries and is recorded in the `epics.distribution-version` label. The generation header marks a change to the file's own definition and is neither an image nor a distribution version.
+A distribution release sets `IMAGE_VERSION` equal to `DIST_VERSION`: `make dist-version.<v>` writes both. `make image-version.<v>` raises only `IMAGE_VERSION`, to republish images without a distribution change; [RELEASE.md](RELEASE.md) does not cover that case. An image-only `IMAGE_VERSION` must not be a number that a later distribution release uses: `release.yml` skips every image whose version tag already exists on Docker Hub, so that later release would publish nothing new. `IMAGE_VERSION` is published as the Docker Hub tag and, through `BUILD_VERSION`, the `org.label-schema.version` label. `DIST_VERSION` selects the prebuilt EPICS binaries and is recorded in the `epics.distribution-version` label. The generation header marks a change to the file's own definition and is neither an image nor a distribution version.
 
 ## Update the EPICS Environment Version
 
-The five EPICS images pin the `EPICS-env-distribution` version in `DIST_VERSION`. Update them as one coordinated change:
+The six development images consume the `EPICS-env-distribution` version in `DIST_VERSION`, and the runner and slim images build on them. Update all of them in one change:
 
 ```bash
-make dist-version.1.3.0
+make dist-version.<v>
 make versions
 make check
 ```
 
-Review all release-image Dockerfile changes. The per-OS workflows only build and gate; publishing is a separate step. To publish an image, run `.github/workflows/publish.yml` with `workflow_dispatch`, giving the image directory as the `image_dir` input; it builds, gates, then pushes `latest` and `<IMAGE_VERSION>`. Publish a runner or slim image only after its `<os>-epics` base image is published, since it builds from that base.
+`<v>` has the form `X.Y.Z`. [RELEASE.md](RELEASE.md) is the full procedure, from the distribution check to the publication of all 18 images through `.github/workflows/release.yml`. The per-OS workflows only build and gate. `.github/workflows/publish.yml` publishes one image, giving the image directory as the `image_dir` input; it builds, gates, then pushes `latest` and `<IMAGE_VERSION>`, and it replaces an existing `<IMAGE_VERSION>` tag. It adds no `org.opencontainers.image.revision` label, so an image it publishes fails `make release-verify`, and a later `release.yml` run at the same `<IMAGE_VERSION>` skips that image because its tag exists. Publish a runner or slim image with it only after its `<os>-epics` base image is published, since it builds from that base; after republishing a base image, republish its runner and slim images too, because they were built from the replaced base.
 
 When a distribution bump changes the shipped image content, raise `IMAGE_VERSION` in the same change so the new content publishes under a new tag. The runner and slim images pin the base `IMAGE_VERSION`, so republishing the same tag would silently change their base.
 

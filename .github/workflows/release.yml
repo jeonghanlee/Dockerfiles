@@ -1,0 +1,87 @@
+---
+name: Release images
+
+# Owner-run release of all 18 EPICS images at one IMAGE_VERSION. The six base
+# images publish first; the runner and slim images build FROM the published
+# base tag and publish after every base image succeeded. Each image skips
+# its build when Docker Hub already carries the version tag, so a rerun with
+# the same version resumes where an earlier run stopped.
+
+"on":
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "IMAGE_VERSION in configure/VERSIONS, e.g. 1.5.0"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-images
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-22.04
+    outputs:
+      base: ${{ steps.lists.outputs.base }}
+      derived: ${{ steps.lists.outputs.derived }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Check the version and the branch
+        env:
+          VERSION: ${{ inputs.version }}
+          REF: ${{ github.ref }}
+        run: |
+          test "${REF}" = refs/heads/master || {
+            echo "error: run on master, not ${REF}" >&2; exit 1; }
+          printf '%s\n' "${VERSION}" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$' || {
+            echo "error: version must have the form X.Y.Z" >&2; exit 1; }
+          # shellcheck disable=SC1091
+          . configure/VERSIONS
+          test "${IMAGE_VERSION}" = "${VERSION}" || {
+            echo "error: IMAGE_VERSION is ${IMAGE_VERSION}, not ${VERSION}" >&2
+            exit 1; }
+
+      - name: Image lists from configure/CONFIG_SITE
+        id: lists
+        run: |
+          list() {
+            sed -n "s/^$1 := //p" configure/CONFIG_SITE |
+              tr ' ' '\n' | sed '/^$/d' | jq -R . | jq -cs .
+          }
+          base="$(list RELEASE_IMAGE_DIRS)"
+          derived="$(jq -cs 'add' <(list RUNNER_IMAGE_DIRS) \
+            <(list SLIM_IMAGE_DIRS))"
+          test "$(jq length <<< "${base}")" -gt 0
+          test "$(jq length <<< "${derived}")" -gt 0
+          echo "base=${base}" >> "${GITHUB_OUTPUT}"
+          echo "derived=${derived}" >> "${GITHUB_OUTPUT}"
+
+  base:
+    needs: prepare
+    strategy:
+      fail-fast: false
+      matrix:
+        image_dir: ${{ fromJSON(needs.prepare.outputs.base) }}
+    uses: ./.github/workflows/release-image.yml
+    with:
+      image_dir: ${{ matrix.image_dir }}
+      version: ${{ inputs.version }}
+    secrets: inherit
+
+  derived:
+    needs: [prepare, base]
+    strategy:
+      fail-fast: false
+      matrix:
+        image_dir: ${{ fromJSON(needs.prepare.outputs.derived) }}
+    uses: ./.github/workflows/release-image.yml
+    with:
+      image_dir: ${{ matrix.image_dir }}
+      version: ${{ inputs.version }}
+    secrets: inherit

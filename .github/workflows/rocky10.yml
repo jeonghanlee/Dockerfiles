@@ -7,6 +7,8 @@ name: Rocky Linux 10.2
     paths:
       - "rocky10/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/rocky10.yml"
       - ".github/workflows/image.yml"
@@ -15,6 +17,8 @@ name: Rocky Linux 10.2
     paths:
       - "rocky10/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/rocky10.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:

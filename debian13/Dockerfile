@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.2.0
+#  version : 2.3.0
 #
 # Distribution-consuming EPICS environment image.
 # Prebuilt binaries come from EPICS-env-distribution; nothing EPICS is
@@ -10,12 +10,12 @@
 FROM debian:trixie-slim
 
 ARG DIST_REPO=https://github.com/jeonghanlee/EPICS-env-distribution.git
-ARG DIST_VERSION=1.3.0
-ARG IMAGE_VERSION=1.1.0
+ARG DIST_VERSION
+ARG IMAGE_VERSION
 ARG OS_DIR=debian-13
-ARG EPICS_VERSION=7.0.10
-ARG PROCSERV_ENV_VERSION=1.0.0
-ARG CON_VERSION=1.1.0
+ARG EPICS_VERSION
+ARG PROCSERV_ENV_VERSION
+ARG CON_VERSION
 ARG INSTALL_ROOT=/opt/epics
 ARG BUILD_DATE
 ARG BUILD_VERSION
@@ -55,6 +55,13 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
         libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
+
+# The versions come from configure/VERSIONS as build args; an empty one stops
+# the build here, before any download that uses it.
+RUN for v in "${DIST_VERSION}" "${IMAGE_VERSION}" "${EPICS_VERSION}" \
+             "${PROCSERV_ENV_VERSION}" "${CON_VERSION}"; do \
+        test -n "${v}" || { echo "error: empty version build arg" >&2; exit 1; }; \
+    done
 
 # Distribution layer: sparse fetch of exactly one OS tree at the DIST_VERSION
 # tag, placed at the versioned install root, bake manifest recorded, .git

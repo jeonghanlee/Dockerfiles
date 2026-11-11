@@ -6,7 +6,10 @@ name: Debian 13 EPICS slim
     branches: [master]
     paths:
       - "debian13-epics-slim/**"
+      - "debian13/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/debian13-epics-slim.yml"
       - ".github/workflows/image.yml"
@@ -14,7 +17,10 @@ name: Debian 13 EPICS slim
     branches: [master]
     paths:
       - "debian13-epics-slim/**"
+      - "debian13/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/debian13-epics-slim.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:
@@ -33,3 +39,4 @@ jobs:
       image_dir: debian13-epics-slim
       image_name: jeonghanlee/debian13-epics-slim
       is_runner: true
+      base_dir: debian13

@@ -1,0 +1,129 @@
+---
+name: Release one image (reusable)
+
+# Called by release.yml for one image directory. When Docker Hub lacks the
+# version tag: build, gate, push the version tag. Then point latest at the
+# version tag without a rebuild and confirm both tags share one digest.
+
+"on":
+  workflow_call:
+    inputs:
+      image_dir:
+        description: "Image directory under the repository root"
+        required: true
+        type: string
+      version:
+        description: "IMAGE_VERSION to publish"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  release:
+    runs-on: ubuntu-22.04
+    env:
+      IMAGE_DIR: ${{ inputs.image_dir }}
+      VERSION: ${{ inputs.version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Resolve image metadata
+        id: meta
+        run: |
+          test -f "${IMAGE_DIR}/Dockerfile"
+          # shellcheck disable=SC1091
+          . "${IMAGE_DIR}/env.conf"
+          # shellcheck disable=SC1091
+          . configure/VERSIONS
+          test "${IMAGE_VERSION}" = "${VERSION}"
+          args="$(./docker_builder.bash -t "${IMAGE_DIR}" -b)"
+          test -n "${args}"
+          image="${DOCKER_ID}/${TARGET_NAME}"
+          url="https://hub.docker.com/v2/repositories/${image}/tags/${VERSION}"
+          code="$(curl -sS -o /dev/null -w '%{http_code}' "${url}")"
+          case "${code}" in
+            200) exists=true ;;
+            404) exists=false ;;
+            *) echo "error: Docker Hub answered ${code} for ${url}" >&2
+               exit 1 ;;
+          esac
+          case "${IMAGE_DIR}" in
+            *-epics-runner|*-epics-slim) r=true ;;
+            *) r=false ;;
+          esac
+          echo "image_name=${image}" >> "${GITHUB_OUTPUT}"
+          echo "exists=${exists}" >> "${GITHUB_OUTPUT}"
+          echo "is_runner=${r}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "build_args<<BUILD_ARGS_END"
+            echo "${args}"
+            echo "BUILD_ARGS_END"
+          } >> "${GITHUB_OUTPUT}"
+          echo "${image}:${VERSION} on Docker Hub: ${exists}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Build and load
+        if: steps.meta.outputs.exists == 'false'
+        uses: docker/build-push-action@v7
+        with:
+          context: ${{ github.workspace }}/${{ inputs.image_dir }}
+          file: ${{ github.workspace }}/${{ inputs.image_dir }}/Dockerfile
+          load: true
+          push: false
+          tags: ${{ steps.meta.outputs.image_name }}:${{ inputs.version }}
+          labels: |
+            org.opencontainers.image.revision=${{ github.sha }}
+          build-args: |
+            BUILD_DATE=${{ github.event.repository.updated_at }}
+            ${{ steps.meta.outputs.build_args }}
+
+      - name: Verification gate
+        if: steps.meta.outputs.exists == 'false'
+        env:
+          IMAGE: ${{ steps.meta.outputs.image_name }}:${{ inputs.version }}
+          IS_RUNNER: ${{ steps.meta.outputs.is_runner }}
+        run: |
+          gate="${GITHUB_WORKSPACE}/gate.bash"
+          if [ "${IS_RUNNER}" = "true" ]; then
+            docker run --rm --entrypoint bash -e GATE_RUNNER=1 \
+              -v "${gate}:/gate.bash:ro" "${IMAGE}" /gate.bash
+          else
+            docker run --rm -v "${gate}:/gate.bash:ro" \
+              "${IMAGE}" bash /gate.bash
+          fi
+
+      - name: Login to Docker Hub
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Push the version tag
+        if: steps.meta.outputs.exists == 'false'
+        env:
+          IMAGE: ${{ steps.meta.outputs.image_name }}:${{ inputs.version }}
+        run: docker push "${IMAGE}"
+
+      - name: Point latest at the version tag
+        env:
+          IMAGE_NAME: ${{ steps.meta.outputs.image_name }}
+        run: |
+          digest() {
+            docker buildx imagetools inspect "$1" \
+              --format '{{.Manifest.Digest}}' 2> /dev/null
+          }
+          want="$(digest "${IMAGE_NAME}:${VERSION}")"
+          test -n "${want}"
+          if [ "$(digest "${IMAGE_NAME}:latest")" != "${want}" ]; then
+            docker buildx imagetools create \
+              -t "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${VERSION}"
+          fi
+          have="$(digest "${IMAGE_NAME}:latest")"
+          echo "${IMAGE_NAME}:${VERSION} ${want}"
+          echo "${IMAGE_NAME}:latest ${have}"
+          test "${have}" = "${want}"

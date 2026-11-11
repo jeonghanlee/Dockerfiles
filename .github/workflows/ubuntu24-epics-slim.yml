@@ -6,7 +6,10 @@ name: Ubuntu 24.04 EPICS slim
     branches: [master]
     paths:
       - "ubuntu24-epics-slim/**"
+      - "ubuntu24/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/ubuntu24-epics-slim.yml"
       - ".github/workflows/image.yml"
@@ -14,7 +17,10 @@ name: Ubuntu 24.04 EPICS slim
     branches: [master]
     paths:
       - "ubuntu24-epics-slim/**"
+      - "ubuntu24/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/ubuntu24-epics-slim.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:
@@ -33,3 +39,4 @@ jobs:
       image_dir: ubuntu24-epics-slim
       image_name: jeonghanlee/ubuntu24-epics-slim
       is_runner: true
+      base_dir: ubuntu24

@@ -1,0 +1,15 @@
+# Version values of the 18 EPICS images, one KEY=value line per key.
+# GNU make includes this file and bash sources it, so keep plain KEY=value lines.
+# "make dist-version.<v>" sets DIST_VERSION and IMAGE_VERSION together;
+# "make image-version.<v>" sets IMAGE_VERSION alone. Edit the component
+# lines by hand. OS_DIR stays in the development Dockerfiles, and the mdBook
+# image keeps its own MDBOOK_VERSION.
+DIST_VERSION=1.3.0
+IMAGE_VERSION=1.1.0
+EPICS_VERSION=7.0.10
+PROCSERV_ENV_VERSION=1.0.0
+CON_VERSION=1.1.0
+RUNNER_VERSION=1.4.0
+SKALIBS_VERSION=2.14.3.0
+EXECLINE_VERSION=2.9.6.1
+S6_VERSION=2.13.1.0

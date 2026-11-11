@@ -6,7 +6,10 @@ name: Rocky Linux 8 EPICS slim
     branches: [master]
     paths:
       - "rocky8-epics-slim/**"
+      - "rocky8/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/rocky8-epics-slim.yml"
       - ".github/workflows/image.yml"
@@ -14,7 +17,10 @@ name: Rocky Linux 8 EPICS slim
     branches: [master]
     paths:
       - "rocky8-epics-slim/**"
+      - "rocky8/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/rocky8-epics-slim.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:
@@ -33,3 +39,4 @@ jobs:
       image_dir: rocky8-epics-slim
       image_name: jeonghanlee/rocky8-epics-slim
       is_runner: true
+      base_dir: rocky8

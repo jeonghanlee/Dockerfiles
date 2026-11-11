@@ -7,6 +7,8 @@ name: Ubuntu 26.04
     paths:
       - "ubuntu26/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".trigger/**"
       - ".github/workflows/ubuntu26.yml"
       - ".github/workflows/image.yml"
@@ -15,6 +17,8 @@ name: Ubuntu 26.04
     paths:
       - "ubuntu26/**"
       - "gate.bash"
+      - "configure/VERSIONS"
+      - "docker_builder.bash"
       - ".github/workflows/ubuntu26.yml"
       - ".github/workflows/image.yml"
   workflow_dispatch:

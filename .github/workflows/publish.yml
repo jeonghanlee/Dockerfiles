@@ -33,10 +33,18 @@ jobs:
           test -f "${df}"
           # shellcheck disable=SC1091
           . "${IMAGE_DIR}/env.conf"
-          v="$(grep -m1 -oE 'IMAGE_VERSION=[0-9.]+' "${df}" | cut -d= -f2)"
-          test -n "${v}"
+          # shellcheck disable=SC1091
+          . configure/VERSIONS
+          test -n "${IMAGE_VERSION}"
+          args="$(./docker_builder.bash -t "${IMAGE_DIR}" -b)"
+          test -n "${args}"
           echo "image_name=${DOCKER_ID}/${TARGET_NAME}" >> "${GITHUB_OUTPUT}"
-          echo "image_version=${v}" >> "${GITHUB_OUTPUT}"
+          echo "image_version=${IMAGE_VERSION}" >> "${GITHUB_OUTPUT}"
+          {
+            echo "build_args<<BUILD_ARGS_END"
+            echo "${args}"
+            echo "BUILD_ARGS_END"
+          } >> "${GITHUB_OUTPUT}"
           case "${IMAGE_DIR}" in
             *-epics-runner|*-epics-slim) r=true ;;
             *) r=false ;;
@@ -56,7 +64,7 @@ jobs:
           tags: ${{ steps.meta.outputs.image_name }}:latest
           build-args: |
             BUILD_DATE=${{ github.event.repository.updated_at }}
-            BUILD_VERSION=${{ steps.meta.outputs.image_version }}
+            ${{ steps.meta.outputs.build_args }}
 
       - name: Verification gate
         env:

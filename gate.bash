@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.7.0
+#  version : 0.8.0
 #
 # Container verification gate. Runs INSIDE a built image and
 # checks the installed EPICS tree and runtime tools. Distinct from the repo's
@@ -19,11 +19,14 @@ set -uo pipefail
 declare -i PASS_COUNT=0
 declare -i FAIL_COUNT=0
 
-# Expected shared-module entry count for the pinned distribution. The modules
-# directory holds 70 entries (symlink + version-dir pairs); this counts
-# entries, not module identities (name/version identity is the distribution's
-# manifest concern, out of this gate's scope).
-declare EXPECTED_MODULES="${GATE_EXPECTED_MODULES:-70}"
+# G1 checks the structure of the modules directory instead of a fixed entry
+# count, so a distribution release needs no edit here: every symlink names a
+# sibling version directory, every version directory is named by a symlink, and
+# no other kind of entry exists. Names in GATE_UNPAIRED_OK need no symlink.
+# GATE_MIN_PAIRS is a floor that catches a tree which lost whole pairs. Module
+# name and version identity stay the distribution's concern.
+declare UNPAIRED_OK="${GATE_UNPAIRED_OK:-commonIocsh}"
+declare -i MIN_PAIRS="${GATE_MIN_PAIRS:-30}"
 
 # G12 runs only on runner images (GATE_RUNNER=1); the development images they are
 # built FROM carry no ioc-runner supervision layer.
@@ -54,15 +57,40 @@ function gate_env {
     fi
 }
 
-# G1 - module inventory count
+# G1 - module inventory structure
 function gate_inventory {
-    local n
-    n="$(find "${EPICS_MODULES}" -maxdepth 1 -mindepth 1 | wc -l)"
-    if [[ "${n}" == "${EXPECTED_MODULES}" ]]; then
-        pass "G1 module inventory ${n}/${EXPECTED_MODULES} entries"
-    else
-        fail "G1 module inventory ${n}, expected ${EXPECTED_MODULES}"
+    local entry name target ok=1
+    local -i pairs=0
+    local -A linked=()
+
+    shopt -s nullglob dotglob
+    for entry in "${EPICS_MODULES}"/*; do
+        name="${entry##*/}"
+        if [[ -L "${entry}" ]]; then
+            target="$(readlink "${entry}")"
+            target="${target#./}"
+            if [[ "${target}" == */* || ! -d "${EPICS_MODULES}/${target}" ]]; then
+                fail "G1 inventory: ${name} does not point to a sibling directory (${target})"; ok=0
+                continue
+            fi
+            linked["${target}"]=1
+            pairs+=1
+        elif [[ ! -d "${entry}" ]]; then
+            fail "G1 inventory: ${name} is neither a symlink nor a directory"; ok=0
+        fi
+    done
+    for entry in "${EPICS_MODULES}"/*; do
+        [[ -L "${entry}" || ! -d "${entry}" ]] && continue
+        name="${entry##*/}"
+        [[ -n "${linked[${name}]:-}" ]] && continue
+        [[ " ${UNPAIRED_OK} " == *" ${name} "* ]] && continue
+        fail "G1 inventory: ${name} has no symlink"; ok=0
+    done
+    shopt -u nullglob dotglob
+    if (( pairs < MIN_PAIRS )); then
+        fail "G1 inventory: ${pairs} symlink and directory pairs, expected at least ${MIN_PAIRS}"; ok=0
     fi
+    (( ok )) && pass "G1 module inventory structure (${pairs} pairs, every symlink and directory paired)"
 }
 
 # G2 - no dead module symlinks

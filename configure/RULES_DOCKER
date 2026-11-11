@@ -1,12 +1,13 @@
 VARS_EXCLUDES += image_targets
 
 .PHONY: all build dry-run gate check check-tools check-images check-scripts
-.PHONY: check-workflows check-docs check-links check-diff docs trigger versions
+.PHONY: check-workflows check-docs check-links check-diff check-versions docs trigger versions
+.PHONY: release-check release-components release-status release-verify release-abandon-status
 
 ##@ General
 all: check ## Run the default validation suite
 
-check: check-tools check-images check-scripts check-workflows check-docs check-links check-diff dry-run ## Run repository validation
+check: check-tools check-images check-versions check-scripts check-workflows check-docs check-links check-diff dry-run ## Run repository validation
 
 versions: ## Print project and tool versions
 	$(QUIET) printf "%s = %s\n" "APPNAME" "$(APPNAME)"
@@ -17,9 +18,8 @@ versions: ## Print project and tool versions
 	$(QUIET) shellcheck --version | sed -n '1p'
 	$(QUIET) yamllint --version
 	$(QUIET) if command -v docker >/dev/null 2>&1; then docker --version; else printf "%s\n" "docker not found"; fi
-	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
-	    v="$$(grep -m1 -oE 'DIST_VERSION=[0-9.]+' "$(TOP)/$$d/Dockerfile" | cut -d= -f2)"; \
-	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$$v"; \
+	$(QUIET) grep -vE '^(#|$$)' "$(TOP)/configure/VERSIONS" | while IFS='=' read -r k v; do \
+	    printf "%s = %s\n" "$$k" "$$v"; \
 	done
 	$(QUIET) printf "%s = %s\n" "repo git" "$$(git -C $(TOP) describe --tags --always 2>/dev/null)"
 
@@ -38,6 +38,10 @@ check-images: ## Verify each configured image has Dockerfile and env.conf
 	    test -s "$(TOP)/$$image/Dockerfile" || { printf "%s\n" "error: missing $$image/Dockerfile"; exit 1; }; \
 	    test -s "$(TOP)/$$image/env.conf" || { printf "%s\n" "error: missing $$image/env.conf"; exit 1; }; \
 	done
+
+check-versions: ## Verify that configure/VERSIONS is the only place an EPICS image version is written
+	$(QUIET) RELEASE_IMAGE_DIRS="$(RELEASE_IMAGE_DIRS)" RUNNER_IMAGE_DIRS="$(RUNNER_IMAGE_DIRS)" \
+	    SLIM_IMAGE_DIRS="$(SLIM_IMAGE_DIRS)" $(VERSIONS_CHECKER)
 
 check-scripts: ## Run Bash syntax and ShellCheck validation
 	$(QUIET) bash -n $(SCRIPT_FILES)
@@ -83,11 +87,36 @@ dry-run: $(IMAGE_DRY_RUN_TARGETS) ## Preview all active Docker builds
 gate: $(IMAGE_GATE_TARGETS) ## Run the container gate against all EPICS images
 
 ##@ Release
-dist-version.%: ## Set DIST_VERSION across all EPICS image Dockerfiles (e.g. dist-version.1.2.2)
-	$(QUIET) for d in $(RELEASE_IMAGE_DIRS); do \
-	    sed -i -E "s/^(ARG DIST_VERSION=).*/\1$*/" "$(TOP)/$$d/Dockerfile"; \
-	    printf "%-10s DIST_VERSION = %s\n" "$$d" "$*"; \
-	done
+dist-version.%: ## Set DIST_VERSION and IMAGE_VERSION in configure/VERSIONS (e.g. dist-version.1.5.0)
+	$(QUIET) printf "%s\n" "$*" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$$' || { \
+	    printf "%s\n" "error: version must have the form X.Y.Z: $*" >&2; exit 1; }
+	$(QUIET) sed -i -E "s/^(DIST_VERSION|IMAGE_VERSION)=.*/\1=$*/" "$(TOP)/configure/VERSIONS"
+	$(QUIET) grep -E '^(DIST_VERSION|IMAGE_VERSION)=' "$(TOP)/configure/VERSIONS"
+
+image-version.%: ## Set only IMAGE_VERSION in configure/VERSIONS (e.g. image-version.1.5.1)
+	$(QUIET) printf "%s\n" "$*" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$$' || { \
+	    printf "%s\n" "error: version must have the form X.Y.Z: $*" >&2; exit 1; }
+	$(QUIET) sed -i -E "s/^(IMAGE_VERSION)=.*/\1=$*/" "$(TOP)/configure/VERSIONS"
+	$(QUIET) grep -E '^IMAGE_VERSION=' "$(TOP)/configure/VERSIONS"
+
+release-check: ## Verify the distribution tag and OS trees for a release (VERSION=X.Y.Z)
+	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-check VERSION=1.5.0" >&2; exit 1; }
+	$(QUIET) $(RELEASE_ENV) $(RELEASE_TOOL) check "$(VERSION)"
+
+release-components: ## Compare pinned component versions with their latest upstream tags
+	$(QUIET) $(RELEASE_ENV) $(RELEASE_TOOL) components
+
+release-status: ## Show how far a release has gone and the next action (VERSION=X.Y.Z, ALL=1 checks every stage)
+	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-status VERSION=1.5.0" >&2; exit 1; }
+	$(QUIET) $(RELEASE_ENV) RELEASE_STATUS_ALL="$(ALL)" $(RELEASE_TOOL) status "$(VERSION)"
+
+release-verify: ## Verify the digests and labels of all published images (VERSION=X.Y.Z)
+	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-verify VERSION=1.5.0" >&2; exit 1; }
+	$(QUIET) $(RELEASE_ENV) $(RELEASE_TOOL) verify "$(VERSION)"
+
+release-abandon-status: ## Show what remains to abandon a release and the commands to run (VERSION=X.Y.Z)
+	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-abandon-status VERSION=1.5.0" >&2; exit 1; }
+	$(QUIET) $(RELEASE_ENV) $(RELEASE_TOOL) abandon "$(VERSION)"
 
 trigger: ## Update tracked CI rebuild trigger file
 	$(QUIET) $(TRIGGER_TOOL)

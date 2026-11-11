@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.1.0
+#  version : 0.2.0
 
 set -euo pipefail
 
@@ -10,13 +10,18 @@ SC_SCRIPT="$(realpath "$0")"
 readonly SC_SCRIPT
 readonly SC_TOP="${SC_SCRIPT%/*}"
 readonly DOCKER_FILENAME="Dockerfile"
+readonly VERSIONS_FILE="${SC_TOP}/configure/VERSIONS"
 
 declare DOCKER_ID=""
 declare TARGET_NAME=""
 declare DOCKER_BUILD_OPTS=""
 declare BUILD_ARGS=""
 
+declare -a VERSION_KEYS=()
+declare -A VERSION_VALUES=()
+
 declare OPT_DRYRUN=0
+declare OPT_PRINT_ARGS=0
 declare cli_docker_id=""
 declare cli_target_name=""
 declare cli_docker_file_path=""
@@ -35,6 +40,7 @@ function usage {
         printf "  -o <options>   Whitespace-separated docker build options\n"
         printf "  -a <args>      Whitespace-separated build args, e.g. \"A=1 B=2\"\n"
         printf "  -d             Print the docker build command without running it\n"
+        printf "  -b             Print the build args taken from configure/VERSIONS, one per line, and exit\n"
         printf "  -h             Show this help\n"
         printf "\n"
         printf "Example:\n"
@@ -103,10 +109,60 @@ function load_config_file {
     done < "$config_file"
 }
 
+# Read configure/VERSIONS: blank lines and comment lines are skipped, every
+# other line must be KEY=value with a dotted numeric value.
+function load_versions {
+    local line
+
+    [[ -s "$VERSIONS_FILE" ]] || die "missing or empty versions file: ${VERSIONS_FILE}"
+
+    while IFS= read -r line || [[ -n "$line" ]]; do
+        line="${line//$'\r'/}"
+
+        if [[ -z "$line" || "$line" == \#* ]]; then
+            continue
+        fi
+
+        if [[ ! "$line" =~ ^([A-Z0-9_]+)=([0-9]+(\.[0-9]+)+)$ ]]; then
+            die "malformed line in ${VERSIONS_FILE}: ${line}"
+        fi
+
+        VERSION_KEYS+=("${BASH_REMATCH[1]}")
+        VERSION_VALUES["${BASH_REMATCH[1]}"]="${BASH_REMATCH[2]}"
+    done < "$VERSIONS_FILE"
+
+    [[ -n "${VERSION_VALUES[IMAGE_VERSION]:-}" ]] || die "IMAGE_VERSION missing in ${VERSIONS_FILE}"
+}
+
+function dockerfile_declares {
+    local dockerfile="$1"
+    local key="$2"
+
+    grep -qE "^ARG ${key}(=|\$)" "$dockerfile"
+}
+
+# Collect one KEY=value build arg for each version key the Dockerfile declares,
+# plus BUILD_VERSION from IMAGE_VERSION for an image that declares IMAGE_VERSION.
+function version_build_args {
+    local dockerfile="$1"
+    local -n args_out="$2"
+    local key
+
+    for key in "${VERSION_KEYS[@]}"; do
+        if dockerfile_declares "$dockerfile" "$key"; then
+            args_out+=("${key}=${VERSION_VALUES[$key]}")
+        fi
+    done
+
+    if dockerfile_declares "$dockerfile" IMAGE_VERSION; then
+        args_out+=("BUILD_VERSION=${VERSION_VALUES[IMAGE_VERSION]}")
+    fi
+}
+
 function parse_args {
     local opt
 
-    while getopts ":o:i:n:t:a:hd" opt; do
+    while getopts ":o:i:n:t:a:hdb" opt; do
         case "$opt" in
             o)
                 cli_docker_build_options="$OPTARG"
@@ -125,6 +181,9 @@ function parse_args {
                 ;;
             d)
                 OPT_DRYRUN=1
+                ;;
+            b)
+                OPT_PRINT_ARGS=1
                 ;;
             h)
                 usage
@@ -230,11 +289,21 @@ function build_image {
     [[ -n "$DOCKER_ID" ]] || die "DOCKER_ID is empty"
     [[ -n "$TARGET_NAME" ]] || die "TARGET_NAME is empty"
 
+    load_versions
+
+    # Version args come first, so env.conf and CLI build args override them.
+    version_build_args "${src_top}/${DOCKER_FILENAME}" build_args
     append_words "$DOCKER_BUILD_OPTS" docker_options
     append_words "$BUILD_ARGS" build_args
 
     command+=("${docker_options[@]}")
     command+=(--file "$DOCKER_FILENAME" -t "$target_image")
+
+    # The version tag lets a runner or slim build that starts FROM
+    # <name>:<IMAGE_VERSION> resolve to this local build, not a pulled image.
+    if dockerfile_declares "${src_top}/${DOCKER_FILENAME}" IMAGE_VERSION; then
+        command+=(-t "${target_image}:${VERSION_VALUES[IMAGE_VERSION]}")
+    fi
 
     for build_arg in "${build_args[@]}"; do
         command+=(--build-arg "$build_arg")
@@ -261,6 +330,17 @@ function main {
 
     parse_args "$@"
     validate_target "$cli_docker_file_path"
+
+    if (( OPT_PRINT_ARGS )); then
+        local -a print_args=()
+
+        load_versions
+        version_build_args "${SC_TOP}/${cli_docker_file_path}/${DOCKER_FILENAME}" print_args
+        if (( ${#print_args[@]} )); then
+            printf "%s\n" "${print_args[@]}"
+        fi
+        return 0
+    fi
 
     target_config="${SC_TOP}/${cli_docker_file_path}/env.conf"
     target_local_config="${SC_TOP}/${cli_docker_file_path}/env.local"
