@@ -109,3 +109,12 @@ the seven-file convention to cure a cosmetic ambiguity, and syncing it to
 `IMAGE_VERSION` would conflate two different things. The header follows its own
 rule instead: 2.1.0 for this generation's s6 and version-split additions, with
 `gate.bash` at 0.3.0 for its new supervision check.
+
+Re-observed on 2026-11-11: 23 tracked files carry the header block - the six
+development Dockerfiles at 2.3.0, the 12 runner and slim Dockerfiles and the
+mdBook Dockerfile at 0.2.0, `docker_builder.bash` and `check_versions.bash` at
+0.2.0, `gate.bash` at 0.8.0, and `release.bash` at 0.10.2. The image versions
+moved out of the Dockerfiles into `configure/VERSIONS`, so a Dockerfile no
+longer shows the second number at all, and the premise of the ambiguity is
+gone. The verdict stands: the header stays a file-generation marker, separate
+from `IMAGE_VERSION`.

@@ -82,7 +82,9 @@ artifact to [GitHub Pages](https://jeonghanlee.github.io/Dockerfiles/) on
 | [docs/README.md](docs/README.md) | Documentation index |
 | [docs/SETUP.md](docs/SETUP.md) | Debian 13 host and Docker environment setup |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | Repository architecture and data flow |
+| [docs/CONTAINER_RUNTIME.md](docs/CONTAINER_RUNTIME.md) | Development, runner, and slim image roles and the supervised IOC lifecycle |
 | [docs/MAINTENANCE.md](docs/MAINTENANCE.md) | Image, version, gate, and publication procedures |
+| [docs/RELEASE.md](docs/RELEASE.md) | Release of the 18 EPICS images to an EPICS-env-distribution version |
 | [docs/IMAGE_FOOTPRINT.md](docs/IMAGE_FOOTPRINT.md) | Image size axes, commands, and history |
 | [docs/CLOSED_DOORS.md](docs/CLOSED_DOORS.md) | Examined candidates deliberately left unchanged |
 | [docs/milestone-69b9303.md](docs/milestone-69b9303.md) | Canonical Work Register |

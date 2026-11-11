@@ -4,6 +4,7 @@
 |---|---|
 | [SETUP.md](SETUP.md) | Debian 13 host packages, Docker access, proxy settings, and the first build |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Image architecture, build flow, configuration scope, and publication flow |
+| [CONTAINER_RUNTIME.md](CONTAINER_RUNTIME.md) | Roles of the development, runner, and slim images, and the supervised IOC lifecycle |
 | [MAINTENANCE.md](MAINTENANCE.md) | Image changes, fixed versions, gates, triggers, and publication procedures |
 | [RELEASE.md](RELEASE.md) | Release of the 18 EPICS images to an EPICS-env-distribution version |
 | [IMAGE_FOOTPRINT.md](IMAGE_FOOTPRINT.md) | Image size axes, measuring commands, and history |

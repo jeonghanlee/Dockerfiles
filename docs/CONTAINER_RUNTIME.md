@@ -8,15 +8,15 @@ This document records the container runtime scenario for the EPICS images: the r
 
 ## Image Roles
 
-The current four EPICS images (`debian13`, `rocky8`, `rocky10`, `ubuntu24`) are development images. They carry the build toolchain, run `softIoc`, `procServ`, and `con` directly, default to an interactive shell (`CMD ["/bin/bash"]`), and serve the existing CI consumers that invoke them as `docker run <image> <command>`. IOCs are prepared and built in these images.
+The six development images (`<os>-epics` for `debian12`, `debian13`, `rocky8`, `rocky10`, `ubuntu24`, and `ubuntu26`) carry the build toolchain, run `softIoc`, `procServ`, and `con` directly, default to an interactive shell (`CMD ["/bin/bash"]`), and serve the existing CI consumers that invoke them as `docker run <image> <command>`. IOCs are prepared and built in these images.
 
-Supervised IOC execution ships as a separate image per OS - `debian13-epics-runner`, `rocky8-epics-runner`, `rocky10-epics-runner`, and `ubuntu24-epics-runner` (variant A: the development image plus the supervision layer). The development images are not converted to a supervision entry point. See Design Decision below.
+Supervised IOC execution ships as a separate image per OS: the six `<os>-epics-runner` images (variant A: the development image plus the supervision layer) and the six `<os>-epics-slim` images (variant B: a toolchain-free runtime with a baked IOC). The development images are not converted to a supervision entry point. See Design Decision below.
 
 ## Supervised IOC Lifecycle
 
 A supervision image is an image whose entry point runs `s6-svscan` as PID 1 on the scan directory `/run/s6-procserv`. An IOC runs under that supervision tree through `ioc-runner --container`. Because PID 1 is `s6-svscan`, an operator can enter and leave the container without stopping the IOC.
 
-The session looks like this; the exact `ioc-runner` subcommands follow the runner CLI in `epics-ioc-runner` 1.4.0:
+The session looks like this; the exact `ioc-runner` subcommands follow the runner CLI of the `epics-ioc-runner` tag in `RUNNER_VERSION` of `configure/VERSIONS`:
 
 ```bash
 docker run -d --name ioc jeonghanlee/debian13-epics-runner   # s6-svscan is PID 1
@@ -35,7 +35,7 @@ The runtime-only slim image (M7) is the toolchain-free supervision image that ru
 
 ## Design Decision
 
-Decision (2026-09-07): supervised execution ships as a separate image. The current four EPICS images stay development images (toolchain-resident, `CMD ["/bin/bash"]`, current CI consumers) and are not converted to run `s6-svscan` as PID 1.
+Decision (2026-09-07): supervised execution ships as a separate image. The development images stay development images (toolchain-resident, `CMD ["/bin/bash"]`, current CI consumers) and are not converted to run `s6-svscan` as PID 1.
 
 Rationale: converting the development images would break `docker run <image> <command>` for the current CI consumers until the GitLab consumer cutover (external gate G2) completes. A separate image keeps supervised execution independent of G2, so it can be built and verified now. This also matches the register, where the runtime-only slim image (M7) is already a separate image.
 
@@ -62,11 +62,11 @@ A slim image bakes a specific IOC, so it is verified against a live IOC by runni
 
 1. Clone tc32sim on the host and start its simulator: `simulator/run_simulators.bash` starts 64 emulators on ports 9400-9463. The simulator is a host-side companion, separate from the copy the image build clones.
 2. Run the slim image on the host network so the IOC's `127.0.0.1:<port>` reaches the host simulator, with `CAP_SYS_PTRACE` for deep inspect: `docker run -d --name ioc --network host --cap-add SYS_PTRACE <slim-image>`.
-3. Drive the baked IOC, regenerating the conf so its `IOC_CHDIR` matches the baked tree. For tc32sim the iocBoot directory is `/opt/ioc/tc32sim/iocBoot/ioctestlab-tc32sim` and the IOC name is `ioctestlab-tc32sim`: `docker exec ioc bash -lc 'cd <iocBoot-dir> && ioc-runner --container generate . && ioc-runner --container install -f ./<name>.conf && ioc-runner --container start <name>'`. The `install -f` skips the save-restore prompt, which otherwise aborts under a non-interactive `docker exec`.
+3. Drive the baked IOC, regenerating the conf so its `IOC_CHDIR` matches the baked tree. For tc32sim the iocBoot directory is `/opt/ioc/tc32sim/iocBoot/ioctestlab-tc32sim` and the IOC name is `ioctestlab-tc32sim`: `docker exec ioc bash -lc 'cd <iocBoot-dir> && printf "2\n" | ioc-runner --container generate . && ioc-runner --container install -f ./<name>.conf && ioc-runner --container start <name>'`. The tc32sim iocBoot directory holds two executable startup scripts, `st-linstat.cmd` and `st-sim.cmd`, so `generate` asks which one to use, and the piped `2` selects `st-sim.cmd`, the one the simulator run needs; without that input, `generate` stops at end of input under a non-interactive `docker exec`. The `install -f` skips the save-restore prompt, which otherwise aborts the same way.
 4. Read records through `docker exec` directly, not `bash -lc`: a login shell reruns `/etc/profile` and drops the EPICS bin from PATH. With the tc32sim device prefix `TC32:008:`: `docker exec ioc caget TC32:008:Ti0` for CA; `docker exec ioc pvxget TC32:008:group` for the PVA group (its pvname is `$(P)$(OBJ)`).
-5. Tear down: `ioc-runner --container stop <name>`, `docker rm -f ioc`, then stop the simulator. `run_simulators.bash --stop` leaves the `socat` listeners running, so also run `pkill -f tc32_emulator` and `pkill -x socat`.
+5. Tear down: `ioc-runner --container stop <name>`, `docker rm -f ioc`, then stop the simulator. `run_simulators.bash --stop` leaves the `socat` listeners running, so also run `pkill -f tc32_emulator` and stop only the simulator listeners with `pkill -f '[T]CP-LISTEN:94[0-6][0-9],reuseaddr,fork'`; a plain `pkill -x socat` would also stop unrelated `socat` processes on the host.
 
 ## References
 
 - Milestone work items and status: `docs/milestone-69b9303.md` (M1 container runtime, M7 runtime-only slim image).
-- Upstream runner: `epics-ioc-runner` tag `1.4.0` (container execution mode).
+- Upstream runner: `epics-ioc-runner`, container execution mode from tag `1.4.0`; the images pin the tag in `RUNNER_VERSION`.

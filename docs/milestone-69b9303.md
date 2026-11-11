@@ -7,14 +7,14 @@ Canonical branch or ref: master
 Git upstream: origin/master
 Remote tracker: jeonghanlee/Dockerfiles, GitHub milestone 1.0.0 ("Lean images, everlasting EPICS")
 
-Next session entry point: no milestone work remains open. All eleven milestone
-rows are Complete - the distribution 1.3.0 bump (M8), the Ubuntu 26.04 set (M6),
-the slim build/CI wiring (M9), the publish split (M10), and the re-added Debian
-12 set (M11, published at 1.1.0). The 1.1.0 release shipped (tag, GitHub release,
-milestone 1.0.0 closed) and all six OS image sets are published on Docker Hub at
-1.1.0. The only open item is external gate G2 (GitLab consumer cutover), whose
-remaining step is the runner-host admin registering the ubuntu24-epics,
-ubuntu26-epics, and debian12-epics GitLab runner tags - infra, not this repo.
+Next session entry point: no milestone work remains open. All twelve milestone
+rows are Complete. M12 gathered every image version in `configure/VERSIONS`,
+added the release tooling and `docs/RELEASE.md`, and released the 18 EPICS
+images at distribution and image version 1.5.0; the next distribution release
+starts at step 1 of `docs/RELEASE.md`. The only open item is external gate G2
+(GitLab consumer cutover), whose remaining step is the runner-host admin
+registering the ubuntu24-epics, ubuntu26-epics, and debian12-epics GitLab
+runner tags - infra, not this repo.
 
 This register is the status source of truth for the remaining master work after
 the 1.2.2 release. It replaces `docs/milestone-5c186b4.md`, whose completed rows
@@ -41,8 +41,9 @@ and decision records stay reachable at commit 69b9303.
 | CI | M10 | Split publish out of the build-gate workflow | Milestone | Complete | No | M9 | image.yml build-and-gates only, a separate owner-run publish.yml pushes, and the per-OS workflows are dispatchable with no publish step; [detail](#m10---split-publish-out-of-the-build-gate-workflow) |
 | Images | M11 | Re-add the Debian 12 EPICS image set | Milestone | Complete | No | | `jeonghanlee/debian12-epics` (+ runner, slim) builds from the 1.3.0 `debian-12` tree at IMAGE_VERSION 1.1.0 and passes the gate; [detail](#m11---re-add-the-debian-12-epics-image-set) |
 | Gates | G4 | EPICS-env-distribution 1.3.0 | External gate | Complete | No | | Distribution 1.3.0 is published and carries an `ubuntu-26.04` tree; [detail](#g4---epics-env-distribution-130) |
+| Release | M12 | One version source, release tooling, and the 1.5.0 release | Milestone | Complete | No | | `configure/VERSIONS` is the only version source, `release.bash` and `release.yml` publish and verify the 18 images, and 1.5.0 passes `make release-verify`; [detail](#m12---one-version-source-release-tooling-and-the-150-release) |
 
-Tally: 11 milestone rows - Complete 11, In progress 0, Blocked 0, Not started 0,
+Tally: 12 milestone rows - Complete 12, In progress 0, Blocked 0, Not started 0,
 Ready 0. External gates: 1 open (G2) and 3 complete (G1, G3, G4).
 Backlog is reported separately below and excluded from this tally.
 
@@ -1202,6 +1203,99 @@ Implementation Authorization: 2026-09-10, owner approval of the accepted plan
 - Verification (2026-09-10 local, 2026-09-11 CI): local gate 12/0 release and
   13/0 runner/slim with the tc32sim end-to-end run; publish.yml built, gated,
   and pushed all three at 1.1.0 to Docker Hub.
+
+#### M12 - One version source, release tooling, and the 1.5.0 release
+
+Origin: 69b9303 / M12
+Identity History: none
+GitHub Issue: none
+Status: Complete
+
+##### Summary
+
+The image versions were spread over the 18 EPICS Dockerfiles, the slim images
+hard-coded their `EPICS_PATH`, the gate compared a fixed module count, and a
+release was a sequence of manual per-image publications. This row gathers every
+version in `configure/VERSIONS`, moves the release decisions into read-only
+`make` targets and an ordered publication workflow, writes the procedure as
+`docs/RELEASE.md`, and releases the 18 images at 1.5.0 by that procedure.
+
+##### Scope
+
+`configure/VERSIONS` read by `docker_builder.bash`, the Dockerfiles, and the
+workflows, with `make check-versions`; slim `EPICS_PATH` through
+`/opt/epics/current`; the gate G1 structure check; `release.bash` with the
+`release-check`, `release-components`, `release-status`, `release-verify`, and
+`release-abandon-status` targets; `release.yml` and `release-image.yml`; runner
+and slim CI building their base in the same job; `docs/RELEASE.md`; the 1.5.0
+release with con 1.2.0 and ioc-runner 1.4.2.
+
+Out of scope: a release that raises only `IMAGE_VERSION`; the s6 set, which
+stays at 2.13.1.0; the GitLab consumer cutover (G2).
+
+##### Completion Criteria
+
+- No EPICS Dockerfile carries a version value, and `make check` enforces it.
+- CI builds and gates all 18 images, the runner and slim images on a base built
+  in the same job.
+- The 18 images carry `1.5.0` and `latest` with one digest each, and
+  `make release-verify VERSION=1.5.0` passes.
+
+##### Dependencies And Decisions
+
+- Decision Date 2026-11-11: `IMAGE_VERSION` equals `DIST_VERSION` for a
+  distribution release; `make dist-version.<v>` writes both.
+- Decision Date 2026-11-11: the s6 set (skalibs, execline, s6) is raised only
+  for a security fix; `HELD_VERSION_KEYS` in `configure/CONFIG_SITE` marks it.
+- Decision Date 2026-11-11: 1.5.0 raises con to 1.2.0 and ioc-runner to 1.4.2.
+- Decision Date 2026-11-11: `publish.yml` stays for publishing one image.
+- Decision Date 2026-11-11: the owner and the agent work in one checkout.
+- `docker buildx imagetools create` makes a new index from a single manifest
+  by default (buildx 0.38.1), so `latest` is copied with
+  `--prefer-index=false`. Observed 2026-11-11 in release run 43112146810.
+
+##### Implementation Plan
+
+Plan Status: accepted
+Plan Acceptance: 2026-11-11, owner approval of the seven code items in session
+Implementation Authorization: 2026-11-11, owner approval in session
+Superseded Plan Artifacts: none
+
+1. Gather the versions in `configure/VERSIONS`. Closed by T1 and T2.
+2. Add `release.bash` and its `make` targets. Closed by T1.
+3. Add `release.yml` and `release-image.yml`. Closed by T5.
+4. Build the base in the runner and slim CI jobs. Closed by T2.
+5. Write `docs/RELEASE.md` and release 1.5.0 by it. Closed by T3 to T6.
+
+##### Test Plan
+
+| Label | Layer | Method | Environment | Expected Result |
+| --- | --- | --- | --- | --- |
+| T1 | Repository validation | `make check`, including `check-versions` | Debian 13 host | Passes |
+| T2 | CI on the tooling commit | The 18 image workflows on master | GitHub Actions | All succeed; the runner and slim jobs build their base first |
+| T3 | Local 1.5.0 build | `make build` and `make gate` for debian13, its runner, and its slim image | Local Docker | Gates report 12/0, 13/0, and 13/0 |
+| T4 | CI on the release commit | The 18 image workflows on master | GitHub Actions | All succeed |
+| T5 | Publication | `release.yml` with `version=1.5.0` | GitHub Actions | The run succeeds for all 18 images |
+| T6 | Release verification | `make release-status VERSION=1.5.0` and `make release-verify VERSION=1.5.0` | Debian 13 host | All stages PASS; `Release verify: OK (1.5.0, 18 images)` |
+
+##### Verification Results
+
+| Label | Observed At | Environment | Result | Evidence |
+| --- | --- | --- | --- | --- |
+| T1 | 2026-11-11 | Debian 13 host | Pass | `make check` ends without an error, `Versions: OK` |
+| T2 | 2026-11-11 | GitHub Actions | Pass | 18/18 workflows succeed on eb07501; the debian12 runner job runs `Build the base image` before `Build and load`, gate 13/0 with G1 at 35 pairs |
+| T3 | 2026-11-11 | Local Docker | Pass | debian13 12/0, debian13-epics-runner 13/0, debian13-epics-slim 13/0, G1 at 36 pairs; runner label 1.4.2 and con built from tag 1.2.0 |
+| T4 | 2026-11-11 | GitHub Actions | Pass | 18/18 workflows succeed on b5de22b |
+| T5 | 2026-11-11 | GitHub Actions | Pass | Run 43112146810 pushed the six base `1.5.0` tags and failed at the `latest` digest check; after c17348c, run 43115930685 succeeded for all 18 images |
+| T6 | 2026-11-11 | Debian 13 host | Pass | Six status stages PASS; `Release verify: OK (1.5.0, 18 images)`, base revision b5de22b, runner and slim revision c17348c |
+
+##### Closure Evidence
+
+- Deliverable: eb07501 (version source, release tooling, CI base build, and
+  `docs/RELEASE.md`), b5de22b (the 1.5.0 release commit), and c17348c (the
+  `latest` copy and the release run status fix).
+- Verification (2026-11-11): the 18 images carry `1.5.0` with `latest` on the
+  same digest, and `make release-verify VERSION=1.5.0` passes.
 
 #### G1 - epics-ioc-runner container mode
 

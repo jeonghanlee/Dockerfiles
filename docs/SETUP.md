@@ -8,7 +8,7 @@ This document prepares a Debian 13 `amd64` host to validate, build, and test the
 
 ## Platform Requirements
 
-The published mdBook image is `linux/amd64`. The four EPICS images bake `EPICS_HOST_ARCH=linux-x86_64`, so the verified host scope is Debian 13 on `amd64`.
+The published mdBook image is `linux/amd64`. The 18 EPICS images bake `EPICS_HOST_ARCH=linux-x86_64`, so the verified host scope is Debian 13 on `amd64`.
 
 Confirm the host architecture:
 
@@ -194,7 +194,11 @@ make build.debian13
 make gate.debian13
 ```
 
-The build must complete its package installation and Git fetches. The gate must report all 11 checks as passing.
+The build must complete its package installation and Git fetches. The gate must end with this line:
+
+```
+-- 12 passed, 0 failed --
+```
 
 Build the documentation with the fixed mdBook image:
 
