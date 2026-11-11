@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.10.0
+#  version : 0.10.2
 #
 # Release tool for the 18 EPICS images. Every subcommand is read-only.
 #
@@ -435,7 +435,7 @@ function release_status {
         head="$(git -C "$SC_TOP" rev-parse HEAD)"
         if ! out="$(cd "$SC_TOP" && gh run list --workflow release.yml -R "$slug" --limit 1 \
             --json databaseId,status,conclusion,headSha \
-            --jq '.[] | "\(.databaseId) \(.status) \(.conclusion) \(.headSha)"' 2>&1)"; then
+            --jq '.[] | "\(.databaseId) \(.status) \(.headSha) \(.conclusion)"' 2>&1)"; then
             if [[ "$out" == *"HTTP 404"* ]]; then
                 stage PASS run "no release run: release.yml is not on the default branch"
             else
@@ -446,7 +446,7 @@ function release_status {
         elif [[ -z "$out" ]]; then
             stage PASS run "no release run yet"
         else
-            read -r run_id run_state run_end run_sha <<< "$out"
+            read -r run_id run_state run_sha run_end <<< "$out"
             if [[ "$run_state" == completed ]]; then
                 stage PASS run "newest release run ${run_id} completed (${run_end}) on ${run_sha:0:7}"
             elif [[ "$run_sha" == "$head" ]]; then
@@ -654,7 +654,8 @@ function release_abandon {
             stage PASS runs "release.yml is not on the default branch; no release run exists"
         else
             stage FAIL runs "gh cannot read the release runs"
-            next_lines "check gh auth status (agent), then run make release-abandon-status VERSION=${version} again (agent)"
+            next_lines "gh auth status   # agent" \
+                "then run make release-abandon-status VERSION=${version} again   # agent"
             FAILURES+=1
             return
         fi
@@ -671,9 +672,9 @@ function release_abandon {
         done
         if (( ${#waiting[@]} + ${#running[@]} > 0 )); then
             stage FAIL runs "not completed: ${waiting[*]:+waiting ${waiting[*]}}${waiting[*]:+${running[*]:+, }}${running[*]:+running ${running[*]}}"
-            for id in "${waiting[@]}" "${running[@]}"; do acts+=("gh run cancel ${id} -R ${slug}   (owner)"); done
-            acts+=("(owner; waiting runs first. gh run cancel returns before the run stops:"
-                   " run make release-abandon-status VERSION=${version} again until runs PASS)")
+            for id in "${waiting[@]}" "${running[@]}"; do acts+=("gh run cancel ${id} -R ${slug}   # owner"); done
+            acts+=("# owner: cancel waiting runs first; gh run cancel returns before the run stops"
+                   "then run make release-abandon-status VERSION=${version} again until runs PASS   # agent")
             next_lines "${acts[@]}"
             FAILURES+=1
             return
@@ -686,8 +687,8 @@ function release_abandon {
     mapfile -t dirty < <(git -C "$SC_TOP" status --porcelain)
     if printf "%s\n" "${dirty[@]}" | grep -q ' configure/VERSIONS$'; then
         stage FAIL local "configure/VERSIONS has an uncommitted change"
-        next_lines "git -C ${SC_TOP} status --short   (agent shows it to the owner)" \
-            "git -C ${SC_TOP} restore configure/VERSIONS   (agent, after the owner confirms)"
+        next_lines "git -C ${SC_TOP} status --short   # agent shows it to the owner" \
+            "git -C ${SC_TOP} restore configure/VERSIONS   # agent, after the owner confirms"
         FAILURES+=1
         return
     fi
@@ -695,7 +696,8 @@ function release_abandon {
     [[ -n "$origin" ]] || { stage FAIL local "cannot read origin/master"; FAILURES+=1; return; }
     if ! git -C "$SC_TOP" cat-file -e "${origin}^{commit}" 2> /dev/null; then
         stage FAIL local "origin/master ${origin:0:7} is not in the local clone"
-        next_lines "git -C ${SC_TOP} fetch   (agent), then run make release-abandon-status VERSION=${version} again"
+        next_lines "git -C ${SC_TOP} fetch   # agent" \
+            "then run make release-abandon-status VERSION=${version} again   # agent"
         FAILURES+=1
         return
     fi
@@ -707,25 +709,25 @@ function release_abandon {
             stage FAIL local "${ahead} local commit(s) take the release out of origin/master, not pushed"
             for line in "${local_commits[@]}"; do printf "      %s\n" "$line"; done
             if (( behind > 0 )); then
-                next_lines "git -C ${SC_TOP} rebase origin/master   (owner, when the listed commits are the reverts of the release;" \
-                    "  origin/master moved by ${behind} commit(s) since they were made)" \
-                    "git -C ${SC_TOP} push   (owner)" \
-                    "stop and ask the owner when a listed commit is other work   (agent)"
+                next_lines "git -C ${SC_TOP} rebase origin/master   # owner, when the listed commits are the reverts of the release;" \
+                    "  # origin/master moved by ${behind} commit(s) since they were made" \
+                    "git -C ${SC_TOP} push   # owner" \
+                    "stop and ask the owner when a listed commit is other work   # agent"
             else
-                next_lines "git -C ${SC_TOP} push   (owner, when the listed commits are the reverts of the release)" \
-                    "stop and ask the owner when a listed commit is other work   (agent)"
+                next_lines "git -C ${SC_TOP} push   # owner, when the listed commits are the reverts of the release" \
+                    "stop and ask the owner when a listed commit is other work   # agent"
             fi
         else
             stage FAIL local "${ahead} local commit(s) not on origin/master"
             for line in "${local_commits[@]}"; do printf "      %s\n" "$line"; done
-            next_lines "git -C ${SC_TOP} reset --keep origin/master   (owner, when every listed commit belongs to the release)" \
-                "stop and ask the owner when a listed commit is other work   (agent)"
+            next_lines "git -C ${SC_TOP} reset --keep origin/master   # owner, when every listed commit belongs to the release" \
+                "stop and ask the owner when a listed commit is other work   # agent"
         fi
         FAILURES+=1
         return
     elif (( behind > 0 )); then
         stage FAIL local "HEAD is ${behind} commit(s) behind origin/master"
-        next_lines "git -C ${SC_TOP} merge --ff-only origin/master   (owner)"
+        next_lines "git -C ${SC_TOP} merge --ff-only origin/master   # owner"
         FAILURES+=1
         return
     fi
@@ -745,9 +747,10 @@ function release_abandon {
         mapfile -t list < <(git -C "$SC_TOP" log --oneline "${rel}^..${origin}")
         stage FAIL master "origin/master has IMAGE_VERSION=${version}; release commit ${rel:0:7}, previous ${prev}"
         for line in "${list[@]}"; do printf "      %s\n" "$line"; done
-        next_lines "git -C ${SC_TOP} revert --no-edit ${rel:0:12}^..origin/master   (owner, when every listed commit belongs to the release)" \
-            "git -C ${SC_TOP} revert --no-edit <commit>   (owner, otherwise: one per release commit, newest first)" \
-            "git -C ${SC_TOP} push   (owner), then run make release-abandon-status VERSION=${version} again"
+        next_lines "git -C ${SC_TOP} revert --no-edit ${rel:0:12}^..origin/master   # owner, when every listed commit belongs to the release" \
+            "git -C ${SC_TOP} revert --no-edit <commit>   # owner, otherwise: one per release commit, newest first" \
+            "git -C ${SC_TOP} push   # owner" \
+            "then run make release-abandon-status VERSION=${version} again   # agent"
         FAILURES+=1
         return
     fi
@@ -766,17 +769,17 @@ function release_abandon {
         fi
         [[ -n "$want" ]] || die "${repo}:${prev} does not exist; latest has no previous tag to return to"
         if [[ "$digest" != "$want" ]]; then
-            acts+=("docker buildx imagetools create -t ${repo}:latest ${repo}:${prev}   (owner, docker login)")
+            acts+=("docker buildx imagetools create --prefer-index=false -t ${repo}:latest ${repo}:${prev}   # owner, docker login")
         fi
         if ! digest="$(hub_digest "$repo" "$version")"; then
             acts+=("run make release-abandon-status VERSION=${version} again once Docker Hub answers (agent; ${repo} unreadable)")
         elif [[ -n "$digest" ]]; then
-            acts+=("delete tag ${version} at https://hub.docker.com/r/${repo}/tags   (owner, after latest is back)")
+            acts+=("delete tag ${version} at https://hub.docker.com/r/${repo}/tags   # owner, after latest is back")
         fi
     done
     if (( ${#acts[@]} > 0 )); then
         stage FAIL hub "$(printf "%d action(s) remain" "${#acts[@]}")"
-        next_lines "${acts[@]}" "then run make release-abandon-status VERSION=${version} again   (agent)"
+        next_lines "${acts[@]}" "then run make release-abandon-status VERSION=${version} again   # agent"
         FAILURES+=1
         return
     fi

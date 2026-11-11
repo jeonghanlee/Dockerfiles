@@ -119,8 +119,10 @@ jobs:
           }
           want="$(digest "${IMAGE_NAME}:${VERSION}")"
           test -n "${want}"
+          # --prefer-index=false copies the single manifest as it is, so
+          # latest gets the digest of the version tag instead of a new index.
           if [ "$(digest "${IMAGE_NAME}:latest")" != "${want}" ]; then
-            docker buildx imagetools create \
+            docker buildx imagetools create --prefer-index=false \
               -t "${IMAGE_NAME}:latest" "${IMAGE_NAME}:${VERSION}"
           fi
           have="$(digest "${IMAGE_NAME}:latest")"

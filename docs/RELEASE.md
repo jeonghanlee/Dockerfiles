@@ -14,7 +14,7 @@ Both roles work in one checkout, `<repo_path>`, the absolute path of the agent's
 target there, and every Git command runs there, written as `git -C <repo_path> ...`. The owner runs each Git command
 that changes the checkout or the remote, such as commit, push, pull, reset, and revert. The agent runs the commands
 that only read or update the remote-tracking refs, such as `status`, `diff`, `log`, `rev-parse`, and `fetch`, and a
-command a status target marks `(agent)` after the owner confirms it. The status targets print each Git command with
+command a status target marks `agent` after the owner confirms it. The status targets print each Git command with
 the checkout path and mark who runs it.
 
 The agent asks one question at a time and starts the next step only after the owner answers. When a command fails or
