@@ -2,7 +2,7 @@ VARS_EXCLUDES += image_targets
 
 .PHONY: all build dry-run gate check check-tools check-images check-scripts
 .PHONY: check-workflows check-docs check-links check-diff check-versions docs trigger versions
-.PHONY: release-check release-components release-status release-verify release-abandon-status
+.PHONY: release-check release-components release-status release-verify release-abandon-status footprint
 
 ##@ General
 all: check ## Run the default validation suite
@@ -113,6 +113,10 @@ release-status: ## Show how far a release has gone and the next action (VERSION=
 release-verify: ## Verify the digests and labels of all published images (VERSION=X.Y.Z)
 	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-verify VERSION=1.5.0" >&2; exit 1; }
 	$(QUIET) $(RELEASE_ENV) $(RELEASE_TOOL) verify "$(VERSION)"
+
+footprint: ## Pull the published images at VERSION and print the docs/IMAGE_FOOTPRINT.md rows (VERSION=X.Y.Z)
+	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make footprint VERSION=1.5.0" >&2; exit 1; }
+	$(QUIET) FOOTPRINT_IMAGE_DIRS="$(FOOTPRINT_IMAGE_DIRS)" $(FOOTPRINT_TOOL) "$(VERSION)"
 
 release-abandon-status: ## Show what remains to abandon a release and the commands to run (VERSION=X.Y.Z)
 	$(QUIET) test -n "$(VERSION)" || { printf "%s\n" "error: set VERSION, e.g. make release-abandon-status VERSION=1.5.0" >&2; exit 1; }

@@ -5,6 +5,8 @@ SLIM_IMAGE_DIRS := debian12-epics-slim debian13-epics-slim rocky8-epics-slim roc
 # configure/VERSIONS keys raised only for a security fix; release-components
 # reports them as held instead of newer.
 HELD_VERSION_KEYS := SKALIBS_VERSION EXECLINE_VERSION S6_VERSION
+# Images measured by make footprint, the columns of docs/IMAGE_FOOTPRINT.md.
+FOOTPRINT_IMAGE_DIRS := debian13 rocky8 rocky10
 DEFAULT_IMAGE := debian13
 BUILD_ARGS :=
 MDBOOK_IMAGE := jeonghanlee/mdbook:0.5.4
