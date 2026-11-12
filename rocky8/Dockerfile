@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.3.0
+#  version : 2.4.0
 #
 # Distribution-consuming EPICS environment image.
 # Same pattern as debian13: prebuilt EPICS-env-distribution binaries,
@@ -72,11 +72,14 @@ RUN for v in "${DIST_VERSION}" "${IMAGE_VERSION}" "${EPICS_VERSION}" \
 # removed - one layer. The tag pins the fetch so the same DIST_VERSION always
 # resolves to the same distribution commit. --branch takes the tag directly in
 # this one shallow clone; a plain clone plus git checkout <tag> would fail,
-# since --depth 1 does not carry the history the tag needs.
+# since --depth 1 does not carry the history the tag needs. The open62541
+# ua-nodeset tree (OPC UA information-model XML for code generation, about
+# 90 MB) is removed in the same layer: no IOC build or run reads it.
 RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "${DIST_REPO}" /tmp/dist && \
     git -C /tmp/dist sparse-checkout set "${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}" && \
     install -d "${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}" && \
     mv "/tmp/dist/${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}" "${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}/" && \
+    rm -rf "${INSTALL_ROOT}/${DIST_VERSION}/${OS_DIR}/${EPICS_VERSION}/vendor/share/open62541/tools/ua-nodeset" && \
     printf '%s %s %s %s\n' EPICS-env-distribution "${DIST_REPO}" "$(git -C /tmp/dist rev-parse HEAD)" "$(date -u +%FT%TZ)" > /etc/epics-bake.manifest && \
     rm -rf /tmp/dist
 
