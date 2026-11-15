@@ -55,7 +55,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         iproute2 socat lsof \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
-        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
+        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev \
+        autoconf autotools-dev libtool && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # The versions come from configure/VERSIONS as build args; an empty one stops
@@ -84,12 +85,13 @@ RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "
 
 # IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
-# autotools set procServ needs (autoconf/automake/libtool) is not needed by
-# consumer IOC builds, so it is installed and removed within this one layer.
+# automake, which procServ needs on top of the resident autoconf and libtool,
+# is not needed by consumer IOC builds, so it is installed and removed within
+# this one layer.
 # hadolint ignore=DL3008
 RUN set -e; \
     apt-get update -y && \
-    apt-get install -y --no-install-recommends autoconf automake libtool && \
+    apt-get install -y --no-install-recommends automake && \
     git clone --depth 1 --branch "${PROCSERV_ENV_VERSION}" https://github.com/jeonghanlee/procServ-env /tmp/procServ-env && \
     make -C /tmp/procServ-env init && make -C /tmp/procServ-env conf && \
     make -C /tmp/procServ-env build && make -C /tmp/procServ-env install && \
@@ -97,7 +99,7 @@ RUN set -e; \
     git clone --depth 1 --branch "${CON_VERSION}" https://github.com/jeonghanlee/con /tmp/con && \
     make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
-    apt-get purge -y autoconf automake libtool && apt-get autoremove -y && \
+    apt-get purge -y automake && apt-get autoremove -y && \
     apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 

@@ -53,7 +53,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         s6 execline \
         libreadline-dev libsnmp-dev libevent-dev libtirpc-dev libxml2-dev \
         libusb-1.0-0-dev libudev-dev libsystemd-dev libssl-dev \
-        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev && \
+        libhdf5-dev libjpeg-dev libz-dev libssh2-1-dev \
+        autoconf automake autotools-dev libtool && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # The versions come from configure/VERSIONS as build args; an empty one stops
@@ -81,11 +82,10 @@ RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "
 
 # IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
-# autotools set procServ needs (autoconf/automake/libtool) is not needed by
-# consumer IOC builds, so it is installed and removed within this one layer.
+# autotools set procServ needs (autoconf/automake/libtool) stays resident:
+# libtool depends on automake on this release, so removing automake would
+# also remove libtool.
 RUN set -e; \
-    apt-get update -y && \
-    apt-get install -y --no-install-recommends autoconf automake libtool && \
     git clone --depth 1 --branch "${PROCSERV_ENV_VERSION}" https://github.com/jeonghanlee/procServ-env /tmp/procServ-env && \
     make -C /tmp/procServ-env init && make -C /tmp/procServ-env conf && \
     make -C /tmp/procServ-env build && make -C /tmp/procServ-env install && \
@@ -95,8 +95,7 @@ RUN set -e; \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
     printf '%s %s %s %s\n' s6 apt "$(dpkg -s s6 | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
     printf '%s %s %s %s\n' execline apt "$(dpkg -s execline | awk '/^Version:/{print $2}')" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
-    apt-get purge -y autoconf automake libtool && apt-get autoremove -y && \
-    apt-get clean && rm -rf /var/lib/apt/lists/* /tmp/procServ-env /tmp/con && \
+    rm -rf /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
 # Baked environment: variable list and PATH order

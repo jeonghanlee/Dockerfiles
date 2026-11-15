@@ -54,7 +54,8 @@ RUN ln -snf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone &
         libtirpc libtirpc-devel libxml2-devel systemd-devel \
         libusb1-devel hdf5-devel libjpeg-turbo-devel \
         libssh2 libssh2-devel python3-devel \
-        ncurses-devel && \
+        ncurses-devel \
+        autoconf automake libtool patch diffutils && \
     ln -snf /usr/bin/python3 /usr/local/bin/python && \
     dnf clean all && rm -rf /var/cache/dnf /var/cache/yum
 
@@ -84,10 +85,10 @@ RUN git clone --depth 1 --filter=blob:none --sparse --branch "${DIST_VERSION}" "
 
 # IOC runtime tools: procServ and con, built from source in the
 # final image (recipes mirror ansible-provision app_procserv / app_con). The
-# autotools set procServ needs (autoconf/automake/libtool) is not needed by
-# consumer IOC builds, so it is installed and removed within this one layer.
+# autotools set procServ needs (autoconf/automake/libtool) stays resident:
+# libtool requires automake on this release, so removing automake would also
+# remove libtool.
 RUN set -e; \
-    dnf install -y autoconf automake libtool && \
     git clone --depth 1 --branch "${PROCSERV_ENV_VERSION}" https://github.com/jeonghanlee/procServ-env /tmp/procServ-env && \
     make -C /tmp/procServ-env init && make -C /tmp/procServ-env conf && \
     make -C /tmp/procServ-env build && make -C /tmp/procServ-env install && \
@@ -95,8 +96,7 @@ RUN set -e; \
     git clone --depth 1 --branch "${CON_VERSION}" https://github.com/jeonghanlee/con /tmp/con && \
     make -C /tmp/con && make -C /tmp/con install DESTDIR=/usr/local && \
     printf '%s %s %s %s\n' con https://github.com/jeonghanlee/con "$(git -C /tmp/con rev-parse HEAD)" "$(date -u +%FT%TZ)" >> /etc/epics-bake.manifest && \
-    dnf remove -y autoconf automake libtool && dnf clean all && \
-    rm -rf /var/cache/dnf /var/cache/yum /tmp/procServ-env /tmp/con && \
+    rm -rf /tmp/procServ-env /tmp/con && \
     test -x /usr/local/bin/procServ && test -x /usr/local/bin/con
 
 # s6 supervision suite: no s6, execline, or skalibs package exists on Rocky, so
