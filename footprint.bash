@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.1.1
+#  version : 0.1.2
 #
 # Measure the four size axes of docs/IMAGE_FOOTPRINT.md for the published
 # images at one tag and print the History table rows to add.

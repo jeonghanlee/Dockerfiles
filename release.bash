@@ -2,7 +2,7 @@
 #
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 0.10.2
+#  version : 0.11.0
 #
 # Release tool for the 18 EPICS images. Every subcommand is read-only.
 #
