@@ -1,6 +1,6 @@
 #  author  : Jeong Han Lee
 #  email   : jeonghan.lee@gmail.com
-#  version : 2.4.0
+#  version : 2.5.0
 #
 # Distribution-consuming EPICS environment image.
 # Same pattern as debian13. Base pinned to 10.2 because it matches
