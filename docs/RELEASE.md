@@ -30,9 +30,10 @@ commit, the publication, resuming an interrupted release, and abandoning a relea
 
 **Out of scope:** adding an image or an operating-system tree (see "Add an Image" in [MAINTENANCE.md](MAINTENANCE.md)),
 the mdBook image (see "Update the mdBook Version" in [MAINTENANCE.md](MAINTENANCE.md)), building the distribution,
-which the EPICS-env-distribution repository owns, and a release that raises only `IMAGE_VERSION` with
-`make image-version.<v>`. This procedure requires `DIST_VERSION` equal to `IMAGE_VERSION`: `make release-check` and
-the `versions` stage of `make release-status` fail for an image-only version.
+which the EPICS-env-distribution repository owns.
+
+A patch release of some images, which raises only `IMAGE_VERSION`, runs this procedure with the differences that
+"Release a patch of some images" lists.
 
 ## Prerequisites
 
@@ -51,7 +52,27 @@ the `versions` stage of `make release-status` fail for an image-only version.
 - `.github/workflows/release.yml` on `master`, since `gh workflow run` starts only a workflow on the default branch.
 - For "Abandon a release" only, a local `docker login` of the owner with push access to `jeonghanlee/*` on Docker Hub.
 
-`<version>` is the distribution release in the form `X.Y.Z`, for example `1.5.0`.
+`<version>` is the distribution release in the form `X.Y.Z`, for example `1.5.0`. A patch release has the form
+`X.Y.Z.W`, for example `1.5.0.1`, and keeps the distribution release `X.Y.Z`.
+
+## Release a patch of some images
+
+A patch release changes some images and leaves the distribution as it is, for example a package added to the operating
+system layer of five images. Its version is `X.Y.Z.W`, where `X.Y.Z` is the distribution release the images keep. The
+procedure below runs as written, with these differences:
+
+- Every `make release-*` command takes `ONLY="<image_dirs>"`, the development images of the release, for example
+  `ONLY="debian13 rocky8"`. The runner and slim images of each listed image join it, so a release of N development
+  images covers 3 x N images. Without `ONLY`, the release covers all 18 images. An image outside `ONLY` keeps its tags.
+  The `make release-*` commands that the `Next:` lines print carry the same `ONLY`.
+- Step 1 checks the distribution tag and the trees of `X.Y.Z`. A tree of an image outside `ONLY` appears as a `NOTE`
+  line that says it has no image; the note does not block the release.
+- Step 3 sets the version with `make image-version.<version>`; `DIST_VERSION` stays `X.Y.Z`.
+- Step 7 starts the release with `-f only="<image_dirs>"` after `-f version=<version>`.
+- The counts of the `ci`, `hub`, and `latest` stages and of `make release-verify` are the covered images, 3 x N,
+  where the text below says 18. `make release-check` ends with `N trees`, where the text below says 6, and the workflow
+  publishes the N development images first and the 2 x N runner and slim images after them, where the text below says
+  six and 12.
 
 ## Resume an interrupted release
 
@@ -66,7 +87,7 @@ The target checks six stages in order and stops at the first unfinished one:
 
 | Stage | PASS when |
 | --- | --- |
-| `versions` | `configure/VERSIONS` has `DIST_VERSION` and `IMAGE_VERSION` equal to `<version>` |
+| `versions` | `configure/VERSIONS` has `DIST_VERSION` and `IMAGE_VERSION` equal to `<version>`; for a patch release, `DIST_VERSION` equal to `X.Y.Z` and `IMAGE_VERSION` equal to `<version>` |
 | `git` | The working tree is clean and `HEAD` equals `origin/master` |
 | `ci` | Each of the 18 image workflows has a successful `master` run with no change to its path filters since |
 | `run` | The newest `release.yml` run has completed, or none exists; its line shows the run ID and commit |
@@ -119,7 +140,8 @@ The `FAIL` line explains the stage, and the last line, `Next:`, names the next a
      key is raised only for a security fix.
    - `MISSING`: the pinned tag does not exist upstream. The target fails.
 
-   The `DIST_VERSION` row shows `newer` until step 3 sets it.
+   The `DIST_VERSION` row shows `newer` until step 3 sets it; in a patch release, `DIST_VERSION` is already the
+   highest tag and the row shows `current`.
 
    **Stop.** For each `newer` or `held` row other than `DIST_VERSION`, ask the owner whether to raise it. For each key
    the owner raises, edit its line in `configure/VERSIONS` to the bare version number, without the `v` that some
@@ -145,7 +167,8 @@ The `FAIL` line explains the stage, and the last line, `Next:`, names the next a
    make check
    ```
 
-   The first command prints `DIST_VERSION=<version>` and `IMAGE_VERSION=<version>`. `make versions` prints every
+   The first command prints `DIST_VERSION=<version>` and `IMAGE_VERSION=<version>`; for a patch release,
+   `make image-version.<version>` prints only `IMAGE_VERSION=<version>`. `make versions` prints every
    `configure/VERSIONS` key, and `make check` ends without an error.
 
 4. To test an image before the commit, build it and run its gate. The step is optional, except when step 1 or 2

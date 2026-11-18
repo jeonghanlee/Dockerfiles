@@ -9,7 +9,8 @@
 #   release.bash check <version>
 #       Verify that EPICS-env-distribution carries the tag <version> and, for
 #       each release image, the tree <version>/<OS_DIR>/<EPICS_VERSION> that
-#       its build fetches.
+#       its build fetches. A four-part <version> (X.Y.Z.W) is a patch release
+#       of the distribution X.Y.Z: the tag and the trees are those of X.Y.Z.
 #
 #   release.bash components
 #       Compare each version a Dockerfile clones by tag with the highest X.Y.Z
@@ -35,7 +36,8 @@
 #       Docker Hub are back at the previous version.
 #
 # The image lists come from RELEASE_IMAGE_DIRS, RUNNER_IMAGE_DIRS, and
-# SLIM_IMAGE_DIRS in the environment, as make passes them. A configure/VERSIONS
+# SLIM_IMAGE_DIRS in the environment, as make passes them; make narrows them
+# when ONLY names the development images of one release. A configure/VERSIONS
 # key set in the environment overrides the file value.
 
 set -uo pipefail
@@ -47,6 +49,10 @@ readonly VERSIONS_FILE="${SC_TOP}/configure/VERSIONS"
 
 declare -i FAILURES=0
 declare TMP_DIR=""
+
+# The ONLY argument that a printed make command repeats; empty without ONLY.
+declare only_arg=""
+[[ -n "${RELEASE_ONLY:-}" ]] && only_arg=" ONLY=\"${RELEASE_ONLY}\""
 
 # The temporary distribution clone of the check subcommand is removed on
 # success and kept for inspection on failure or with KEEP_WORKSPACE=1.
@@ -92,12 +98,20 @@ function dockerfile_arg {
     return 1
 }
 
+# Print the distribution version of a release version: X.Y.Z for X.Y.Z and for
+# the patch release X.Y.Z.W.
+function distribution_of {
+    [[ "$1" =~ ^([0-9]+\.[0-9]+\.[0-9]+)(\.[0-9]+)?$ ]] || return 1
+    printf "%s\n" "${BASH_REMATCH[1]}"
+}
+
 function release_check {
-    local version="$1" epics dir file repo os_dir found
+    local version="$1" dist epics dir file repo os_dir found
     local -a dirs trees
     local -A used=()
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must have the form X.Y.Z: ${version}"
+    dist="$(distribution_of "$version")" \
+        || die "version must have the form X.Y.Z or X.Y.Z.W: ${version}"
     epics="$(versions_value EPICS_VERSION)"
     [[ -n "$epics" ]] || die "EPICS_VERSION is not set in configure/VERSIONS"
     read -r -a dirs <<< "${RELEASE_IMAGE_DIRS:-}"
@@ -112,33 +126,33 @@ function release_check {
 
     # git ls-remote --exit-code returns 2 when no ref matches; any other
     # failure means the repository could not be read, not a missing tag.
-    git ls-remote --exit-code --tags "$repo" "refs/tags/${version}" > /dev/null
+    git ls-remote --exit-code --tags "$repo" "refs/tags/${dist}" > /dev/null
     case $? in
         0) ;;
-        2) fail "tag ${version} not found in ${repo}"; return ;;
-        *) fail "cannot read ${repo}; run make release-check VERSION=${version} again once it answers"; return ;;
+        2) fail "tag ${dist} not found in ${repo}"; return ;;
+        *) fail "cannot read ${repo}; run make release-check VERSION=${version}${only_arg} again once it answers"; return ;;
     esac
-    pass "tag ${version} exists in ${repo}"
+    pass "tag ${dist} exists in ${repo}"
 
     TMP_DIR="$(mktemp -d)" || die "mktemp failed"
-    git clone --quiet --depth 1 --filter=blob:none --no-checkout --branch "$version" "$repo" "${TMP_DIR}/dist" \
-        2> /dev/null || die "clone of ${repo} at ${version} failed"
+    git clone --quiet --depth 1 --filter=blob:none --no-checkout --branch "$dist" "$repo" "${TMP_DIR}/dist" \
+        2> /dev/null || die "clone of ${repo} at ${dist} failed"
 
     for dir in "${dirs[@]}"; do
         file="${SC_TOP}/${dir}/Dockerfile"
         os_dir="$(dockerfile_arg "$file" OS_DIR)" || { fail "${dir}/Dockerfile declares no OS_DIR default"; continue; }
         used["$os_dir"]=1
-        if git -C "${TMP_DIR}/dist" cat-file -e "HEAD:${version}/${os_dir}/${epics}" 2> /dev/null; then
-            pass "$(printf "%-9s %s" "$dir" "${version}/${os_dir}/${epics}")"
+        if git -C "${TMP_DIR}/dist" cat-file -e "HEAD:${dist}/${os_dir}/${epics}" 2> /dev/null; then
+            pass "$(printf "%-9s %s" "$dir" "${dist}/${os_dir}/${epics}")"
         else
-            found="$(git -C "${TMP_DIR}/dist" ls-tree -d --name-only "HEAD:${version}/${os_dir}" 2> /dev/null | paste -sd " ")"
-            fail "$(printf "%-9s %s missing; found: %s" "$dir" "${version}/${os_dir}/${epics}" "${found:-no ${version}/${os_dir} tree}")"
+            found="$(git -C "${TMP_DIR}/dist" ls-tree -d --name-only "HEAD:${dist}/${os_dir}" 2> /dev/null | paste -sd " ")"
+            fail "$(printf "%-9s %s missing; found: %s" "$dir" "${dist}/${os_dir}/${epics}" "${found:-no ${dist}/${os_dir} tree}")"
         fi
     done
 
-    mapfile -t trees < <(git -C "${TMP_DIR}/dist" ls-tree -d --name-only "HEAD:${version}" 2> /dev/null)
+    mapfile -t trees < <(git -C "${TMP_DIR}/dist" ls-tree -d --name-only "HEAD:${dist}" 2> /dev/null)
     for os_dir in "${trees[@]}"; do
-        [[ -n "${used[$os_dir]:-}" ]] || note "${version}/${os_dir} has no image"
+        [[ -n "${used[$os_dir]:-}" ]] || note "${dist}/${os_dir} has no image"
     done
 
     if (( FAILURES == 0 )); then
@@ -280,14 +294,15 @@ function stage {
 }
 
 function release_status {
-    local version="$1" dist image head origin dir wf sha state conclusion repo digest out other next="" slug
+    local version="$1" dist image want_dist head origin dir wf sha state conclusion repo digest out other next="" slug
     local run_id run_state run_end run_sha
     local -a dirs paths runs ci_bad=() ci_none=() ci_stale=() ci_error=() hub_missing=() hub_error=()
     local -a latest_bad=() latest_error=()
     local -A tag_digest=() tag_error=()
     local -i all=0 ci_ok=0 stop=0 ahead=0 behind=0 tagged=0
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must have the form X.Y.Z: ${version}"
+    want_dist="$(distribution_of "$version")" \
+        || die "version must have the form X.Y.Z or X.Y.Z.W: ${version}"
     [[ "${RELEASE_STATUS_ALL:-}" == 1 ]] && all=1
     slug="$(github_slug)" || die "origin is not a GitHub repository; set GH_REPO"
     read -r -a dirs <<< "${RELEASE_IMAGE_DIRS:-} ${RUNNER_IMAGE_DIRS:-} ${SLIM_IMAGE_DIRS:-}"
@@ -295,10 +310,14 @@ function release_status {
 
     # Stage 1: versions.
     dist="$(versions_value DIST_VERSION)" image="$(versions_value IMAGE_VERSION)"
-    if [[ "$dist" == "$version" && "$image" == "$version" ]]; then
+    if [[ "$dist" == "$want_dist" && "$image" == "$version" ]]; then
         stage PASS versions "DIST_VERSION=${dist} IMAGE_VERSION=${image}"
     else
-        stage FAIL versions "DIST_VERSION=${dist} IMAGE_VERSION=${image}, expected ${version}"
+        if [[ "$want_dist" == "$version" ]]; then
+            stage FAIL versions "DIST_VERSION=${dist} IMAGE_VERSION=${image}, expected ${version}"
+        else
+            stage FAIL versions "DIST_VERSION=${dist} IMAGE_VERSION=${image}, expected DIST_VERSION=${want_dist} IMAGE_VERSION=${version}"
+        fi
         # A checkout behind origin/master reads an old configure/VERSIONS, and
         # a version that Docker Hub already carries was released or abandoned
         # before; neither starts a new release at step 1.
@@ -307,9 +326,9 @@ function release_status {
         if [[ -n "$origin" && "$head" != "$origin" ]] \
             && ! git -C "$SC_TOP" merge-base --is-ancestor "$origin" "$head" 2> /dev/null; then
             if git -C "$SC_TOP" cat-file -e "${origin}^{commit}" 2> /dev/null; then
-                next="pull origin/master: git -C ${SC_TOP} pull --ff-only (owner), then run make release-status VERSION=${version} again"
+                next="pull origin/master: git -C ${SC_TOP} pull --ff-only (owner), then run make release-status VERSION=${version}${only_arg} again"
             else
-                next="fetch origin/master: git -C ${SC_TOP} fetch (agent), then run make release-status VERSION=${version} again"
+                next="fetch origin/master: git -C ${SC_TOP} fetch (agent), then run make release-status VERSION=${version}${only_arg} again"
             fi
         else
             tagged=0
@@ -318,9 +337,11 @@ function release_status {
                 digest="$(hub_digest "$repo" "$version")" && [[ -n "$digest" ]] && tagged+=1
             done
             if (( tagged > 0 )); then
-                next="stop and ask the owner: Docker Hub already has ${version} for ${tagged} image(s), from an earlier release or an abandoned one; make release-status VERSION=${version} ALL=1 shows them"
+                next="stop and ask the owner: Docker Hub already has ${version} for ${tagged} image(s), from an earlier release or an abandoned one; make release-status VERSION=${version}${only_arg} ALL=1 shows them"
+            elif [[ "$want_dist" == "$version" ]]; then
+                next="make release-check VERSION=${version}${only_arg}, then make dist-version.${version}"
             else
-                next="make release-check VERSION=${version}, then make dist-version.${version}"
+                next="make release-check VERSION=${version}${only_arg}, then make image-version.${version}"
             fi
         fi
         stop=1
@@ -336,10 +357,10 @@ function release_status {
         ahead=0 behind=0
         if [[ -z "$origin" ]]; then
             stage FAIL git "cannot read origin/master"
-            [[ -n "$next" ]] || next="restore access to origin, then run make release-status VERSION=${version} again"
+            [[ -n "$next" ]] || next="restore access to origin, then run make release-status VERSION=${version}${only_arg} again"
         elif [[ "$head" != "$origin" ]] && ! git -C "$SC_TOP" cat-file -e "${origin}^{commit}" 2> /dev/null; then
             stage FAIL git "origin/master ${origin:0:7} is not in the local clone"
-            [[ -n "$next" ]] || next="fetch origin/master: git -C ${SC_TOP} fetch (agent), then run make release-status VERSION=${version} again"
+            [[ -n "$next" ]] || next="fetch origin/master: git -C ${SC_TOP} fetch (agent), then run make release-status VERSION=${version}${only_arg} again"
         else
             [[ "$head" == "$origin" ]] \
                 || read -r ahead behind < <(git -C "$SC_TOP" rev-list --left-right --count "${head}...${origin}")
@@ -352,7 +373,7 @@ function release_status {
                 fi
             elif (( behind > 0 && ahead == 0 )); then
                 stage FAIL git "HEAD ${head:0:7} is ${behind} commit(s) behind origin/master ${origin:0:7}"
-                [[ -n "$next" ]] || next="pull origin/master: git -C ${SC_TOP} pull --ff-only (owner), then run make release-status VERSION=${version} again"
+                [[ -n "$next" ]] || next="pull origin/master: git -C ${SC_TOP} pull --ff-only (owner), then run make release-status VERSION=${version}${only_arg} again"
             elif (( behind > 0 )); then
                 stage FAIL git "HEAD ${head:0:7} and origin/master ${origin:0:7} diverged (${ahead} ahead, ${behind} behind)"
                 [[ -n "$next" ]] || next="stop and ask the owner how to reconcile HEAD with origin/master"
@@ -366,7 +387,7 @@ function release_status {
                 [[ -n "$next" ]] || next="commit and push the release change (owner), as step 5 describes"
             elif (( ahead > 0 )); then
                 stage FAIL git "HEAD ${head:0:7} is ${ahead} commit(s) ahead of origin/master ${origin:0:7}"
-                [[ -n "$next" ]] || next="push HEAD: git -C ${SC_TOP} push (owner), then run make release-status VERSION=${version} again"
+                [[ -n "$next" ]] || next="push HEAD: git -C ${SC_TOP} push (owner), then run make release-status VERSION=${version}${only_arg} again"
             else
                 stage PASS git "clean, HEAD ${head:0:7} = origin/master"
             fi
@@ -416,11 +437,11 @@ function release_status {
             stage FAIL ci "${ci_ok}/${#dirs[@]} covered${ci_bad[*]:+; not successful: ${ci_bad[*]}}${ci_stale[*]:+; changed since the last run: ${ci_stale[*]}}${ci_none[*]:+; no master run: ${ci_none[*]}}${ci_error[*]:+; gh cannot read the runs: ${ci_error[*]}}"
             if [[ -z "$next" ]]; then
                 if (( ${#ci_error[@]} > 0 )); then
-                    next="check gh auth status, then run make release-status VERSION=${version} again"
+                    next="check gh auth status, then run make release-status VERSION=${version}${only_arg} again"
                 elif (( ${#ci_bad[@]} > 0 )); then
-                    next="wait for the running workflows, or fix the failed ones, then run make release-status VERSION=${version} again"
+                    next="wait for the running workflows, or fix the failed ones, then run make release-status VERSION=${version}${only_arg} again"
                 else
-                    next="start each listed workflow: gh workflow run <image_dir>.yml -R ${slug} --ref master (owner), then run make release-status VERSION=${version} again"
+                    next="start each listed workflow: gh workflow run <image_dir>.yml -R ${slug} --ref master (owner), then run make release-status VERSION=${version}${only_arg} again"
                 fi
             fi
             stop=1
@@ -440,7 +461,7 @@ function release_status {
                 stage PASS run "no release run: release.yml is not on the default branch"
             else
                 stage FAIL run "gh cannot read the release runs"
-                [[ -n "$next" ]] || next="check gh auth status (agent), then run make release-status VERSION=${version} again"
+                [[ -n "$next" ]] || next="check gh auth status (agent), then run make release-status VERSION=${version}${only_arg} again"
                 stop=1
             fi
         elif [[ -z "$out" ]]; then
@@ -451,7 +472,7 @@ function release_status {
                 stage PASS run "newest release run ${run_id} completed (${run_end}) on ${run_sha:0:7}"
             elif [[ "$run_sha" == "$head" ]]; then
                 stage FAIL run "release run ${run_id} is ${run_state} on HEAD ${head:0:7}"
-                [[ -n "$next" ]] || next="wait for release run ${run_id}: gh run watch ${run_id} -R ${slug} (owner), then run make release-status VERSION=${version} again"
+                [[ -n "$next" ]] || next="wait for release run ${run_id}: gh run watch ${run_id} -R ${slug} (owner), then run make release-status VERSION=${version}${only_arg} again"
                 stop=1
             else
                 stage FAIL run "release run ${run_id} is ${run_state} on ${run_sha:0:7}, not HEAD ${head:0:7}"
@@ -482,9 +503,9 @@ function release_status {
             stage FAIL hub "${#tag_digest[@]}/${#dirs[@]} carry tag ${version}${hub_missing[*]:+; missing: ${hub_missing[*]}}${hub_error[*]:+; unreadable: ${hub_error[*]}}"
             if [[ -z "$next" ]]; then
                 if (( ${#hub_error[@]} > 0 )); then
-                    next="Docker Hub could not be read; run make release-status VERSION=${version} again once it answers"
+                    next="Docker Hub could not be read; run make release-status VERSION=${version}${only_arg} again once it answers"
                 else
-                    next="run the release workflow (owner), then run make release-status VERSION=${version} again"
+                    next="run the release workflow (owner), then run make release-status VERSION=${version}${only_arg} again"
                 fi
             fi
             stop=1
@@ -511,9 +532,9 @@ function release_status {
             stage FAIL latest "$(( ${#dirs[@]} - ${#latest_bad[@]} - ${#latest_error[@]} ))/${#dirs[@]} latest = ${version}${latest_bad[*]:+; differs: ${latest_bad[*]}}${latest_error[*]:+; unreadable: ${latest_error[*]}}"
             if [[ -z "$next" ]]; then
                 if (( ${#latest_error[@]} > 0 )); then
-                    next="Docker Hub could not be read; run make release-status VERSION=${version} again once it answers"
+                    next="Docker Hub could not be read; run make release-status VERSION=${version}${only_arg} again once it answers"
                 else
-                    next="run the release workflow (owner), then run make release-status VERSION=${version} again"
+                    next="run the release workflow (owner), then run make release-status VERSION=${version}${only_arg} again"
                 fi
             fi
             stop=1
@@ -522,7 +543,7 @@ function release_status {
         stage .... latest "not checked"
     fi
 
-    (( stop == 0 )) && next="make release-verify VERSION=${version}"
+    (( stop == 0 )) && next="make release-verify VERSION=${version}${only_arg}"
     printf "Next: %s\n" "$next"
     (( stop == 0 )) || FAILURES+=1
 }
@@ -591,7 +612,7 @@ function release_verify {
     local version="$1" origin dir
     local -a dirs
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must have the form X.Y.Z: ${version}"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || die "version must have the form X.Y.Z or X.Y.Z.W: ${version}"
     read -r -a dirs <<< "${RELEASE_IMAGE_DIRS:-} ${RUNNER_IMAGE_DIRS:-} ${SLIM_IMAGE_DIRS:-}"
     (( ${#dirs[@]} > 0 )) || die "RELEASE_IMAGE_DIRS, RUNNER_IMAGE_DIRS, and SLIM_IMAGE_DIRS are empty"
     origin="$(git -C "$SC_TOP" ls-remote origin refs/heads/master 2> /dev/null | cut -f1)"
@@ -642,7 +663,7 @@ function release_abandon {
     local -a dirs runs waiting=() running=() dirty=() local_commits=() list=() acts=()
     local -i ahead=0 behind=0
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must have the form X.Y.Z: ${version}"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || die "version must have the form X.Y.Z or X.Y.Z.W: ${version}"
     read -r -a dirs <<< "${RELEASE_IMAGE_DIRS:-} ${RUNNER_IMAGE_DIRS:-} ${SLIM_IMAGE_DIRS:-}"
     (( ${#dirs[@]} > 0 )) || die "RELEASE_IMAGE_DIRS, RUNNER_IMAGE_DIRS, and SLIM_IMAGE_DIRS are empty"
     slug="$(github_slug)" || die "origin is not a GitHub repository"
@@ -655,7 +676,7 @@ function release_abandon {
         else
             stage FAIL runs "gh cannot read the release runs"
             next_lines "gh auth status   # agent" \
-                "then run make release-abandon-status VERSION=${version} again   # agent"
+                "then run make release-abandon-status VERSION=${version}${only_arg} again   # agent"
             FAILURES+=1
             return
         fi
@@ -674,7 +695,7 @@ function release_abandon {
             stage FAIL runs "not completed: ${waiting[*]:+waiting ${waiting[*]}}${waiting[*]:+${running[*]:+, }}${running[*]:+running ${running[*]}}"
             for id in "${waiting[@]}" "${running[@]}"; do acts+=("gh run cancel ${id} -R ${slug}   # owner"); done
             acts+=("# owner: cancel waiting runs first; gh run cancel returns before the run stops"
-                   "then run make release-abandon-status VERSION=${version} again until runs PASS   # agent")
+                   "then run make release-abandon-status VERSION=${version}${only_arg} again until runs PASS   # agent")
             next_lines "${acts[@]}"
             FAILURES+=1
             return
@@ -697,7 +718,7 @@ function release_abandon {
     if ! git -C "$SC_TOP" cat-file -e "${origin}^{commit}" 2> /dev/null; then
         stage FAIL local "origin/master ${origin:0:7} is not in the local clone"
         next_lines "git -C ${SC_TOP} fetch   # agent" \
-            "then run make release-abandon-status VERSION=${version} again   # agent"
+            "then run make release-abandon-status VERSION=${version}${only_arg} again   # agent"
         FAILURES+=1
         return
     fi
@@ -750,7 +771,7 @@ function release_abandon {
         next_lines "git -C ${SC_TOP} revert --no-edit ${rel:0:12}^..origin/master   # owner, when every listed commit belongs to the release" \
             "git -C ${SC_TOP} revert --no-edit <commit>   # owner, otherwise: one per release commit, newest first" \
             "git -C ${SC_TOP} push   # owner" \
-            "then run make release-abandon-status VERSION=${version} again   # agent"
+            "then run make release-abandon-status VERSION=${version}${only_arg} again   # agent"
         FAILURES+=1
         return
     fi
@@ -764,7 +785,7 @@ function release_abandon {
     for dir in "${dirs[@]}"; do
         repo="$(envconf_value "${SC_TOP}/${dir}/env.conf" DOCKER_ID)/$(envconf_value "${SC_TOP}/${dir}/env.conf" TARGET_NAME)"
         if ! want="$(hub_digest "$repo" "$prev")" || ! digest="$(hub_digest "$repo" latest)"; then
-            acts+=("run make release-abandon-status VERSION=${version} again once Docker Hub answers (agent; ${repo} unreadable)")
+            acts+=("run make release-abandon-status VERSION=${version}${only_arg} again once Docker Hub answers (agent; ${repo} unreadable)")
             continue
         fi
         [[ -n "$want" ]] || die "${repo}:${prev} does not exist; latest has no previous tag to return to"
@@ -772,14 +793,14 @@ function release_abandon {
             acts+=("docker buildx imagetools create --prefer-index=false -t ${repo}:latest ${repo}:${prev}   # owner, docker login")
         fi
         if ! digest="$(hub_digest "$repo" "$version")"; then
-            acts+=("run make release-abandon-status VERSION=${version} again once Docker Hub answers (agent; ${repo} unreadable)")
+            acts+=("run make release-abandon-status VERSION=${version}${only_arg} again once Docker Hub answers (agent; ${repo} unreadable)")
         elif [[ -n "$digest" ]]; then
             acts+=("delete tag ${version} at https://hub.docker.com/r/${repo}/tags   # owner, after latest is back")
         fi
     done
     if (( ${#acts[@]} > 0 )); then
         stage FAIL hub "$(printf "%d action(s) remain" "${#acts[@]}")"
-        next_lines "${acts[@]}" "then run make release-abandon-status VERSION=${version} again   # agent"
+        next_lines "${acts[@]}" "then run make release-abandon-status VERSION=${version}${only_arg} again   # agent"
         FAILURES+=1
         return
     fi

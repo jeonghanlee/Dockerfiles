@@ -52,7 +52,7 @@ function measure {
     local version="$1" dir id name repo image url out code
     local -a dirs real=() download=() layers=() disk=() epics=()
 
-    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]] || die "version must have the form X.Y.Z: ${version}"
+    [[ "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+(\.[0-9]+)?$ ]] || die "version must have the form X.Y.Z or X.Y.Z.W: ${version}"
     read -r -a dirs <<< "${FOOTPRINT_IMAGE_DIRS:-}"
     (( ${#dirs[@]} > 0 )) || die "FOOTPRINT_IMAGE_DIRS is empty"
     command -v docker > /dev/null || die "docker not found"
