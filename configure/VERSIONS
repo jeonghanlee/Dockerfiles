@@ -5,7 +5,7 @@
 # lines by hand. OS_DIR stays in the development Dockerfiles, and the mdBook
 # image keeps its own MDBOOK_VERSION.
 DIST_VERSION=1.5.0
-IMAGE_VERSION=1.5.0
+IMAGE_VERSION=1.5.0.1
 EPICS_VERSION=7.0.10
 PROCSERV_ENV_VERSION=1.0.0
 CON_VERSION=1.2.0
